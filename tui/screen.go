@@ -142,6 +142,95 @@ func (s *Screen) DimArea(x, y, width, height int) {
 	}
 }
 
+// DrawBrutalistBox draws a box with heavy borders
+func (s *Screen) DrawBrutalistBox(x, y, width, height int, style lipgloss.Style) {
+	// Top border (heavy)
+	s.DrawRune(x, y, '┏', style)
+	for i := 1; i < width-1; i++ {
+		s.DrawRune(x+i, y, '━', style)
+	}
+	s.DrawRune(x+width-1, y, '┓', style)
+
+	// Sides (heavy)
+	for i := 1; i < height-1; i++ {
+		s.DrawRune(x, y+i, '┃', style)
+		s.DrawRune(x+width-1, y+i, '┃', style)
+	}
+
+	// Bottom border (heavy)
+	s.DrawRune(x, y+height-1, '┗', style)
+	for i := 1; i < width-1; i++ {
+		s.DrawRune(x+i, y+height-1, '━', style)
+	}
+	s.DrawRune(x+width-1, y+height-1, '┛', style)
+}
+
+// DrawBrutalistBoxWithTitle draws a brutalist box with a title
+func (s *Screen) DrawBrutalistBoxWithTitle(x, y, width, height int, title string, borderStyle, titleStyle lipgloss.Style) {
+	// Top left corner
+	s.DrawRune(x, y, '┏', borderStyle)
+	
+	// Calculate title position (centered)
+	titleWithSpaces := " " + title + " "
+	titleLen := len(titleWithSpaces)
+	titleStart := x + (width-titleLen)/2
+	
+	// Draw left border segment
+	for i := x + 1; i < titleStart; i++ {
+		s.DrawRune(i, y, '━', borderStyle)
+	}
+	
+	// Draw title
+	s.DrawString(titleStart, y, titleWithSpaces, titleStyle)
+	
+	// Draw right border segment
+	for i := titleStart + titleLen; i < x+width-1; i++ {
+		s.DrawRune(i, y, '━', borderStyle)
+	}
+	
+	// Top right corner
+	s.DrawRune(x+width-1, y, '┓', borderStyle)
+
+	// Sides (heavy)
+	for i := 1; i < height-1; i++ {
+		s.DrawRune(x, y+i, '┃', borderStyle)
+		s.DrawRune(x+width-1, y+i, '┃', borderStyle)
+	}
+
+	// Bottom border (heavy)
+	s.DrawRune(x, y+height-1, '┗', borderStyle)
+	for i := 1; i < width-1; i++ {
+		s.DrawRune(x+i, y+height-1, '━', borderStyle)
+	}
+	s.DrawRune(x+width-1, y+height-1, '┛', borderStyle)
+}
+
+// DrawBlockShadow draws a solid block shadow for a given area
+func (s *Screen) DrawBlockShadow(x, y, width, height int, shadowStyle lipgloss.Style, offsetX, offsetY int) {
+	// Draw shadow using solid blocks
+	
+	// Draw bottom shadow (full width, offset down)
+	for i := 0; i < width; i++ {
+		for j := 0; j < offsetY; j++ {
+			s.DrawRune(x+offsetX+i, y+height+j, '█', shadowStyle)
+		}
+	}
+	
+	// Draw right shadow (full height, offset right)
+	for i := 0; i < height; i++ {
+		for j := 0; j < offsetX; j++ {
+			s.DrawRune(x+width+j, y+offsetY+i, '█', shadowStyle)
+		}
+	}
+	
+	// Draw corner shadow (fills the gap)
+	for i := 0; i < offsetX; i++ {
+		for j := 0; j < offsetY; j++ {
+			s.DrawRune(x+width+i, y+height+j, '█', shadowStyle)
+		}
+	}
+}
+
 func (s *Screen) Render() string {
 	var builder strings.Builder
 	builder.Grow(s.width * s.height * 2) // Pre-allocate space

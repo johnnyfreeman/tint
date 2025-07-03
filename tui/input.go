@@ -222,8 +222,12 @@ func (i *Input) DrawInBox(screen *Screen, x, y int, title string, theme *Theme) 
 		}
 	}
 	
-	// Draw box with title
-	screen.DrawBoxWithTitle(x, y, boxWidth, boxHeight, title, borderStyle, titleStyle)
+	// Draw box with title - use heavy borders when focused
+	if i.focused {
+		screen.DrawBrutalistBoxWithTitle(x, y, boxWidth, boxHeight, title, borderStyle, titleStyle)
+	} else {
+		screen.DrawBoxWithTitle(x, y, boxWidth, boxHeight, title, borderStyle, titleStyle)
+	}
 	
 	// Draw the input inside the box
 	i.Draw(screen, x+2, y+1, theme)

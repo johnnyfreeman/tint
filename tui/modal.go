@@ -88,23 +88,15 @@ func (m *Modal) Draw(screen *Screen, x, y int, theme *Theme) {
 		actualX, actualY = m.x, m.y
 	}
 
-	// Draw shadow first (offset by 1 pixel down and right)
+	// Draw block shadow with neo-brutalist style (offset by 1 cell)
 	shadowStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Shadow).
 		Background(theme.Palette.Background)
-	shadowOffset := 1
-
-	for dy := 0; dy < m.height; dy++ {
-		for dx := 0; dx < m.width; dx++ {
-			shadowX := actualX + dx + shadowOffset
-			shadowY := actualY + dy + shadowOffset
-
-			// Only draw shadow if within screen bounds
-			if shadowX < screen.Width() && shadowY < screen.Height() {
-				screen.DrawRune(shadowX, shadowY, '░', shadowStyle)
-			}
-		}
-	}
+	shadowOffsetX := 1
+	shadowOffsetY := 1
+	
+	// Use the new DrawBlockShadow method
+	screen.DrawBlockShadow(actualX, actualY, m.width, m.height, shadowStyle, shadowOffsetX, shadowOffsetY)
 
 	// Modal background uses surface color
 	bgStyle := lipgloss.NewStyle().
@@ -135,8 +127,12 @@ func (m *Modal) Draw(screen *Screen, x, y int, theme *Theme) {
 		}
 	}
 
-	// Draw border with title
-	screen.DrawBoxWithTitle(actualX, actualY, m.width, m.height, m.title, borderStyle, titleStyle)
+	// Draw border with title - use heavy borders when focused
+	if m.focused {
+		screen.DrawBrutalistBoxWithTitle(actualX, actualY, m.width, m.height, m.title, borderStyle, titleStyle)
+	} else {
+		screen.DrawBoxWithTitle(actualX, actualY, m.width, m.height, m.title, borderStyle, titleStyle)
+	}
 
 	// Draw content
 	contentStyle := lipgloss.NewStyle().

@@ -130,23 +130,15 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 		notifStyle = NotificationStyles.Info
 	}
 
-	// Draw shadow first (offset by 1 pixel down and right)
+	// Draw block shadow with neo-brutalist style (offset by 1 cell)
 	shadowStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Shadow).
 		Background(theme.Palette.Background)
-	shadowOffset := 1
-
-	for dy := 0; dy < n.height; dy++ {
-		for dx := 0; dx < n.width; dx++ {
-			shadowX := actualX + dx + shadowOffset
-			shadowY := actualY + dy + shadowOffset
-
-			// Only draw shadow if within screen bounds
-			if shadowX < screen.Width() && shadowY < screen.Height() {
-				screen.DrawRune(shadowX, shadowY, '░', shadowStyle)
-			}
-		}
-	}
+	shadowOffsetX := 1
+	shadowOffsetY := 1
+	
+	// Use the new DrawBlockShadow method
+	screen.DrawBlockShadow(actualX, actualY, n.width, n.height, shadowStyle, shadowOffsetX, shadowOffsetY)
 
 	// Notification background
 	bgStyle := lipgloss.NewStyle().
@@ -171,8 +163,12 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Create title with icon
 	title := notifStyle.Icon + " Notification"
 
-	// Draw border with title
-	screen.DrawBoxWithTitle(actualX, actualY, n.width, n.height, title, borderStyle, titleStyle)
+	// Draw border with title - use heavy borders when focused
+	if n.focused {
+		screen.DrawBrutalistBoxWithTitle(actualX, actualY, n.width, n.height, title, borderStyle, titleStyle)
+	} else {
+		screen.DrawBoxWithTitle(actualX, actualY, n.width, n.height, title, borderStyle, titleStyle)
+	}
 
 	// Draw message
 	lines := n.wrapText(n.message, n.width-4)

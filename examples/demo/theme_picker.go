@@ -56,20 +56,13 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 		Background(currentTheme.Palette.Surface).
 		Bold(true)
 
-	// Draw shadow
+	// Draw block shadow with 1 cell offset (same as modal)
 	shadowStyle := lipgloss.NewStyle().
 		Foreground(currentTheme.Palette.Shadow).
 		Background(currentTheme.Palette.Background)
-	shadowOffset := 1
-	for dy := 0; dy < tp.height; dy++ {
-		for dx := 0; dx < tp.width; dx++ {
-			shadowX := x + dx + shadowOffset
-			shadowY := y + dy + shadowOffset
-			if shadowX < screen.Width() && shadowY < screen.Height() {
-				screen.DrawRune(shadowX, shadowY, '░', shadowStyle)
-			}
-		}
-	}
+	shadowOffsetX := 1
+	shadowOffsetY := 1
+	screen.DrawBlockShadow(x, y, tp.width, tp.height, shadowStyle, shadowOffsetX, shadowOffsetY)
 
 	// Draw background
 	for dy := 0; dy < tp.height; dy++ {
@@ -78,8 +71,12 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 		}
 	}
 
-	// Draw border with title
-	screen.DrawBoxWithTitle(x, y, tp.width, tp.height, "Choose Theme", borderStyle, titleStyle)
+	// Draw border with title - use heavy borders when focused
+	if focused {
+		screen.DrawBrutalistBoxWithTitle(x, y, tp.width, tp.height, "Choose Theme", borderStyle, titleStyle)
+	} else {
+		screen.DrawBoxWithTitle(x, y, tp.width, tp.height, "Choose Theme", borderStyle, titleStyle)
+	}
 
 	// Draw theme options with color swatches
 	for i, themeName := range tp.themes {

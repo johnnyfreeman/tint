@@ -324,8 +324,12 @@ func (t *TextArea) DrawInBox(screen *Screen, x, y, width, height int, title stri
 		}
 	}
 	
-	// Draw box with title
-	screen.DrawBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
+	// Draw box with title - use heavy borders when focused
+	if t.focused {
+		screen.DrawBrutalistBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
+	} else {
+		screen.DrawBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
+	}
 	
 	// Set text area size based on box dimensions
 	t.SetSize(width-4, height-2) // -4 for borders and padding, -2 for top/bottom borders

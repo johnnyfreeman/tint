@@ -144,13 +144,21 @@ func (t *TabsComponent) drawAtPosition(screen *Screen, x, y, width, height int, 
 // drawTabsOnTop draws tabs on the top border
 func (t *TabsComponent) drawTabsOnTop(screen *Screen, x, y, width, height int, theme *Theme, borderStyle, contentStyle lipgloss.Style) {
 	// Draw top border with embedded tab titles
-	screen.DrawRune(x, y, '┌', borderStyle)
+	if t.focused {
+		screen.DrawRune(x, y, '┏', borderStyle)
+	} else {
+		screen.DrawRune(x, y, '┌', borderStyle)
+	}
 
 	currentX := x + 1
 	for i, tab := range t.tabs {
 		if i > 0 {
-			// Draw separator between tabs
-			screen.DrawRune(currentX, y, '─', borderStyle)
+			// Draw separator between tabs - bold when focused
+			if t.focused {
+				screen.DrawRune(currentX, y, '┃', borderStyle)
+			} else {
+				screen.DrawRune(currentX, y, '─', borderStyle)
+			}
 			currentX++
 		}
 
@@ -182,55 +190,97 @@ func (t *TabsComponent) drawTabsOnTop(screen *Screen, x, y, width, height int, t
 	}
 
 	// Fill rest of top border
-	for currentX < x+width-1 {
-		screen.DrawRune(currentX, y, '─', borderStyle)
-		currentX++
+	if t.focused {
+		for currentX < x+width-1 {
+			screen.DrawRune(currentX, y, '━', borderStyle)
+			currentX++
+		}
+		screen.DrawRune(x+width-1, y, '┓', borderStyle)
+	} else {
+		for currentX < x+width-1 {
+			screen.DrawRune(currentX, y, '─', borderStyle)
+			currentX++
+		}
+		screen.DrawRune(x+width-1, y, '┐', borderStyle)
 	}
-	screen.DrawRune(x+width-1, y, '┐', borderStyle)
 
-	// Draw sides
+	// Draw sides - heavy when focused
 	for i := 1; i < height-1; i++ {
-		screen.DrawRune(x, y+i, '│', borderStyle)
-		screen.DrawRune(x+width-1, y+i, '│', borderStyle)
+		if t.focused {
+			screen.DrawRune(x, y+i, '┃', borderStyle)
+			screen.DrawRune(x+width-1, y+i, '┃', borderStyle)
+		} else {
+			screen.DrawRune(x, y+i, '│', borderStyle)
+			screen.DrawRune(x+width-1, y+i, '│', borderStyle)
+		}
 	}
 
 	// Draw content
 	t.drawContent(screen, x, y+1, width, height-2, theme, contentStyle)
 
-	// Draw bottom border
-	screen.DrawRune(x, y+height-1, '└', borderStyle)
-	for i := 1; i < width-1; i++ {
-		screen.DrawRune(x+i, y+height-1, '─', borderStyle)
+	// Draw bottom border - heavy when focused
+	if t.focused {
+		screen.DrawRune(x, y+height-1, '┗', borderStyle)
+		for i := 1; i < width-1; i++ {
+			screen.DrawRune(x+i, y+height-1, '━', borderStyle)
+		}
+		screen.DrawRune(x+width-1, y+height-1, '┛', borderStyle)
+	} else {
+		screen.DrawRune(x, y+height-1, '└', borderStyle)
+		for i := 1; i < width-1; i++ {
+			screen.DrawRune(x+i, y+height-1, '─', borderStyle)
+		}
+		screen.DrawRune(x+width-1, y+height-1, '┘', borderStyle)
 	}
-	screen.DrawRune(x+width-1, y+height-1, '┘', borderStyle)
 }
 
 // drawTabsOnBottom draws tabs on the bottom border
 func (t *TabsComponent) drawTabsOnBottom(screen *Screen, x, y, width, height int, theme *Theme, borderStyle, contentStyle lipgloss.Style) {
-	// Draw top border
-	screen.DrawRune(x, y, '┌', borderStyle)
-	for i := 1; i < width-1; i++ {
-		screen.DrawRune(x+i, y, '─', borderStyle)
+	// Draw top border - heavy when focused
+	if t.focused {
+		screen.DrawRune(x, y, '┏', borderStyle)
+		for i := 1; i < width-1; i++ {
+			screen.DrawRune(x+i, y, '━', borderStyle)
+		}
+		screen.DrawRune(x+width-1, y, '┓', borderStyle)
+	} else {
+		screen.DrawRune(x, y, '┌', borderStyle)
+		for i := 1; i < width-1; i++ {
+			screen.DrawRune(x+i, y, '─', borderStyle)
+		}
+		screen.DrawRune(x+width-1, y, '┐', borderStyle)
 	}
-	screen.DrawRune(x+width-1, y, '┐', borderStyle)
 
-	// Draw sides
+	// Draw sides - heavy when focused
 	for i := 1; i < height-1; i++ {
-		screen.DrawRune(x, y+i, '│', borderStyle)
-		screen.DrawRune(x+width-1, y+i, '│', borderStyle)
+		if t.focused {
+			screen.DrawRune(x, y+i, '┃', borderStyle)
+			screen.DrawRune(x+width-1, y+i, '┃', borderStyle)
+		} else {
+			screen.DrawRune(x, y+i, '│', borderStyle)
+			screen.DrawRune(x+width-1, y+i, '│', borderStyle)
+		}
 	}
 
 	// Draw content
 	t.drawContent(screen, x, y+1, width, height-2, theme, contentStyle)
 
 	// Draw bottom border with embedded tab titles
-	screen.DrawRune(x, y+height-1, '└', borderStyle)
+	if t.focused {
+		screen.DrawRune(x, y+height-1, '┗', borderStyle)
+	} else {
+		screen.DrawRune(x, y+height-1, '└', borderStyle)
+	}
 
 	currentX := x + 1
 	for i, tab := range t.tabs {
 		if i > 0 {
-			// Draw separator between tabs
-			screen.DrawRune(currentX, y+height-1, '─', borderStyle)
+			// Draw separator between tabs - bold when focused
+			if t.focused {
+				screen.DrawRune(currentX, y+height-1, '┃', borderStyle)
+			} else {
+				screen.DrawRune(currentX, y+height-1, '─', borderStyle)
+			}
 			currentX++
 		}
 
@@ -261,12 +311,20 @@ func (t *TabsComponent) drawTabsOnBottom(screen *Screen, x, y, width, height int
 		currentX += len(title)
 	}
 
-	// Fill rest of bottom border
-	for currentX < x+width-1 {
-		screen.DrawRune(currentX, y+height-1, '─', borderStyle)
-		currentX++
+	// Fill rest of bottom border - heavy when focused
+	if t.focused {
+		for currentX < x+width-1 {
+			screen.DrawRune(currentX, y+height-1, '━', borderStyle)
+			currentX++
+		}
+		screen.DrawRune(x+width-1, y+height-1, '┛', borderStyle)
+	} else {
+		for currentX < x+width-1 {
+			screen.DrawRune(currentX, y+height-1, '─', borderStyle)
+			currentX++
+		}
+		screen.DrawRune(x+width-1, y+height-1, '┘', borderStyle)
 	}
-	screen.DrawRune(x+width-1, y+height-1, '┘', borderStyle)
 }
 
 // drawContent draws the content of the active tab

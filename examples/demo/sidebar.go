@@ -70,8 +70,12 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 		}
 	}
 	
-	// Draw box with title
-	screen.DrawBoxWithTitle(x, y, s.width, height, "Sidebar", borderStyle, titleStyle)
+	// Draw box with title - use heavy borders when focused
+	if focused {
+		screen.DrawBrutalistBoxWithTitle(x, y, s.width, height, "Sidebar", borderStyle, titleStyle)
+	} else {
+		screen.DrawBoxWithTitle(x, y, s.width, height, "Sidebar", borderStyle, titleStyle)
+	}
 
 	// Normal item style from theme
 	normalItemStyle := lipgloss.NewStyle().

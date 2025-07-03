@@ -230,7 +230,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 
 	// Draw column headers
 	currentX := x
-	for _, col := range t.columns {
+	for colIdx, col := range t.columns {
 		header := col.Title
 		if len(header) > col.Width {
 			header = header[:col.Width-1] + "…"
@@ -238,7 +238,24 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 		// Pad to column width
 		header = header + strings.Repeat(" ", col.Width-len(header))
 		screen.DrawString(currentX, y, header, headerStyle)
+		
+		// Draw bold column separator (except after last column)
+		if colIdx < len(t.columns)-1 {
+			separatorStyle := lipgloss.NewStyle().
+				Foreground(theme.Palette.Border).
+				Background(theme.Palette.Background)
+			screen.DrawRune(currentX+col.Width, y, '┃', separatorStyle)
+		}
+		
 		currentX += col.Width + 1 // +1 for separator
+	}
+	
+	// Draw bold horizontal line under headers
+	lineStyle := lipgloss.NewStyle().
+		Foreground(theme.Palette.Border).
+		Background(theme.Palette.Background)
+	for i := 0; i < t.getTableWidth(); i++ {
+		screen.DrawRune(x+i, y+1, '━', lineStyle)
 	}
 
 	// Draw rows
@@ -254,7 +271,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 		}
 
 		row := t.rows[rowIndex]
-		rowY := y + i + 1 // +1 for header
+		rowY := y + i + 2 // +2 for header and separator line
 
 		currentX = x
 		for colIndex, col := range t.columns {
@@ -312,6 +329,14 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 					screen.DrawRune(cursorX, rowY, cursorChar, cursorStyle)
 				}
 			}
+			
+			// Draw column separator (except after last column)
+			if colIndex < len(t.columns)-1 {
+				separatorStyle := lipgloss.NewStyle().
+					Foreground(theme.Palette.Border).
+					Background(theme.Palette.Background)
+				screen.DrawRune(currentX+col.Width, rowY, '┃', separatorStyle)
+			}
 
 			currentX += col.Width + 1
 		}
@@ -323,7 +348,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 			Foreground(theme.Palette.TextMuted).
 			Background(theme.Palette.Background).
 			Italic(true)
-		screen.DrawString(x, y+1, "No data. Press 'n' to add a row.", emptyStyle)
+		screen.DrawString(x, y+2, "No data. Press 'n' to add a row.", emptyStyle)
 	}
 
 	// Draw scroll indicator if needed
@@ -380,8 +405,12 @@ func (t *Table) DrawInBox(screen *Screen, x, y, width, height int, title string,
 		}
 	}
 	
-	// Draw box with title
-	screen.DrawBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
+	// Draw box with title - use heavy borders when focused
+	if t.focused {
+		screen.DrawBrutalistBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
+	} else {
+		screen.DrawBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
+	}
 	
 	// Set table height based on box height (minus borders and header)
 	t.SetHeight(height - 3) // -2 for borders, -1 for header
