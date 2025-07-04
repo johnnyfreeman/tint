@@ -28,6 +28,8 @@ examples/api-client/api-client
 examples/api-client/tint-api-client
 examples/text-editor/text-editor
 examples/text-editor/tint-text-editor
+examples/container-demo/container-demo
+examples/container-demo/tint-container-demo
 
 # IDE and editor files
 .idea/

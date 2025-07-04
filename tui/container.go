@@ -15,6 +15,7 @@ type Container struct {
 	height     int
 	focused    bool
 	borderStyle string // "single", "double", "heavy", "rounded"
+	borderElements []BorderElement
 }
 
 // NewContainer creates a new container
@@ -23,6 +24,7 @@ func NewContainer() *Container {
 		showBorder:  true,
 		padding:     NewMargin(1),
 		borderStyle: "single",
+		borderElements: []BorderElement{},
 	}
 }
 
@@ -31,10 +33,6 @@ func (c *Container) SetContent(component Component) {
 	c.content = component
 }
 
-// SetTitle sets the container title
-func (c *Container) SetTitle(title string) {
-	c.title = title
-}
 
 // SetShowBorder sets whether to show the border
 func (c *Container) SetShowBorder(show bool) {
@@ -50,6 +48,48 @@ func (c *Container) SetPadding(padding Margin) {
 // Options: "single", "double", "heavy", "rounded"
 func (c *Container) SetBorderStyle(style string) {
 	c.borderStyle = style
+}
+
+// AddBorderElement adds an inline element to the border
+func (c *Container) AddBorderElement(element InlineElement, position BorderPosition, alignment BorderAlignment) {
+	c.borderElements = append(c.borderElements, BorderElement{
+		Element:   element,
+		Position:  position,
+		Alignment: alignment,
+	})
+}
+
+// AddBorderElementWithOffset adds an inline element with a specific offset
+func (c *Container) AddBorderElementWithOffset(element InlineElement, position BorderPosition, alignment BorderAlignment, offset int) {
+	c.borderElements = append(c.borderElements, BorderElement{
+		Element:   element,
+		Position:  position,
+		Alignment: alignment,
+		Offset:    offset,
+	})
+}
+
+// ClearBorderElements removes all border elements
+func (c *Container) ClearBorderElements() {
+	c.borderElements = []BorderElement{}
+}
+
+// SetTitle is a convenience method that adds a title as a border element
+func (c *Container) SetTitle(title string) {
+	c.title = title
+	// Remove any existing title elements
+	newElements := []BorderElement{}
+	for _, elem := range c.borderElements {
+		if _, isText := elem.Element.(*TextElement); !isText || elem.Position != BorderTop || elem.Alignment != BorderAlignLeft {
+			newElements = append(newElements, elem)
+		}
+	}
+	c.borderElements = newElements
+	
+	// Add title as a border element if not empty
+	if title != "" {
+		c.AddBorderElementWithOffset(NewTextElement(title), BorderTop, BorderAlignLeft, 2)
+	}
 }
 
 // Draw renders the container to the screen
@@ -88,38 +128,17 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 		// Draw border based on style
 		switch c.borderStyle {
 		case "double":
-			c.drawDoubleBorder(screen, x, y, width, height, borderStyle)
+			c.drawDoubleBorder(screen, x, y, width, height, borderStyle, theme)
 		case "heavy", "bold":
 			if c.focused {
-				c.drawHeavyBorder(screen, x, y, width, height, borderStyle)
+				c.drawHeavyBorder(screen, x, y, width, height, borderStyle, theme)
 			} else {
-				c.drawSingleBorder(screen, x, y, width, height, borderStyle)
+				c.drawSingleBorder(screen, x, y, width, height, borderStyle, theme)
 			}
 		case "rounded":
-			c.drawRoundedBorder(screen, x, y, width, height, borderStyle)
+			c.drawRoundedBorder(screen, x, y, width, height, borderStyle, theme)
 		default:
-			c.drawSingleBorder(screen, x, y, width, height, borderStyle)
-		}
-
-		// Draw title if present
-		if c.title != "" {
-			titleStyle := lipgloss.NewStyle().
-				Foreground(theme.Palette.Text).
-				Background(theme.Palette.Background).
-				Bold(true)
-			
-			// Calculate title position
-			titleText := " " + c.title + " "
-			titleX := x + 2
-			if titleX+len(titleText) > x+width-2 {
-				// Truncate title if too long
-				maxLen := width - 4
-				if maxLen > 0 && len(titleText) > maxLen {
-					titleText = titleText[:maxLen-3] + "..."
-				}
-			}
-			
-			screen.DrawString(titleX, y, titleText, titleStyle)
+			c.drawSingleBorder(screen, x, y, width, height, borderStyle, theme)
 		}
 
 		// Adjust content area for border
@@ -148,18 +167,88 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 	}
 }
 
-func (c *Container) drawSingleBorder(screen *Screen, x, y, width, height int, style lipgloss.Style) {
+// drawHorizontalBorderWithElements draws a horizontal border line with embedded elements
+func (c *Container) drawHorizontalBorderWithElements(screen *Screen, x, y, width int, position BorderPosition, borderChar rune, borderStyle lipgloss.Style, theme *Theme) {
+	// First, draw the entire border line
+	for i := 1; i < width-1; i++ {
+		screen.DrawRune(x+i, y, borderChar, borderStyle)
+	}
+	
+	// Then draw elements on top
+	elements := c.getElementsForPosition(position)
+	if len(elements) == 0 {
+		return
+	}
+	
+	// Group elements by alignment
+	leftElements := []BorderElement{}
+	centerElements := []BorderElement{}
+	rightElements := []BorderElement{}
+	
+	for _, elem := range elements {
+		switch elem.Alignment {
+		case BorderAlignLeft:
+			leftElements = append(leftElements, elem)
+		case BorderAlignCenter:
+			centerElements = append(centerElements, elem)
+		case BorderAlignRight:
+			rightElements = append(rightElements, elem)
+		}
+	}
+	
+	// Draw left-aligned elements
+	currentX := x + 1
+	for _, elem := range leftElements {
+		currentX += elem.Offset
+		if currentX+elem.Element.Width() < x+width-1 {
+			width := elem.Element.Draw(screen, currentX, y, theme, c.focused)
+			currentX += width
+		}
+	}
+	
+	// Draw center-aligned elements
+	for _, elem := range centerElements {
+		elemWidth := elem.Element.Width()
+		centerX := x + (width-elemWidth)/2 + elem.Offset
+		if centerX > x && centerX+elemWidth < x+width-1 {
+			elem.Element.Draw(screen, centerX, y, theme, c.focused)
+		}
+	}
+	
+	// Draw right-aligned elements
+	for i := len(rightElements) - 1; i >= 0; i-- {
+		elem := rightElements[i]
+		elemWidth := elem.Element.Width()
+		rightX := x + width - 1 - elemWidth - elem.Offset
+		if rightX > x {
+			elem.Element.Draw(screen, rightX, y, theme, c.focused)
+		}
+	}
+}
+
+// getElementsForPosition returns all elements for a given border position
+func (c *Container) getElementsForPosition(position BorderPosition) []BorderElement {
+	result := []BorderElement{}
+	for _, elem := range c.borderElements {
+		if elem.Position == position {
+			result = append(result, elem)
+		}
+	}
+	return result
+}
+
+func (c *Container) drawSingleBorder(screen *Screen, x, y, width, height int, style lipgloss.Style, theme *Theme) {
 	// Corners
 	screen.DrawRune(x, y, '┌', style)
 	screen.DrawRune(x+width-1, y, '┐', style)
 	screen.DrawRune(x, y+height-1, '└', style)
 	screen.DrawRune(x+width-1, y+height-1, '┘', style)
 
-	// Horizontal lines
-	for i := 1; i < width-1; i++ {
-		screen.DrawRune(x+i, y, '─', style)
-		screen.DrawRune(x+i, y+height-1, '─', style)
-	}
+	// Top border
+	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '─', style, theme)
+	
+	// Bottom border
+	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '─', style, theme)
 
 	// Vertical lines
 	for i := 1; i < height-1; i++ {
@@ -168,18 +257,18 @@ func (c *Container) drawSingleBorder(screen *Screen, x, y, width, height int, st
 	}
 }
 
-func (c *Container) drawDoubleBorder(screen *Screen, x, y, width, height int, style lipgloss.Style) {
+func (c *Container) drawDoubleBorder(screen *Screen, x, y, width, height int, style lipgloss.Style, theme *Theme) {
 	// Corners
 	screen.DrawRune(x, y, '╔', style)
 	screen.DrawRune(x+width-1, y, '╗', style)
 	screen.DrawRune(x, y+height-1, '╚', style)
 	screen.DrawRune(x+width-1, y+height-1, '╝', style)
 
-	// Horizontal lines
-	for i := 1; i < width-1; i++ {
-		screen.DrawRune(x+i, y, '═', style)
-		screen.DrawRune(x+i, y+height-1, '═', style)
-	}
+	// Top border
+	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '═', style, theme)
+	
+	// Bottom border
+	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '═', style, theme)
 
 	// Vertical lines
 	for i := 1; i < height-1; i++ {
@@ -188,18 +277,18 @@ func (c *Container) drawDoubleBorder(screen *Screen, x, y, width, height int, st
 	}
 }
 
-func (c *Container) drawHeavyBorder(screen *Screen, x, y, width, height int, style lipgloss.Style) {
+func (c *Container) drawHeavyBorder(screen *Screen, x, y, width, height int, style lipgloss.Style, theme *Theme) {
 	// Corners
 	screen.DrawRune(x, y, '┏', style)
 	screen.DrawRune(x+width-1, y, '┓', style)
 	screen.DrawRune(x, y+height-1, '┗', style)
 	screen.DrawRune(x+width-1, y+height-1, '┛', style)
 
-	// Horizontal lines
-	for i := 1; i < width-1; i++ {
-		screen.DrawRune(x+i, y, '━', style)
-		screen.DrawRune(x+i, y+height-1, '━', style)
-	}
+	// Top border
+	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '━', style, theme)
+	
+	// Bottom border
+	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '━', style, theme)
 
 	// Vertical lines
 	for i := 1; i < height-1; i++ {
@@ -208,18 +297,18 @@ func (c *Container) drawHeavyBorder(screen *Screen, x, y, width, height int, sty
 	}
 }
 
-func (c *Container) drawRoundedBorder(screen *Screen, x, y, width, height int, style lipgloss.Style) {
+func (c *Container) drawRoundedBorder(screen *Screen, x, y, width, height int, style lipgloss.Style, theme *Theme) {
 	// Corners
 	screen.DrawRune(x, y, '╭', style)
 	screen.DrawRune(x+width-1, y, '╮', style)
 	screen.DrawRune(x, y+height-1, '╰', style)
 	screen.DrawRune(x+width-1, y+height-1, '╯', style)
 
-	// Horizontal lines
-	for i := 1; i < width-1; i++ {
-		screen.DrawRune(x+i, y, '─', style)
-		screen.DrawRune(x+i, y+height-1, '─', style)
-	}
+	// Top border
+	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '─', style, theme)
+	
+	// Bottom border
+	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '─', style, theme)
 
 	// Vertical lines
 	for i := 1; i < height-1; i++ {

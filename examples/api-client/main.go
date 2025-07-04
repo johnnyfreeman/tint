@@ -48,6 +48,10 @@ type model struct {
 	headersContainer  *tui.Container
 	bodyContainer     *tui.Container
 	responseContainer *tui.Container
+	
+	// Tab elements for dynamic updates
+	responseTabs      *tui.TabsElement
+	headerCountBadge  *tui.BadgeElement
 }
 
 type Header struct {
@@ -95,10 +99,12 @@ func initialModel() model {
 	splitView.SetSplit(30) // 30 pixels for history
 	splitView.SetShowBorder(true)
 	
-	// Create containers
+	// Create containers with enhanced border elements
 	historyContainer := tui.NewContainer()
 	historyContainer.SetTitle("History")
 	historyContainer.SetPadding(tui.NewMargin(1))
+	// Add a count badge for history items
+	historyContainer.AddBorderElement(tui.NewBadgeElement("3"), tui.BorderTop, tui.BorderAlignRight)
 	
 	urlContainer := tui.NewContainer()
 	urlContainer.SetTitle("Request URL")
@@ -109,16 +115,27 @@ func initialModel() model {
 	headersContainer.SetTitle("Headers")
 	headersContainer.SetPadding(tui.NewMargin(1))
 	headersContainer.SetContent(headersTable)
+	// Add a count badge showing number of headers
+	headerCountBadge := tui.NewBadgeElement("2")
+	headersContainer.AddBorderElement(headerCountBadge, tui.BorderTop, tui.BorderAlignRight)
 	
 	bodyContainer := tui.NewContainer()
 	bodyContainer.SetTitle("Body")
 	bodyContainer.SetPadding(tui.NewMargin(1))
 	bodyContainer.SetContent(bodyTextArea)
+	// Add format indicator
+	bodyContainer.AddBorderElement(tui.NewTextElement("JSON"), tui.BorderTop, tui.BorderAlignRight)
 	
 	responseContainer := tui.NewContainer()
 	responseContainer.SetTitle("Response")
 	responseContainer.SetPadding(tui.NewMargin(1))
 	responseContainer.SetContent(responseViewer)
+	// Add tabs for different response views
+	responseTabs := tui.NewTabsElement([]string{"Body", "Headers", "Status"})
+	responseTabs.SetActiveTab(0)
+	responseContainer.AddBorderElement(responseTabs, tui.BorderTop, tui.BorderAlignCenter)
+	// Add status indicator
+	responseContainer.AddBorderElement(tui.NewStatusElement("Ready"), tui.BorderTop, tui.BorderAlignRight)
 	
 	return model{
 		width:         80,
@@ -130,6 +147,7 @@ func initialModel() model {
 		headersTable:   headersTable,
 		bodyTextArea:   bodyTextArea,
 		responseTab:    0,
+		responseTabs:   responseTabs,
 		responseViewer: responseViewer,
 		history: []HistoryItem{
 			{Method: "GET", URL: "https://api.github.com/users/github", Time: "10:23:45"},
@@ -146,6 +164,7 @@ func initialModel() model {
 		headersContainer:  headersContainer,
 		bodyContainer:     bodyContainer,
 		responseContainer: responseContainer,
+		headerCountBadge:  headerCountBadge,
 	}
 }
 
@@ -367,6 +386,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.responseTab = 1
 				case "3":
 					m.responseTab = 2
+				}
+				// Update the tabs element to reflect the change
+				if m.responseTabs != nil {
+					m.responseTabs.SetActiveTab(m.responseTab)
 				}
 			}
 		}
