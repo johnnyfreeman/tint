@@ -23,7 +23,11 @@ dist/
 
 # Example binaries
 examples/demo/demo
+examples/demo/tint-demo
 examples/api-client/api-client
+examples/api-client/tint-api-client
+examples/text-editor/text-editor
+examples/text-editor/tint-text-editor
 
 # IDE and editor files
 .idea/
