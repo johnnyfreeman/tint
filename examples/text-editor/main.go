@@ -197,7 +197,7 @@ type model struct {
 	helpViewer     *helpViewerComponent
 	tabs           *tui.TabsComponent
 	notification   *tui.Notification
-	statusBar      string
+	statusBar      *tui.StatusBar
 	
 	// Demo data
 	openFiles []string
@@ -344,6 +344,13 @@ func main() {
 		viewer: viewer,
 	}
 	
+	// Create status bar
+	statusBar := tui.NewStatusBar()
+	statusBar.AddSegment("NORMAL", "left")
+	statusBar.AddSegment("main.go | Go", "left")
+	statusBar.AddSegment("Ln 5, Col 12", "center")
+	statusBar.AddSegment("UTF-8 | Spaces: 4", "right")
+	
 	return &model{
 		screen:       tui.NewScreen(defaultWidth, defaultHeight),
 		width:        defaultWidth,
@@ -357,7 +364,7 @@ func main() {
 		helpViewer:   helpViewer,
 		tabs:         tabs,
 		notification: notification,
-		statusBar:    " NORMAL | main.go | Go | Ln 5, Col 12 | UTF-8 | Spaces: 4",
+		statusBar:    statusBar,
 		openFiles:    []string{"main.go", "config.go", "README.md"},
 		activeTab:    0,
 		unsavedFiles: make(map[string]bool),
@@ -753,10 +760,6 @@ func (m *model) updateEditorContent() {
 	} else {
 		m.editor.SetValue(fmt.Sprintf("// %s\n// File content would appear here", filename))
 	}
-	
-	// Update status bar
-	m.statusBar = fmt.Sprintf(" NORMAL | %s | %s | Ln 1, Col 1 | UTF-8 | Spaces: 4", 
-		filename, getFileType(filename))
 }
 
 func (m *model) drawTabBar(x, y, width int) {
@@ -805,25 +808,15 @@ func (m *model) drawTabBar(x, y, width int) {
 }
 
 func (m *model) drawStatusBar() {
-	y := m.height - 1
-	style := lipgloss.NewStyle().
-		Background(m.theme.Palette.Surface).
-		Foreground(m.theme.Palette.TextMuted)
+	// Update status bar segments based on current state
+	m.statusBar.Clear()
+	m.statusBar.AddSegment("NORMAL", "left")
+	m.statusBar.AddSegment(fmt.Sprintf("%s | %s", m.openFiles[m.activeTab], getFileType(m.openFiles[m.activeTab])), "left")
+	m.statusBar.AddSegment("Ln 1, Col 1", "center")
+	m.statusBar.AddSegment("?:help p:find e:explore s:settings q:quit", "right")
 	
-	// Clear the line
-	for x := 0; x < m.width; x++ {
-		m.screen.SetCell(x, y, tui.Cell{
-			Rune:       ' ',
-			Background: m.theme.Palette.Surface,
-		})
-	}
-	
-	// Draw status text
-	m.screen.DrawString(0, y, m.statusBar, style)
-	
-	// Draw right-aligned info with shortcuts hint
-	rightInfo := "?:help p:find e:explore s:settings q:quit"
-	m.screen.DrawString(m.width-len(rightInfo)-1, y, rightInfo, style)
+	// Draw the status bar
+	m.statusBar.Draw(m.screen, 0, m.height-1, &m.theme)
 }
 
 func (m *model) drawFuzzyFinder() {

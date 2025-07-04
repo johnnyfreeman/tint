@@ -19,12 +19,18 @@ type model struct {
 	modal        *tui.Modal
 	notification *tui.Notification
 	themePicker  *ThemePicker
+	statusBar    *tui.StatusBar
 	width        int
 	height       int
 	focus        string // "sidebar", "tabs", "modal", "themepicker"
 }
 
 func initialModel() model {
+	// Set up status bar
+	statusBar := tui.NewStatusBar()
+	statusBar.AddSegment("Tab: focus", "left")
+	statusBar.AddSegment("Ctrl+B: sidebar | 1-3: tabs | m: modal | n/s/w/e: notif | t: theme | q: quit", "right")
+	
 	return model{
 		screen:       tui.NewScreen(80, 24),
 		sidebar:      NewSidebar(),
@@ -32,6 +38,7 @@ func initialModel() model {
 		modal:        createDemoModal(),
 		notification: tui.NewNotification(),
 		themePicker:  NewThemePicker(),
+		statusBar:    statusBar,
 		width:        80,
 		height:       24,
 		focus:        "tabs",
@@ -163,7 +170,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
-		m.height = msg.Height - 1 // Reserve space for help line
+		m.height = msg.Height
 		m.screen = tui.NewScreen(m.width, m.height)
 
 	case tickMsg:
@@ -190,13 +197,16 @@ func (m model) View() string {
 	}
 	tabsWidth := m.width - tabsX
 
+	// Calculate content height (minus status bar)
+	contentHeight := m.height - 1
+	
 	// Draw sidebar
-	m.sidebar.DrawWithTheme(m.screen, 0, 0, m.height, theme, m.focus == "sidebar")
+	m.sidebar.DrawWithTheme(m.screen, 0, 0, contentHeight, theme, m.focus == "sidebar")
 
 	// Fill gap between sidebar and tabs if sidebar is visible
 	if sidebarWidth > 0 && tabsX > sidebarWidth {
 		gapStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-		for y := 0; y < m.height; y++ {
+		for y := 0; y < contentHeight; y++ {
 			m.screen.DrawRune(sidebarWidth, y, ' ', gapStyle)
 		}
 	}
@@ -207,7 +217,7 @@ func (m model) View() string {
 	} else {
 		m.tabs.Blur()
 	}
-	m.tabs.SetSize(tabsWidth, m.height)
+	m.tabs.SetSize(tabsWidth, contentHeight)
 	m.tabs.Draw(m.screen, tabsX, 0, &theme)
 
 	// Draw modal
@@ -224,19 +234,11 @@ func (m model) View() string {
 	// Draw theme picker (always on top)
 	m.themePicker.DrawWithTheme(m.screen, &theme, m.focus == "themepicker")
 
-	// Render screen to string
-	content := m.screen.Render()
-
-	// Add help text at the bottom
-	helpStyle := lipgloss.NewStyle().
-		Foreground(theme.Palette.TextMuted).
-		Background(theme.Palette.Background).
-		Italic(true).
-		Width(m.width)
-	helpText := "Tab: focus • Ctrl+B: sidebar • 1-3: tabs • m: modal • n/s/w/e: notif • t: theme • q: quit"
-	help := helpStyle.Render(helpText)
+	// Draw status bar at the bottom
+	m.statusBar.Draw(m.screen, 0, m.height-1, &theme)
 	
-	return content + "\n" + help
+	// Render screen to string
+	return m.screen.Render()
 }
 
 func createDemoTabs() *tui.TabsComponent {

@@ -37,6 +37,10 @@ type model struct {
 
 	// Current theme
 	currentTheme string
+	
+	// New components
+	statusBar *tui.StatusBar
+	splitView *tui.SplitView
 }
 
 type Header struct {
@@ -74,6 +78,16 @@ func initialModel() model {
 	responseViewer := tui.NewViewer()
 	responseViewer.SetWrapText(true)
 	
+	// Create status bar
+	statusBar := tui.NewStatusBar()
+	statusBar.AddSegment("Tab: focus", "left")
+	statusBar.AddSegment("H: history | R: send | M: method | 1-3: tabs | n/d: table | arrows: nav | q: quit", "right")
+	
+	// Create split view for history sidebar
+	splitView := tui.NewSplitView(true) // vertical split
+	splitView.SetSplit(30) // 30 pixels for history
+	splitView.SetShowBorder(true)
+	
 	return model{
 		width:         80,
 		height:        24,
@@ -93,6 +107,8 @@ func initialModel() model {
 		historyIndex:   0,
 		historyVisible: true,
 		currentTheme:   "tokyonight",
+		statusBar:      statusBar,
+		splitView:      splitView,
 	}
 }
 
@@ -320,7 +336,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
-		m.height = msg.Height - 1 // Reserve space for help line
+		m.height = msg.Height
 		m.screen = tui.NewScreen(m.width, m.height)
 	}
 
@@ -362,19 +378,11 @@ func (m model) View() string {
 	// Draw main area
 	m.drawMainArea(theme, mainX, mainWidth)
 
-	// Render screen to string
-	content := m.screen.Render()
-
-	// Add help text at the bottom
-	helpStyle := lipgloss.NewStyle().
-		Foreground(theme.Palette.TextMuted).
-		Background(theme.Palette.Background).
-		Italic(true).
-		Width(m.width)
-	helpText := "Tab: focus • H: history • R: send • M: method • 1-3: tabs • n/d: table • arrows: nav • q: quit"
-	help := helpStyle.Render(helpText)
+	// Draw status bar at the bottom
+	m.statusBar.Draw(m.screen, 0, m.height-1, &theme)
 	
-	return content + "\n" + help
+	// Render screen to string
+	return m.screen.Render()
 }
 
 func (m *model) drawHistory(theme tui.Theme, width int) {
