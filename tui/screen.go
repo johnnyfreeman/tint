@@ -9,21 +9,26 @@ type Screen struct {
 	width  int
 	height int
 	cells  [][]Cell
+	theme  Theme
 }
 
-func NewScreen(width, height int) *Screen {
-	cells := make([][]Cell, height)
-	for i := range cells {
-		cells[i] = make([]Cell, width)
-		for j := range cells[i] {
-			cells[i][j] = NewCell(' ')
-		}
-	}
-	return &Screen{
+func NewScreen(width, height int, theme Theme) *Screen {
+	s := &Screen{
 		width:  width,
 		height: height,
-		cells:  cells,
+		theme:  theme,
 	}
+	s.cells = make([][]Cell, height)
+	for i := range s.cells {
+		s.cells[i] = make([]Cell, width)
+	}
+	s.Clear() // Clear with theme background
+	return s
+}
+
+// NewDefaultScreen creates a new screen with the default theme
+func NewDefaultScreen(width, height int) *Screen {
+	return NewScreen(width, height, DefaultTheme)
 }
 
 func (s *Screen) SetCell(x, y int, cell Cell) {
@@ -83,14 +88,9 @@ func (s *Screen) DrawString(x, y int, str string, style lipgloss.Style) {
 }
 
 func (s *Screen) Clear() {
-	for y := 0; y < s.height; y++ {
-		for x := 0; x < s.width; x++ {
-			s.cells[y][x] = NewCell(' ')
-		}
-	}
-}
-
-func (s *Screen) ClearWithStyle(style lipgloss.Style) {
+	style := lipgloss.NewStyle().
+		Background(s.theme.Palette.Background).
+		Foreground(s.theme.Palette.Text)
 	for y := 0; y < s.height; y++ {
 		for x := 0; x < s.width; x++ {
 			s.cells[y][x] = NewCell(' ').WithStyle(style)
@@ -98,12 +98,17 @@ func (s *Screen) ClearWithStyle(style lipgloss.Style) {
 	}
 }
 
+
 func (s *Screen) Width() int {
 	return s.width
 }
 
 func (s *Screen) Height() int {
 	return s.height
+}
+
+func (s *Screen) Theme() Theme {
+	return s.theme
 }
 
 func (s *Screen) DrawBox(x, y, width, height int, style lipgloss.Style) {

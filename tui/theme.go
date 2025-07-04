@@ -558,6 +558,9 @@ func createMonochromeTheme() Theme {
 	}
 }
 
+// DefaultTheme is the default theme used when no theme is specified
+var DefaultTheme = GetTheme("monochrome")
+
 // GetTheme returns a theme by name
 func GetTheme(name string) Theme {
 	if theme, ok := Themes[name]; ok {

@@ -8,8 +8,8 @@ import (
 
 func main() {
 	// Create a small screen to test theme picker rendering
-	screen := tui.NewScreen(50, 15)
 	theme := tui.GetTheme("monochrome")
+	screen := tui.NewScreen(50, 15, theme)
 	
 	// Simulate theme picker states
 	themes := []string{"tokyonight", "rosepine", "catppuccin", "monochrome"}

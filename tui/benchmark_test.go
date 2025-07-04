@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkScreenRender(b *testing.B) {
-	screen := NewScreen(80, 25)
+	screen := NewDefaultScreen(80, 25)
 	style := lipgloss.NewStyle()
 	
 	// Fill screen with content
@@ -22,7 +22,7 @@ func BenchmarkScreenRender(b *testing.B) {
 }
 
 func BenchmarkScreenDrawString(b *testing.B) {
-	screen := NewScreen(80, 25)
+	screen := NewDefaultScreen(80, 25)
 	style := lipgloss.NewStyle()
 	text := "Hello, World!"
 	
@@ -33,7 +33,7 @@ func BenchmarkScreenDrawString(b *testing.B) {
 }
 
 func BenchmarkScreenDrawUnicode(b *testing.B) {
-	screen := NewScreen(80, 25)
+	screen := NewDefaultScreen(80, 25)
 	style := lipgloss.NewStyle()
 	text := "こんにちは世界🌍"
 	
@@ -109,7 +109,7 @@ func BenchmarkTextAreaInsert(b *testing.B) {
 }
 
 func BenchmarkTableDraw(b *testing.B) {
-	screen := NewScreen(80, 25)
+	screen := NewDefaultScreen(80, 25)
 	theme := NewTestTheme()
 	
 	table := NewTable()
@@ -138,7 +138,7 @@ func BenchmarkTableDraw(b *testing.B) {
 }
 
 func BenchmarkContainerDraw(b *testing.B) {
-	screen := NewScreen(80, 25)
+	screen := NewDefaultScreen(80, 25)
 	theme := NewTestTheme()
 	
 	container := NewContainer()
@@ -157,7 +157,7 @@ func BenchmarkContainerDraw(b *testing.B) {
 }
 
 func BenchmarkScreenClearArea(b *testing.B) {
-	screen := NewScreen(80, 25)
+	screen := NewDefaultScreen(80, 25)
 	style := lipgloss.NewStyle().Background(lipgloss.Color("#FF0000"))
 	
 	b.ResetTimer()
@@ -167,7 +167,7 @@ func BenchmarkScreenClearArea(b *testing.B) {
 }
 
 func BenchmarkWideCharacterHandling(b *testing.B) {
-	screen := NewScreen(80, 25)
+	screen := NewDefaultScreen(80, 25)
 	style := lipgloss.NewStyle()
 	
 	// Mix of regular and wide characters

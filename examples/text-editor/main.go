@@ -18,14 +18,18 @@ const (
 	explorerWidth = 28
 	
 	// Modal dimensions
-	fuzzyFinderWidth  = 60
-	fuzzyFinderHeight = 20
+	fuzzyFinderWidth  = 90
+	fuzzyFinderHeight = 30
 	settingsWidth     = 50
 	settingsHeight    = 13
 	
 	// UI constraints
 	maxFuzzyResults = 14
 	modalPadding    = 2
+	
+	// Fuzzy finder layout
+	searchContainerHeight = 3
+	resultsContainerWidth = 35
 )
 
 // Demo data
@@ -210,11 +214,14 @@ type model struct {
 
 type fuzzyFinderComponent struct {
 	*tui.Modal
-	input    *tui.Input
-	results  *tui.Table
-	allFiles []string
-	filtered []string
-	selectedIdx int
+	searchContainer   *tui.Container
+	resultsContainer  *tui.Container
+	previewContainer  *tui.Container
+	input            *tui.Input
+	previewViewer    *tui.Viewer
+	allFiles         []string
+	filtered         []string
+	selectedIdx      int
 }
 
 type settingsComponent struct {
@@ -273,27 +280,39 @@ func main() {
 	})
 	
 	// Create fuzzy finder
+	fuzzyModal := tui.NewModal() // Still keep modal for Show/Hide state
+	
+	// Search container
+	searchContainer := tui.NewContainer()
+	searchContainer.SetTitle("Search")
+	searchContainer.SetPadding(tui.NewMargin(1))
+	
 	fuzzyInput := tui.NewInput()
 	fuzzyInput.SetPlaceholder("Type to search files...")
-	fuzzyInput.SetWidth(fuzzyFinderWidth - 2*modalPadding)
+	searchContainer.SetContent(fuzzyInput)
 	
-	fuzzyModal := tui.NewModal()
-	fuzzyModal.SetTitle("🔍 Find File")
-	fuzzyModal.SetSize(fuzzyFinderWidth, fuzzyFinderHeight)
-	fuzzyModal.SetCentered(true)
+	// Results container
+	resultsContainer := tui.NewContainer()
+	resultsContainer.SetTitle("Results")
+	resultsContainer.SetPadding(tui.NewMargin(1))
 	
-	fuzzyResults := tui.NewTable()
-	fuzzyResults.SetColumns([]tui.TableColumn{
-		{Title: "File", Width: 40},
-		{Title: "Path", Width: 18},
-	})
+	// Preview container
+	previewContainer := tui.NewContainer()
+	previewContainer.SetTitle("Preview")
+	previewContainer.SetPadding(tui.NewMargin(1))
+	
+	previewViewer := tui.NewViewer()
+	previewContainer.SetContent(previewViewer)
 	
 	fuzzyFinder := &fuzzyFinderComponent{
-		Modal:    fuzzyModal,
-		input:    fuzzyInput,
-		results:  fuzzyResults,
-		allFiles: demoFiles,
-		filtered: []string{},
+		Modal:            fuzzyModal,
+		searchContainer:  searchContainer,
+		resultsContainer: resultsContainer,
+		previewContainer: previewContainer,
+		input:           fuzzyInput,
+		previewViewer:   previewViewer,
+		allFiles:        demoFiles,
+		filtered:        []string{},
 	}
 	
 	// Create settings
@@ -352,7 +371,7 @@ func main() {
 	statusBar.AddSegment("UTF-8 | Spaces: 4", "right")
 	
 	return &model{
-		screen:       tui.NewScreen(defaultWidth, defaultHeight),
+		screen:       tui.NewScreen(defaultWidth, defaultHeight, theme),
 		width:        defaultWidth,
 		height:       defaultHeight,
 		theme:        theme,
@@ -393,7 +412,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.screen = tui.NewScreen(m.width, m.height)
+		m.screen = tui.NewScreen(m.width, m.height, m.theme)
 		
 	case tickMsg:
 		// Update notification (handles auto-hide)
@@ -454,6 +473,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.fuzzyFinder.Show()
 			m.fuzzyFinder.input.Focus()
 			m.fuzzyFinder.input.SetValue("")
+			m.fuzzyFinder.selectedIdx = 0
 			m.updateFuzzyResults("")
 			return m, nil
 			
@@ -638,14 +658,14 @@ func (m *model) View() string {
 
 func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 	switch msg.String() {
-	case "up":
+	case "up", "k":
 		// Navigate results up
 		if m.fuzzyFinder.selectedIdx > 0 {
 			m.fuzzyFinder.selectedIdx--
 		}
-	case "down":
+	case "down", "j":
 		// Navigate results down
-		if m.fuzzyFinder.selectedIdx < len(m.fuzzyFinder.filtered)-1 {
+		if m.fuzzyFinder.selectedIdx < len(m.fuzzyFinder.filtered)-1 && m.fuzzyFinder.selectedIdx < maxFuzzyResults-1 {
 			m.fuzzyFinder.selectedIdx++
 		}
 	case "enter":
@@ -657,9 +677,25 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 			m.activeView = "editor"
 		}
 	case "escape", "esc":
-		// Don't pass escape to input
+		// Close fuzzy finder without action
 		return
+	case "ctrl+u", "ctrl+d":
+		// Optional: scroll preview up/down
+		if msg.String() == "ctrl+u" {
+			m.fuzzyFinder.previewViewer.HandleInput("up")
+			m.fuzzyFinder.previewViewer.HandleInput("up")
+			m.fuzzyFinder.previewViewer.HandleInput("up")
+			m.fuzzyFinder.previewViewer.HandleInput("up")
+			m.fuzzyFinder.previewViewer.HandleInput("up")
+		} else {
+			m.fuzzyFinder.previewViewer.HandleInput("down")
+			m.fuzzyFinder.previewViewer.HandleInput("down")
+			m.fuzzyFinder.previewViewer.HandleInput("down")
+			m.fuzzyFinder.previewViewer.HandleInput("down")
+			m.fuzzyFinder.previewViewer.HandleInput("down")
+		}
 	default:
+		// All other input goes to the search field
 		m.fuzzyFinder.input.HandleInput(msg.String())
 		m.updateFuzzyResults(m.fuzzyFinder.input.Value())
 	}
@@ -669,32 +705,18 @@ func (m *model) updateFuzzyResults(query string) {
 	m.fuzzyFinder.filtered = []string{}
 	
 	if query == "" {
-		m.fuzzyFinder.filtered = m.fuzzyFinder.allFiles[:8] // Show first 8 files
+		// Show all files when query is empty
+		m.fuzzyFinder.filtered = m.fuzzyFinder.allFiles
 	} else {
 		query = strings.ToLower(query)
 		for _, file := range m.fuzzyFinder.allFiles {
 			if strings.Contains(strings.ToLower(file), query) {
 				m.fuzzyFinder.filtered = append(m.fuzzyFinder.filtered, file)
-				if len(m.fuzzyFinder.filtered) >= 8 {
-					break
-				}
 			}
 		}
 	}
 	
-	// Update results table
-	var rows []tui.TableRow
-	for _, file := range m.fuzzyFinder.filtered {
-		path := "src/"
-		if strings.HasSuffix(file, "_test.go") {
-			path = "tests/"
-		} else if strings.HasSuffix(file, ".md") {
-			path = "docs/"
-		}
-		rows = append(rows, tui.TableRow{file, path})
-	}
-	m.fuzzyFinder.results.SetRows(rows)
-	// Reset selection to first row
+	// Reset selection when results change
 	m.fuzzyFinder.selectedIdx = 0
 }
 
@@ -823,15 +845,49 @@ func (m *model) drawFuzzyFinder() {
 	modalX := (m.width - fuzzyFinderWidth) / 2
 	modalY := (m.height - fuzzyFinderHeight) / 2
 	
-	// Draw modal
-	m.fuzzyFinder.Modal.SetSize(fuzzyFinderWidth, fuzzyFinderHeight)
-	m.fuzzyFinder.Modal.Draw(m.screen, modalX, modalY, &m.theme)
+	// Draw shadow with 1 pixel offset to bottom-right
+	// This creates a subtle depth effect
+	for dy := 0; dy < fuzzyFinderHeight; dy++ {
+		m.screen.SetCell(modalX+fuzzyFinderWidth, modalY+dy+1, tui.Cell{
+			Rune:       ' ',
+			Background: m.theme.Palette.Shadow,
+		})
+	}
+	for dx := 0; dx < fuzzyFinderWidth+1; dx++ {
+		m.screen.SetCell(modalX+dx, modalY+fuzzyFinderHeight, tui.Cell{
+			Rune:       ' ',
+			Background: m.theme.Palette.Shadow,
+		})
+	}
 	
-	// Draw input
-	m.fuzzyFinder.input.SetWidth(fuzzyFinderWidth - 2*modalPadding)
-	m.fuzzyFinder.input.Draw(m.screen, modalX+modalPadding, modalY+modalPadding, &m.theme)
+	// Modal backdrop - we don't fill with a different color to avoid inconsistency
+	// The containers will draw their own backgrounds
 	
-	// Draw results manually with selection
+	// Layout calculations
+	leftColumnWidth := resultsContainerWidth
+	rightColumnWidth := fuzzyFinderWidth - leftColumnWidth - 3  // Account for margins
+	resultsHeight := fuzzyFinderHeight - searchContainerHeight - 2  // No extra spacing
+	
+	// Update container sizes
+	m.fuzzyFinder.searchContainer.SetSize(leftColumnWidth, searchContainerHeight)
+	m.fuzzyFinder.resultsContainer.SetSize(leftColumnWidth, resultsHeight)
+	m.fuzzyFinder.previewContainer.SetSize(rightColumnWidth, fuzzyFinderHeight - 2)
+	
+	// Update input width to fit in search container
+	m.fuzzyFinder.input.SetWidth(leftColumnWidth - 4)  // Account for container padding
+	
+	// Update preview viewer size to fit in preview container
+	m.fuzzyFinder.previewViewer.SetSize(rightColumnWidth - 4, fuzzyFinderHeight - 6)
+	
+	// Draw containers
+	// Left column: search and results
+	m.fuzzyFinder.searchContainer.Draw(m.screen, modalX + 1, modalY + 1, &m.theme)
+	m.fuzzyFinder.resultsContainer.Draw(m.screen, modalX + 1, modalY + searchContainerHeight + 1, &m.theme)  // No gap
+	
+	// Right column: preview (full height)
+	m.fuzzyFinder.previewContainer.Draw(m.screen, modalX + leftColumnWidth + 2, modalY + 1, &m.theme)
+	
+	// Draw results manually with selection highlighting inside results container
 	textStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text).
 		Background(m.theme.Palette.Surface)
@@ -839,44 +895,61 @@ func (m *model) drawFuzzyFinder() {
 		Foreground(m.theme.Palette.Background).
 		Background(m.theme.Palette.Primary)
 	
-	startY := modalY + 4
+	// Draw filtered results inside the results container (accounting for borders and padding)
+	resultsContentX := modalX + 3  // modalX + 1 for position, +2 for border and padding
+	resultsContentY := modalY + searchContainerHeight + 3  // +1 for position, +2 for border and title
+	maxResultsHeight := resultsHeight - 4  // Account for top/bottom borders and title
 	
 	for i, file := range m.fuzzyFinder.filtered {
-		if i >= maxFuzzyResults {
+		if i >= maxFuzzyResults || i >= maxResultsHeight {
 			break
 		}
 		
-		// Create full-width selection bar
+		style := textStyle
+		fileY := resultsContentY + i
+		
 		if i == m.fuzzyFinder.selectedIdx {
-			// Fill entire row with selection background
-			for x := modalX + 1; x < modalX + fuzzyFinderWidth - 1; x++ {
-				m.screen.SetCell(x, startY+i, tui.Cell{
+			// Highlight selected row within the content area
+			for x := 0; x < resultsContainerWidth - 4; x++ {  // Account for borders and padding
+				m.screen.SetCell(resultsContentX + x, fileY, tui.Cell{
 					Rune:       ' ',
 					Background: m.theme.Palette.Primary,
 				})
 			}
-		}
-		
-		style := textStyle
-		if i == m.fuzzyFinder.selectedIdx {
 			style = selectedStyle
 		}
 		
-		// Draw file name and path
-		path := "src/"
-		if strings.HasSuffix(file, "_test.go") {
-			path = "tests/"
-		} else if strings.HasSuffix(file, ".md") {
-			path = "docs/"
+		// Truncate filename if too long
+		displayName := file
+		maxFileWidth := resultsContainerWidth - 6  // Account for borders and padding
+		if len(displayName) > maxFileWidth {
+			displayName = displayName[:maxFileWidth-3] + "..."
 		}
 		
-		// Draw file name on the left
-		m.screen.DrawString(modalX+modalPadding, startY+i, file, style)
-		
-		// Draw path on the right
-		pathX := modalX + fuzzyFinderWidth - modalPadding - len(path) - modalPadding
-		m.screen.DrawString(pathX, startY+i, path, style)
+		m.screen.DrawString(resultsContentX, fileY, displayName, style)
 	}
+	
+	// Update preview if a file is selected
+	if m.fuzzyFinder.selectedIdx >= 0 && m.fuzzyFinder.selectedIdx < len(m.fuzzyFinder.filtered) {
+		selectedFile := m.fuzzyFinder.filtered[m.fuzzyFinder.selectedIdx]
+		previewContent := m.getFilePreview(selectedFile)
+		m.fuzzyFinder.previewViewer.SetContent(previewContent)
+	} else {
+		m.fuzzyFinder.previewViewer.SetContent("No file selected")
+	}
+}
+
+func (m *model) getFilePreview(filename string) string {
+	// Generate demo preview content based on file type
+	if strings.HasSuffix(filename, ".go") {
+		return "package main\n\nimport (\n    \"fmt\"\n    \"log\"\n)\n\nfunc main() {\n    fmt.Println(\"Hello from " + filename + "\")\n    \n    // Initialize application\n    app := NewApp()\n    if err := app.Run(); err != nil {\n        log.Fatal(err)\n    }\n}\n\n// Additional preview content..."
+	} else if strings.HasSuffix(filename, ".md") {
+		return "# " + filename + "\n\nThis is a preview of the markdown file.\n\n## Features\n- Feature 1\n- Feature 2\n- Feature 3\n\n## Usage\n```bash\ngo run " + filename + "\n```\n\n### Additional Information\nLorem ipsum dolor sit amet..."
+	} else if strings.HasSuffix(filename, "_test.go") {
+		return "package main\n\nimport \"testing\"\n\nfunc TestExample(t *testing.T) {\n    // Test implementation\n    result := DoSomething()\n    if result != expected {\n        t.Errorf(\"expected %v, got %v\", expected, result)\n    }\n}"
+	}
+	
+	return "// Preview not available for this file type"
 }
 
 func (m *model) drawSettings() {
@@ -901,8 +974,8 @@ func (m *model) drawSettings() {
 		// Create full-width selection bar
 		style := textStyle
 		if i == m.settings.selectedIdx {
-			// Fill entire row with selection background
-			for x := modalX + 1; x < modalX + settingsWidth - 1; x++ {
+			// Fill entire row with selection background, respecting modal padding
+			for x := modalX + modalPadding; x < modalX + settingsWidth - modalPadding; x++ {
 				m.screen.SetCell(x, y, tui.Cell{
 					Rune:       ' ',
 					Background: m.theme.Palette.Primary,

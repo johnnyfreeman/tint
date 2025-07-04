@@ -140,7 +140,7 @@ func initialModel() model {
 	return model{
 		width:         80,
 		height:        24,
-		screen:        tui.NewScreen(80, 24),
+		screen:        tui.NewScreen(80, 24, tui.GetTheme("tokyonight")),
 		focus:         "url",
 		method:        "GET",
 		urlInput:      urlInput,
@@ -397,7 +397,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.screen = tui.NewScreen(m.width, m.height)
+		m.screen = tui.NewScreen(m.width, m.height, tui.GetTheme(m.currentTheme))
 	}
 
 	return m, nil
@@ -406,9 +406,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	theme := tui.GetTheme(m.currentTheme)
 	
-	// Clear screen with theme background
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	m.screen.ClearWithStyle(bgStyle)
+	// Recreate screen if theme changed
+	if m.screen.Theme().Name != theme.Name {
+		m.screen = tui.NewScreen(m.width, m.height, theme)
+	}
+	
+	// Clear screen (now uses theme background automatically)
+	m.screen.Clear()
 
 	// Calculate layout
 	historyWidth := 0

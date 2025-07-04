@@ -32,7 +32,7 @@ func initialModel() model {
 	statusBar.AddSegment("Ctrl+B: sidebar | 1-3: tabs | m: modal | n/s/w/e: notif | t: theme | q: quit", "right")
 	
 	return model{
-		screen:       tui.NewScreen(80, 24),
+		screen:       tui.NewDefaultScreen(80, 24),
 		sidebar:      NewSidebar(),
 		tabs:         createDemoTabs(),
 		modal:        createDemoModal(),
@@ -171,7 +171,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.screen = tui.NewScreen(m.width, m.height)
+		theme := tui.GetTheme(m.themePicker.GetPreviewTheme())
+		m.screen = tui.NewScreen(m.width, m.height, theme)
 
 	case tickMsg:
 		m.notification.Update()
@@ -185,9 +186,13 @@ func (m model) View() string {
 	// Get current theme (preview theme if hovering)
 	theme := tui.GetTheme(m.themePicker.GetPreviewTheme())
 	
-	// Clear screen with theme background
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	m.screen.ClearWithStyle(bgStyle)
+	// Recreate screen if theme changed
+	if m.screen.Theme().Name != theme.Name {
+		m.screen = tui.NewScreen(m.width, m.height, theme)
+	}
+	
+	// Clear screen (now uses theme background automatically)
+	m.screen.Clear()
 
 	// Calculate layout
 	sidebarWidth := m.sidebar.Width()

@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewScreen(t *testing.T) {
-	screen := NewScreen(10, 5)
+	screen := NewDefaultScreen(10, 5)
 	
 	if screen.Width() != 10 {
 		t.Errorf("Expected width 10, got %d", screen.Width())
@@ -86,25 +86,6 @@ func TestScreenClear(t *testing.T) {
 	}
 }
 
-func TestScreenClearWithStyle(t *testing.T) {
-	screen := NewScreenSimulation(10, 5)
-	bgStyle := lipgloss.NewStyle().Background(lipgloss.Color("#0000FF"))
-	
-	screen.ClearWithStyle(bgStyle)
-	
-	// Check all cells have the background color
-	for y := 0; y < 5; y++ {
-		for x := 0; x < 10; x++ {
-			cell := screen.GetCell(x, y)
-			if cell.Rune != ' ' {
-				t.Errorf("Cell at (%d,%d) not cleared to space", x, y)
-			}
-			if _, isNoColor := cell.Background.(lipgloss.NoColor); isNoColor {
-				t.Errorf("Cell at (%d,%d) doesn't have background color", x, y)
-			}
-		}
-	}
-}
 
 func TestScreenDrawBox(t *testing.T) {
 	screen := NewScreenSimulation(20, 10)

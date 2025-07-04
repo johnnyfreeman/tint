@@ -87,7 +87,7 @@ func initialModel() *model {
 	}
 	
 	return &model{
-		screen:     tui.NewScreen(80, 24),
+		screen:     tui.NewScreen(80, 24, theme),
 		width:      80,
 		height:     24,
 		theme:      theme,
@@ -105,7 +105,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.screen = tui.NewScreen(m.width, m.height)
+		m.screen = tui.NewScreen(m.width, m.height, m.theme)
 		
 	case tea.KeyMsg:
 		switch msg.String() {

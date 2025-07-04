@@ -17,7 +17,7 @@ type ScreenSimulation struct {
 // NewScreenSimulation creates a new simulated screen for testing
 func NewScreenSimulation(width, height int) *ScreenSimulation {
 	return &ScreenSimulation{
-		Screen:        NewScreen(width, height),
+		Screen:        NewDefaultScreen(width, height),
 		cursorX:       0,
 		cursorY:       0,
 		cursorVisible: false,

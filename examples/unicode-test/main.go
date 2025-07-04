@@ -13,7 +13,7 @@ func main() {
 	theme := tui.GetTheme("monochrome")
 
 	// Create screen
-	screen := tui.NewScreen(80, 30)
+	screen := tui.NewScreen(80, 30, theme)
 
 	// Test strings with various unicode characters
 	testStrings := []struct {

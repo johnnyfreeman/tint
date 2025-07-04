@@ -112,7 +112,7 @@ func TestGetByteOffset(t *testing.T) {
 
 func TestCellContinuation(t *testing.T) {
 	// Test that wide characters create continuation cells
-	screen := NewScreen(10, 1)
+	screen := NewDefaultScreen(10, 1)
 	
 	// Draw a wide character
 	style := lipgloss.NewStyle()
