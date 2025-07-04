@@ -41,6 +41,13 @@ type model struct {
 	// New components
 	statusBar *tui.StatusBar
 	splitView *tui.SplitView
+	
+	// Containers for different sections
+	historyContainer  *tui.Container
+	urlContainer      *tui.Container
+	headersContainer  *tui.Container
+	bodyContainer     *tui.Container
+	responseContainer *tui.Container
 }
 
 type Header struct {
@@ -88,6 +95,31 @@ func initialModel() model {
 	splitView.SetSplit(30) // 30 pixels for history
 	splitView.SetShowBorder(true)
 	
+	// Create containers
+	historyContainer := tui.NewContainer()
+	historyContainer.SetTitle("History")
+	historyContainer.SetPadding(tui.NewMargin(1))
+	
+	urlContainer := tui.NewContainer()
+	urlContainer.SetTitle("Request URL")
+	urlContainer.SetPadding(tui.NewMargin(1))
+	urlContainer.SetContent(urlInput)
+	
+	headersContainer := tui.NewContainer()
+	headersContainer.SetTitle("Headers")
+	headersContainer.SetPadding(tui.NewMargin(1))
+	headersContainer.SetContent(headersTable)
+	
+	bodyContainer := tui.NewContainer()
+	bodyContainer.SetTitle("Body")
+	bodyContainer.SetPadding(tui.NewMargin(1))
+	bodyContainer.SetContent(bodyTextArea)
+	
+	responseContainer := tui.NewContainer()
+	responseContainer.SetTitle("Response")
+	responseContainer.SetPadding(tui.NewMargin(1))
+	responseContainer.SetContent(responseViewer)
+	
 	return model{
 		width:         80,
 		height:        24,
@@ -106,9 +138,14 @@ func initialModel() model {
 		},
 		historyIndex:   0,
 		historyVisible: true,
-		currentTheme:   "tokyonight",
-		statusBar:      statusBar,
-		splitView:      splitView,
+		currentTheme:      "tokyonight",
+		statusBar:         statusBar,
+		splitView:         splitView,
+		historyContainer:  historyContainer,
+		urlContainer:      urlContainer,
+		headersContainer:  headersContainer,
+		bodyContainer:     bodyContainer,
+		responseContainer: responseContainer,
 	}
 }
 
@@ -375,7 +412,7 @@ func (m model) View() string {
 		}
 	}
 
-	// Draw main area
+	// Draw main area (accounting for status bar)
 	m.drawMainArea(theme, mainX, mainWidth)
 
 	// Draw status bar at the bottom
@@ -386,33 +423,18 @@ func (m model) View() string {
 }
 
 func (m *model) drawHistory(theme tui.Theme, width int) {
-	// Get border colors based on focus
-	var borderColors, titleColors tui.StateColors
+	// Update container focus state
 	if m.focus == "history" {
-		borderColors = theme.Components.Container.Border.Focused
-		titleColors = theme.Components.Container.Title.Focused
+		m.historyContainer.Focus()
 	} else {
-		borderColors = theme.Components.Container.Border.Unfocused
-		titleColors = theme.Components.Container.Title.Unfocused
+		m.historyContainer.Blur()
 	}
 	
-	borderStyle := lipgloss.NewStyle().
-		Foreground(borderColors.Border).
-		Background(theme.Palette.Background)
-	titleStyle := lipgloss.NewStyle().
-		Foreground(titleColors.Text).
-		Background(theme.Palette.Background)
-
-	// Fill background
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	for dy := 0; dy < m.height; dy++ {
-		for dx := 0; dx < width; dx++ {
-			m.screen.DrawRune(dx, dy, ' ', bgStyle)
-		}
-	}
+	// Set container size
+	m.historyContainer.SetSize(width, m.height-1) // -1 for status bar
 	
-	// Draw box with title
-	m.screen.DrawBoxWithTitle(0, 0, width, m.height, "History", borderStyle, titleStyle)
+	// Draw container background and border
+	m.historyContainer.DrawWithBounds(m.screen, 0, 0, width, m.height-1, &theme)
 
 	// Draw history items
 	itemY := 2
@@ -470,7 +492,7 @@ func (m *model) drawMainArea(theme tui.Theme, x, width int) {
 		bodyHeight = 6
 	}
 	responseY := urlHeight + headersHeight + bodyHeight
-	responseHeight := m.height - responseY
+	responseHeight := m.height - responseY - 1 // -1 for status bar
 
 	// Draw URL input area
 	m.drawURLInput(theme, x, 0, width, urlHeight)
@@ -530,25 +552,33 @@ func (m *model) drawURLInput(theme tui.Theme, x, y, width, height int) {
 }
 
 func (m *model) drawHeaders(theme tui.Theme, x, y, width, height int) {
-	// Draw the headers table in a box
-	// The table's DrawInBox will check if it's focused to determine border color
-	// Debug: ensure focus state is correct
+	// Update container focus state
 	if m.focus == "headers" {
+		m.headersContainer.Focus()
 		m.headersTable.Focus()
 	} else {
+		m.headersContainer.Blur()
 		m.headersTable.Blur()
 	}
-	m.headersTable.DrawInBox(m.screen, x, y, width, height, "Headers", &theme)
+	
+	// Set container size and draw
+	m.headersContainer.SetSize(width, height)
+	m.headersContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
 }
 
 func (m *model) drawRequestBody(theme tui.Theme, x, y, width, height int) {
-	// Draw the body text area in a box
+	// Update container focus state
 	if m.focus == "body" {
+		m.bodyContainer.Focus()
 		m.bodyTextArea.Focus()
 	} else {
+		m.bodyContainer.Blur()
 		m.bodyTextArea.Blur()
 	}
-	m.bodyTextArea.DrawInBox(m.screen, x, y, width, height, "Body", &theme)
+	
+	// Set container size and draw
+	m.bodyContainer.SetSize(width, height)
+	m.bodyContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
 }
 
 func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
