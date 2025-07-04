@@ -1,0 +1,99 @@
+name: Tests
+
+on:
+  push:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        go-version: ['1.24', '1.23', '1.22']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+    
+    - name: Get dependencies
+      run: go mod download
+    
+    - name: Run tests
+      run: go test -v -race -coverprofile=coverage.out ./...
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      if: matrix.go-version == '1.24'
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+    
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout 5m
+
+  examples:
+    name: Build Examples
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+    
+    - name: Build demo example
+      run: |
+        cd examples/demo
+        go build -v .
+    
+    - name: Build text-editor example
+      run: |
+        cd examples/text-editor
+        go build -v .
+    
+    - name: Build api-client example
+      run: |
+        cd examples/api-client
+        go build -v .
+    
+    - name: Build container-demo example
+      run: |
+        cd examples/container-demo
+        go build -v .
+    
+    - name: Build unicode-test example
+      run: |
+        cd examples/unicode-test
+        go build -v .
+    
+    - name: Build unicode-theme-test example
+      run: |
+        cd examples/unicode-theme-test
+        go build -v .
