@@ -8,8 +8,8 @@ import (
 // Input represents a single-line text input field
 type Input struct {
 	value       string
-	cursor      int
-	offset      int // For horizontal scrolling when text is longer than width
+	cursor      int  // Visual column position
+	offset      int  // Visual column offset for horizontal scrolling
 	width       int
 	placeholder string
 	focused     bool
@@ -41,7 +41,7 @@ func (i *Input) SetPlaceholder(placeholder string) {
 // SetValue sets the input value and moves cursor to end
 func (i *Input) SetValue(value string) {
 	i.value = value
-	i.cursor = len(value)
+	i.cursor = StringWidth(value)
 	i.adjustOffset()
 }
 
@@ -76,42 +76,31 @@ func (i *Input) IsFocused() bool {
 func (i *Input) HandleInput(key string) {
 	switch key {
 	case "left", "ctrl+b":
-		if i.cursor > 0 {
-			i.cursor--
-			i.adjustOffset()
-		}
+		i.moveCursorLeft()
+		i.adjustOffset()
 	case "right", "ctrl+f":
-		if i.cursor < len(i.value) {
-			i.cursor++
-			i.adjustOffset()
-		}
+		i.moveCursorRight()
+		i.adjustOffset()
 	case "home", "ctrl+a":
 		i.cursor = 0
 		i.adjustOffset()
 	case "end", "ctrl+e":
-		i.cursor = len(i.value)
+		i.cursor = StringWidth(i.value)
 		i.adjustOffset()
 	case "backspace", "ctrl+h":
-		if i.cursor > 0 {
-			i.value = i.value[:i.cursor-1] + i.value[i.cursor:]
-			i.cursor--
-			i.adjustOffset()
-		}
+		i.deleteBeforeCursorInput()
+		i.adjustOffset()
 	case "delete", "ctrl+d":
-		if i.cursor < len(i.value) {
-			i.value = i.value[:i.cursor] + i.value[i.cursor+1:]
-		}
+		i.deleteAtCursorInput()
 	case "ctrl+k": // Kill to end of line
-		i.value = i.value[:i.cursor]
+		i.killToEndOfLine()
 	case "ctrl+u": // Kill to beginning of line
-		i.value = i.value[i.cursor:]
-		i.cursor = 0
+		i.killToBeginningOfLine()
 		i.adjustOffset()
 	default:
 		// Handle regular character input
 		if len(key) == 1 && key[0] >= 32 && key[0] < 127 {
-			i.value = i.value[:i.cursor] + key + i.value[i.cursor:]
-			i.cursor++
+			i.insertAtCursorInput(key)
 			i.adjustOffset()
 		}
 	}
@@ -154,17 +143,13 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 			Italic(true)
 		
 		displayText = i.placeholder
-		if len(displayText) > i.width {
-			displayText = displayText[:i.width]
+		if StringWidth(displayText) > i.width {
+			displayText = TruncateWithEllipsis(displayText, i.width)
 		}
 		screen.DrawString(x, y, displayText, placeholderStyle)
 	} else {
 		// Show value
-		visibleEnd := i.offset + i.width
-		if visibleEnd > len(i.value) {
-			visibleEnd = len(i.value)
-		}
-		displayText = i.value[i.offset:visibleEnd]
+		displayText = i.getVisibleValuePortion()
 		screen.DrawString(x, y, displayText, style)
 	}
 	
@@ -176,19 +161,20 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 			Background(theme.Palette.Text)
 		
 		// Get the character under the cursor or use space if at end
-		var cursorChar rune = ' '
-		if i.cursor < len(i.value) {
-			cursorChar = rune(i.value[i.cursor])
+		cursorChar, found := GetCharAtVisualCol(i.value, i.cursor)
+		if !found {
+			cursorChar = ' '
 		}
 		screen.DrawRune(cursorX, y, cursorChar, cursorStyle)
 	}
 	
 	// Fill the rest of the input width with spaces
-	remainingWidth := i.width - len(displayText)
+	displayWidth := StringWidth(displayText)
+	remainingWidth := i.width - displayWidth
 	if remainingWidth > 0 {
 		emptyStyle := lipgloss.NewStyle().
 			Background(theme.Palette.Background)
-		screen.DrawString(x+len(displayText), y, strings.Repeat(" ", remainingWidth), emptyStyle)
+		screen.DrawString(x+displayWidth, y, strings.Repeat(" ", remainingWidth), emptyStyle)
 	}
 }
 

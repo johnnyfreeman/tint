@@ -100,21 +100,21 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 				Foreground(colors.Text).
 				Background(currentTheme.Palette.Surface).
 				Bold(true)
-			prefix = "* "
+			prefix = "◉ "  // Filled circle for selected
 		} else if i == tp.hovered {
 			// Hovered theme
 			colors := currentTheme.Components.Interactive.Hover
 			style = lipgloss.NewStyle().
 				Foreground(colors.Text).
 				Background(currentTheme.Palette.Surface)
-			prefix = "> "
+			prefix = "○ "  // Empty circle for hoverable
 		} else {
 			// Normal theme
 			colors := currentTheme.Components.Interactive.Normal
 			style = lipgloss.NewStyle().
 				Foreground(colors.Text).
 				Background(currentTheme.Palette.Surface)
-			prefix = "  "
+			prefix = "○ "  // Empty circle for normal
 		}
 		
 		screen.DrawString(itemX, lineY, prefix+theme.Name, style)

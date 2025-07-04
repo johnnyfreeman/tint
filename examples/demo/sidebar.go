@@ -117,7 +117,7 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 					Background(theme.Palette.Background).
 					Bold(true)
 			}
-			prefix = "▸ "
+			prefix = "▶ "  // Solid right-pointing triangle
 		} else if focused && i == s.hovered {
 			// Hovered item (only when sidebar is focused)
 			colors := theme.Components.Interactive.Hover

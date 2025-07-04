@@ -14,6 +14,7 @@ var (
 
 type Cell struct {
 	Rune       rune
+	Width      int  // 0 for continuation cell, 1-2 for actual character
 	Foreground lipgloss.TerminalColor
 	Background lipgloss.TerminalColor
 	Bold       bool
@@ -25,6 +26,17 @@ type Cell struct {
 func NewCell(r rune) Cell {
 	return Cell{
 		Rune:       r,
+		Width:      RuneWidth(r),
+		Foreground: lipgloss.NoColor{},
+		Background: lipgloss.NoColor{},
+	}
+}
+
+// NewContinuationCell creates a continuation cell for wide characters
+func NewContinuationCell() Cell {
+	return Cell{
+		Rune:       0,
+		Width:      0, // Continuation cell
 		Foreground: lipgloss.NoColor{},
 		Background: lipgloss.NoColor{},
 	}
@@ -72,6 +84,11 @@ func (c Cell) cacheKey() uint64 {
 }
 
 func (c Cell) Render() string {
+	// Continuation cells should not render anything
+	if c.Width == 0 {
+		return ""
+	}
+	
 	if c.Rune == 0 {
 		return " "
 	}
@@ -144,10 +161,16 @@ func (c Cell) IsDefault() bool {
 	_, bgIsNoColor := c.Background.(lipgloss.NoColor)
 	
 	return c.Rune == ' ' && 
+		c.Width == 1 &&
 		fgIsNoColor && 
 		bgIsNoColor && 
 		!c.Bold && 
 		!c.Italic && 
 		!c.Underline &&
 		!c.Dim
+}
+
+// IsContinuation checks if this is a continuation cell
+func (c Cell) IsContinuation() bool {
+	return c.Width == 0
 }

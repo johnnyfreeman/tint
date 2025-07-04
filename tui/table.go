@@ -160,31 +160,21 @@ func (t *Table) handleEditKey(key string) {
 		// Cancel the edit
 		t.editingCell = false
 	case "left", "ctrl+b":
-		if t.editCursor > 0 {
-			t.editCursor--
-		}
+		t.moveCursorLeftTable()
 	case "right", "ctrl+f":
-		if t.editCursor < len(t.editValue) {
-			t.editCursor++
-		}
+		t.moveCursorRightTable()
 	case "home", "ctrl+a":
 		t.editCursor = 0
 	case "end", "ctrl+e":
-		t.editCursor = len(t.editValue)
+		t.editCursor = StringWidth(t.editValue)
 	case "backspace", "ctrl+h":
-		if t.editCursor > 0 {
-			t.editValue = t.editValue[:t.editCursor-1] + t.editValue[t.editCursor:]
-			t.editCursor--
-		}
+		t.deleteBeforeCursorTable()
 	case "delete", "ctrl+d":
-		if t.editCursor < len(t.editValue) {
-			t.editValue = t.editValue[:t.editCursor] + t.editValue[t.editCursor+1:]
-		}
+		t.deleteAtCursorTable()
 	default:
 		// Handle regular character input
 		if len(key) == 1 && key[0] >= 32 && key[0] < 127 {
-			t.editValue = t.editValue[:t.editCursor] + key + t.editValue[t.editCursor:]
-			t.editCursor++
+			t.insertAtCursorTable(key)
 		}
 	}
 }
@@ -232,11 +222,14 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 	currentX := x
 	for colIdx, col := range t.columns {
 		header := col.Title
-		if len(header) > col.Width {
-			header = header[:col.Width-1] + "…"
+		if StringWidth(header) > col.Width {
+			header = TruncateWithEllipsis(header, col.Width)
 		}
 		// Pad to column width
-		header = header + strings.Repeat(" ", col.Width-len(header))
+		headerWidth := StringWidth(header)
+		if headerWidth < col.Width {
+			header = header + strings.Repeat(" ", col.Width-headerWidth)
+		}
 		screen.DrawString(currentX, y, header, headerStyle)
 		
 		// Draw bold column separator (except after last column)
@@ -306,11 +299,14 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 
 			// Truncate if too long
 			displayValue := cellValue
-			if len(displayValue) > col.Width {
-				displayValue = displayValue[:col.Width-1] + "…"
+			if StringWidth(displayValue) > col.Width {
+				displayValue = TruncateWithEllipsis(displayValue, col.Width)
 			}
 			// Pad to column width
-			displayValue = displayValue + strings.Repeat(" ", col.Width-len(displayValue))
+			displayWidth := StringWidth(displayValue)
+			if displayWidth < col.Width {
+				displayValue = displayValue + strings.Repeat(" ", col.Width-displayWidth)
+			}
 
 			screen.DrawString(currentX, rowY, displayValue, cellStyle)
 
@@ -366,7 +362,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 			scrollText += " ↓"
 		}
 		
-		scrollX := x + t.getTableWidth() - len(scrollText)
+		scrollX := x + t.getTableWidth() - StringWidth(scrollText)
 		screen.DrawString(scrollX, y, scrollText, scrollStyle)
 	}
 }

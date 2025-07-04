@@ -72,12 +72,12 @@ func (t *TextElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool)
 	}
 	
 	screen.DrawString(x, y, text, style)
-	return len(text)
+	return StringWidth(text)
 }
 
 // Width returns the width this element will consume
 func (t *TextElement) Width() int {
-	return len(t.text) + 2 // +2 for padding spaces
+	return StringWidth(t.text) + 2 // +2 for padding spaces
 }
 
 // TabsElement represents tabs that can be embedded in a border
@@ -140,7 +140,7 @@ func (t *TabsElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool)
 		
 		// Draw tab
 		screen.DrawString(currentX, y, tabText, style)
-		currentX += len(tabText)
+		currentX += StringWidth(tabText)
 	}
 	
 	return currentX - x
@@ -153,7 +153,7 @@ func (t *TabsElement) Width() int {
 		if i > 0 {
 			width++ // separator
 		}
-		width += len(tab) + 2 // tab text with padding
+		width += StringWidth(tab) + 2 // tab text with padding
 	}
 	return width
 }
@@ -241,12 +241,12 @@ func (s *StatusElement) Draw(screen *Screen, x, y int, theme *Theme, focused boo
 	}
 	
 	screen.DrawString(x, y, text, style)
-	return len(text)
+	return StringWidth(text)
 }
 
 // Width returns the width this element will consume
 func (s *StatusElement) Width() int {
-	return len(s.status) + 4 // status + "[ ]" + spaces
+	return StringWidth(s.status) + 4 // status + "[ ]" + spaces
 }
 
 // BadgeElement represents a badge or count indicator
@@ -271,10 +271,10 @@ func (b *BadgeElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool
 	style := b.style.Foreground(theme.Palette.Primary).Bold(true)
 	
 	screen.DrawString(x, y, text, style)
-	return len(text)
+	return StringWidth(text)
 }
 
 // Width returns the width this element will consume
 func (b *BadgeElement) Width() int {
-	return len(b.text) + 4 // text + "()" + spaces
+	return StringWidth(b.text) + 4 // text + "()" + spaces
 }

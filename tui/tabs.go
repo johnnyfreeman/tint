@@ -186,7 +186,7 @@ func (t *TabsComponent) drawTabsOnTop(screen *Screen, x, y, width, height int, t
 		}
 
 		screen.DrawString(currentX, y, title, tabStyle)
-		currentX += len(title)
+		currentX += StringWidth(title)
 	}
 
 	// Fill rest of top border
@@ -308,7 +308,7 @@ func (t *TabsComponent) drawTabsOnBottom(screen *Screen, x, y, width, height int
 		}
 
 		screen.DrawString(currentX, y+height-1, title, tabStyle)
-		currentX += len(title)
+		currentX += StringWidth(title)
 	}
 
 	// Fill rest of bottom border - heavy when focused
@@ -348,8 +348,8 @@ func (t *TabsComponent) drawContent(screen *Screen, x, y, width, height int, the
 				screen.DrawRune(dx, y+i, ' ', contentStyle)
 			}
 			// Draw content
-			if len(line) > width-4 {
-				line = line[:width-4]
+			if StringWidth(line) > width-4 {
+				line = Truncate(line, width-4)
 			}
 			screen.DrawString(x+2, y+i, line, contentStyle)
 		}

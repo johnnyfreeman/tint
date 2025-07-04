@@ -89,7 +89,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 			style = segment.Style
 		}
 		screen.DrawString(currentX, y, segment.Text, style)
-		currentX += len(segment.Text)
+		currentX += StringWidth(segment.Text)
 	}
 	
 	// Draw center-aligned segments
@@ -101,7 +101,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 			}
 			centerText += segment.Text
 		}
-		centerX := x + (width-len(centerText))/2
+		centerX := x + (width-StringWidth(centerText))/2
 		screen.DrawString(centerX, y, centerText, bgStyle)
 	}
 	
@@ -114,7 +114,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 			}
 			rightText += segment.Text
 		}
-		rightX := x + width - len(rightText) - 1
+		rightX := x + width - StringWidth(rightText) - 1
 		screen.DrawString(rightX, y, rightText, bgStyle)
 	}
 }

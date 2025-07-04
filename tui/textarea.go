@@ -9,9 +9,9 @@ import (
 type TextArea struct {
 	lines       []string
 	cursorRow   int
-	cursorCol   int
-	offsetRow   int // For vertical scrolling
-	offsetCol   int // For horizontal scrolling
+	cursorCol   int  // Visual column position
+	offsetRow   int  // For vertical scrolling
+	offsetCol   int  // Visual column offset for horizontal scrolling
 	width       int
 	height      int
 	focused     bool
@@ -54,7 +54,7 @@ func (t *TextArea) SetValue(value string) {
 	} else {
 		t.lines = strings.Split(value, "\n")
 		t.cursorRow = len(t.lines) - 1
-		t.cursorCol = len(t.lines[t.cursorRow])
+		t.cursorCol = StringWidth(t.lines[t.cursorRow])
 	}
 	t.adjustOffset()
 }
@@ -86,8 +86,9 @@ func (t *TextArea) HandleInput(key string) {
 		if t.cursorRow > 0 {
 			t.cursorRow--
 			// Adjust column if the new line is shorter
-			if t.cursorCol > len(t.lines[t.cursorRow]) {
-				t.cursorCol = len(t.lines[t.cursorRow])
+			lineWidth := StringWidth(t.lines[t.cursorRow])
+			if t.cursorCol > lineWidth {
+				t.cursorCol = lineWidth
 			}
 			t.adjustOffset()
 		}
@@ -95,84 +96,36 @@ func (t *TextArea) HandleInput(key string) {
 		if t.cursorRow < len(t.lines)-1 {
 			t.cursorRow++
 			// Adjust column if the new line is shorter
-			if t.cursorCol > len(t.lines[t.cursorRow]) {
-				t.cursorCol = len(t.lines[t.cursorRow])
+			lineWidth := StringWidth(t.lines[t.cursorRow])
+			if t.cursorCol > lineWidth {
+				t.cursorCol = lineWidth
 			}
 			t.adjustOffset()
 		}
 	case "left", "ctrl+b":
-		if t.cursorCol > 0 {
-			t.cursorCol--
-		} else if t.cursorRow > 0 {
-			// Move to end of previous line
-			t.cursorRow--
-			t.cursorCol = len(t.lines[t.cursorRow])
-		}
+		t.moveCursorLeft()
 		t.adjustOffset()
 	case "right", "ctrl+f":
-		if t.cursorCol < len(t.lines[t.cursorRow]) {
-			t.cursorCol++
-		} else if t.cursorRow < len(t.lines)-1 {
-			// Move to beginning of next line
-			t.cursorRow++
-			t.cursorCol = 0
-		}
+		t.moveCursorRight()
 		t.adjustOffset()
 	case "home", "ctrl+a":
 		t.cursorCol = 0
 		t.adjustOffset()
 	case "end", "ctrl+e":
-		t.cursorCol = len(t.lines[t.cursorRow])
+		t.cursorCol = StringWidth(t.lines[t.cursorRow])
 		t.adjustOffset()
 	case "enter":
-		// Split the current line at cursor position
-		currentLine := t.lines[t.cursorRow]
-		before := currentLine[:t.cursorCol]
-		after := currentLine[t.cursorCol:]
-		
-		// Update current line and insert new line
-		t.lines[t.cursorRow] = before
-		newLines := append(t.lines[:t.cursorRow+1], append([]string{after}, t.lines[t.cursorRow+1:]...)...)
-		t.lines = newLines
-		
-		// Move cursor to beginning of new line
-		t.cursorRow++
-		t.cursorCol = 0
+		t.splitLineAtCursor()
 		t.adjustOffset()
 	case "backspace", "ctrl+h":
-		if t.cursorCol > 0 {
-			// Delete character before cursor
-			line := t.lines[t.cursorRow]
-			t.lines[t.cursorRow] = line[:t.cursorCol-1] + line[t.cursorCol:]
-			t.cursorCol--
-		} else if t.cursorRow > 0 {
-			// Join with previous line
-			prevLine := t.lines[t.cursorRow-1]
-			currentLine := t.lines[t.cursorRow]
-			t.cursorCol = len(prevLine)
-			t.lines[t.cursorRow-1] = prevLine + currentLine
-			// Remove current line
-			t.lines = append(t.lines[:t.cursorRow], t.lines[t.cursorRow+1:]...)
-			t.cursorRow--
-		}
+		t.deleteBeforeCursor()
 		t.adjustOffset()
 	case "delete", "ctrl+d":
-		line := t.lines[t.cursorRow]
-		if t.cursorCol < len(line) {
-			// Delete character at cursor
-			t.lines[t.cursorRow] = line[:t.cursorCol] + line[t.cursorCol+1:]
-		} else if t.cursorRow < len(t.lines)-1 {
-			// Join with next line
-			t.lines[t.cursorRow] = line + t.lines[t.cursorRow+1]
-			// Remove next line
-			t.lines = append(t.lines[:t.cursorRow+1], t.lines[t.cursorRow+2:]...)
-		}
+		t.deleteAtCursor()
 	default:
 		// Handle regular character input
 		if len(key) == 1 && key[0] >= 32 && key[0] < 127 {
-			line := t.lines[t.cursorRow]
-			t.lines[t.cursorRow] = line[:t.cursorCol] + key + line[t.cursorCol:]
-			t.cursorCol++
+			t.insertAtCursor(key)
 			t.adjustOffset()
 		}
 	}
@@ -223,8 +176,8 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 			if i >= t.height {
 				break
 			}
-			if len(line) > t.width {
-				line = line[:t.width]
+			if StringWidth(line) > t.width {
+				line = TruncateWithEllipsis(line, t.width)
 			}
 			screen.DrawString(x, y+i, line, placeholderStyle)
 		}
@@ -244,37 +197,31 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 		line := t.lines[lineIndex]
 		
 		// Extract visible portion of the line
-		visibleLine := ""
-		if t.offsetCol < len(line) {
-			endCol := t.offsetCol + t.width
-			if endCol > len(line) {
-				endCol = len(line)
-			}
-			visibleLine = line[t.offsetCol:endCol]
-		}
+		visibleLine := t.getVisibleLine(line)
 		
 		// Draw the line
 		screen.DrawString(x, y+row, visibleLine, textStyle)
 		
 		// Fill the rest of the row
-		remainingWidth := t.width - len(visibleLine)
+		visibleWidth := StringWidth(visibleLine)
+		remainingWidth := t.width - visibleWidth
 		if remainingWidth > 0 {
 			emptyStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-			screen.DrawString(x+len(visibleLine), y+row, strings.Repeat(" ", remainingWidth), emptyStyle)
+			screen.DrawString(x+visibleWidth, y+row, strings.Repeat(" ", remainingWidth), emptyStyle)
 		}
 		
 		// Draw cursor if on this line and focused
 		if t.focused && lineIndex == t.cursorRow {
-			cursorScreenCol := t.cursorCol - t.offsetCol
+			cursorScreenCol := t.getCursorScreenCol()
 			if cursorScreenCol >= 0 && cursorScreenCol < t.width {
 				cursorStyle := lipgloss.NewStyle().
 					Foreground(theme.Palette.Background).
 					Background(theme.Palette.Text)
 				
 				// Get character under cursor
-				var cursorChar rune = ' '
-				if t.cursorCol < len(line) {
-					cursorChar = rune(line[t.cursorCol])
+				cursorChar, found := GetCharAtVisualCol(line, t.cursorCol)
+				if !found {
+					cursorChar = ' '
 				}
 				screen.DrawRune(x+cursorScreenCol, y+row, cursorChar, cursorStyle)
 			}

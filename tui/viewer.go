@@ -81,18 +81,12 @@ func (v *Viewer) processContent() {
 
 	// Wrap lines that are too long
 	for _, line := range rawLines {
-		if len(line) <= v.width {
+		if StringWidth(line) <= v.width {
 			v.lines = append(v.lines, line)
 		} else {
-			// Wrap long lines
-			for len(line) > 0 {
-				end := v.width
-				if end > len(line) {
-					end = len(line)
-				}
-				v.lines = append(v.lines, line[:end])
-				line = line[end:]
-			}
+			// Use the unicode-aware Wrap function
+			wrappedLines := Wrap(line, v.width)
+			v.lines = append(v.lines, wrappedLines...)
 		}
 	}
 }
@@ -157,18 +151,19 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 		
 		// Truncate if line is still too long (shouldn't happen with wrapping)
 		displayLine := line
-		if len(displayLine) > v.width {
-			displayLine = displayLine[:v.width-1] + "…"
+		if StringWidth(displayLine) > v.width {
+			displayLine = TruncateWithEllipsis(displayLine, v.width)
 		}
 
 		// Draw the line
 		screen.DrawString(x, y+row, displayLine, textStyle)
 		
 		// Fill the rest of the row
-		remainingWidth := v.width - len(displayLine)
+		displayWidth := StringWidth(displayLine)
+		remainingWidth := v.width - displayWidth
 		if remainingWidth > 0 {
 			emptyStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-			screen.DrawString(x+len(displayLine), y+row, strings.Repeat(" ", remainingWidth), emptyStyle)
+			screen.DrawString(x+displayWidth, y+row, strings.Repeat(" ", remainingWidth), emptyStyle)
 		}
 	}
 

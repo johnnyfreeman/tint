@@ -28,19 +28,57 @@ func NewScreen(width, height int) *Screen {
 
 func (s *Screen) SetCell(x, y int, cell Cell) {
 	if x >= 0 && x < s.width && y >= 0 && y < s.height {
+		// Check if we're overwriting a continuation cell
+		if x > 0 && s.cells[y][x].IsContinuation() {
+			// Find the start of the wide character and clear it
+			for i := x - 1; i >= 0 && i > x - 3; i-- {
+				if !s.cells[y][i].IsContinuation() {
+					// Found the wide character, clear it
+					s.cells[y][i] = NewCell(' ')
+					break
+				}
+			}
+		}
+		
+		// Check if we're overwriting the start of a wide character
+		if x+1 < s.width && s.cells[y][x+1].IsContinuation() {
+			// Clear continuation cells
+			for i := x + 1; i < s.width && s.cells[y][i].IsContinuation(); i++ {
+				s.cells[y][i] = NewCell(' ')
+			}
+		}
+		
 		s.cells[y][x] = cell
+		
+		// For wide characters, set continuation cells
+		if cell.Width > 1 {
+			continuationCell := NewContinuationCell()
+			continuationCell.Foreground = cell.Foreground
+			continuationCell.Background = cell.Background
+			continuationCell.Bold = cell.Bold
+			continuationCell.Italic = cell.Italic
+			continuationCell.Underline = cell.Underline
+			continuationCell.Dim = cell.Dim
+			
+			for i := 1; i < cell.Width && x+i < s.width; i++ {
+				s.cells[y][x+i] = continuationCell
+			}
+		}
 	}
 }
 
 func (s *Screen) DrawRune(x, y int, r rune, style lipgloss.Style) {
 	if x >= 0 && x < s.width && y >= 0 && y < s.height {
-		s.cells[y][x] = NewCell(r).WithStyle(style)
+		cell := NewCell(r).WithStyle(style)
+		s.SetCell(x, y, cell)
 	}
 }
 
 func (s *Screen) DrawString(x, y int, str string, style lipgloss.Style) {
-	for i, r := range str {
-		s.DrawRune(x+i, y, r, style)
+	xOffset := 0
+	for _, r := range str {
+		s.DrawRune(x+xOffset, y, r, style)
+		xOffset += RuneWidth(r)
 	}
 }
 
@@ -96,7 +134,7 @@ func (s *Screen) DrawBoxWithTitle(x, y, width, height int, title string, borderS
 	
 	// Calculate title position (centered)
 	titleWithSpaces := " " + title + " "
-	titleLen := len(titleWithSpaces)
+	titleLen := StringWidth(titleWithSpaces)
 	titleStart := x + (width-titleLen)/2
 	
 	// Draw left border segment
@@ -172,7 +210,7 @@ func (s *Screen) DrawBrutalistBoxWithTitle(x, y, width, height int, title string
 	
 	// Calculate title position (centered)
 	titleWithSpaces := " " + title + " "
-	titleLen := len(titleWithSpaces)
+	titleLen := StringWidth(titleWithSpaces)
 	titleStart := x + (width-titleLen)/2
 	
 	// Draw left border segment
