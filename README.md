@@ -2,11 +2,21 @@
 
 A refreshingly simple terminal UI (TUI) component library for Go, built on top of [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss). Theme your TUIs with ease!
 
+## Why Tint?
+
+1. **Cell-based rendering** - Prevents ANSI escape sequence corruption that plagues other TUI libraries
+2. **Theme-first design** - Consistent, beautiful UIs out of the box with multiple built-in themes
+3. **Terminal-native layouts** - Designed specifically for terminal constraints, not web concepts
+4. **Production-ready** - Used in real applications with complex requirements
+5. **Easy to learn** - Consistent patterns across all components
+
 ## Features
 
 - **Cell-based rendering** - Prevents ANSI escape sequence corruption
 - **Comprehensive theming system** - Multiple built-in themes with state-based styling
-- **Rich component library** - Input fields, tables, text areas, viewers, modals, tabs, and notifications
+- **Rich component library** - Containers, inputs, tables, text areas, viewers, modals, tabs, and notifications
+- **Constraint-based layout system** - Terminal-native layouts with flexible sizing
+- **Full Unicode support** - Proper handling of emojis, CJK characters, and combining marks
 - **Consistent component interface** - All components implement a standard interface
 - **Focus management** - Proper keyboard navigation between components
 - **No rendering artifacts** - Clean, flicker-free updates
@@ -36,32 +46,129 @@ type Component interface {
 }
 ```
 
-## Core Components
+## Layout System
 
-### Screen
-The foundation of the rendering system. Manages a 2D grid of cells.
+Tint provides a powerful constraint-based layout system designed specifically for terminal UIs:
+
+### Linear Layout (HBox/VBox)
+
+Arrange components horizontally or vertically with flexible sizing:
 
 ```go
-screen := tui.NewScreen(width, height)
-screen.DrawString(x, y, "Hello", style)
+// Horizontal layout
+header := tui.HBox().
+    AddFixed(logo, 20).           // Fixed 20 columns
+    AddFlex(title, 1).            // Flexible space
+    AddFixed(clock, 10)           // Fixed 10 columns
+
+// Vertical layout  
+sidebar := tui.VBox().
+    AddFixed(header, 3).          // Fixed 3 rows
+    AddFlex(content, 1).          // Takes remaining space
+    AddFixed(statusBar, 1)        // Fixed 1 row
+```
+
+### Split Layout
+
+Create resizable split panes:
+
+```go
+// Vertical split (side by side)
+split := tui.NewVSplit().
+    SetFixed(200).                // Fixed left panel
+    SetFirst(sidebar).
+    SetSecond(mainContent)
+
+// Horizontal split (top/bottom)
+split := tui.NewHSplit().
+    SetPercentage(0.7).           // Top takes 70%
+    SetFirst(editor).
+    SetSecond(terminal)
+```
+
+### Stack Layout
+
+Layer components on top of each other:
+
+```go
+// Create layered UI with modals
+stack := tui.NewStack().
+    AddLayer(mainView).           // Base layer
+    AddLayer(modal, tui.StackItem{
+        X: tui.Percentage(0.25),  // Center at 25%
+        Y: tui.Percentage(0.25),
+        Width: tui.Percentage(0.5),
+        Height: tui.Percentage(0.5),
+    })
+```
+
+### Conditional Layout
+
+Responsive layouts based on terminal size:
+
+```go
+layout := tui.NewConditional().
+    AddCondition(func(w, h int) bool {
+        return w < 80  // Mobile view
+    }, mobileLayout).
+    AddCondition(func(w, h int) bool {
+        return w < 120 // Tablet view  
+    }, tabletLayout).
+    SetFallback(desktopLayout)
+```
+
+## Core Components
+
+### Container
+
+The fundamental building block for creating bordered regions:
+
+```go
+// Create a container with padding and title
+container := tui.NewContainer().
+    SetTitle("Settings").
+    SetBorderStyle(tui.BorderStyleRounded).
+    SetPadding(tui.NewPadding(1, 2, 1, 2)). // top, right, bottom, left
+    SetContent(myComponent)
+
+// Or use builder methods
+container := tui.BoxWithTitle("User Profile", userForm).
+    WithPadding(2).
+    WithStyle(tui.BorderStyleDouble)
+```
+
+### Screen
+
+The foundation of the rendering system with theme support:
+
+```go
+// Create themed screen
+theme := tui.GetTheme("tokyonight")
+screen := tui.NewScreen(width, height, theme)
+
+// Draw with proper Unicode support
+screen.DrawString(x, y, "Hello 世界! 🎉", style)
 screen.Render() // Returns the final output
 ```
 
 ### Input
-Single-line text input with cursor and scrolling support.
+
+Single-line text input with full Unicode support:
 
 ```go
 input := tui.NewInput()
-input.SetPlaceholder("Enter text...")
+input.SetPlaceholder("Enter name...")
 input.SetWidth(40)
 input.Focus()
 
-// Draw it
-input.Draw(screen, x, y, theme)
+// Wrap in a container for better presentation
+container := tui.BoxWithTitle("Username", input)
+container.Draw(screen, x, y, theme)
 ```
 
 ### TextArea
-Multi-line text editor with cursor navigation.
+
+Multi-line text editor with Unicode-aware cursor navigation:
 
 ```go
 textarea := tui.NewTextArea()
@@ -69,12 +176,15 @@ textarea.SetSize(80, 20)
 textarea.SetValue("Initial content")
 textarea.Focus()
 
-// Draw with border
-textarea.DrawWithBorder(screen, x, y, theme, "Editor")
+// Draw with container
+container := tui.BoxWithTitle("Editor", textarea).
+    WithPadding(1)
+container.Draw(screen, x, y, theme)
 ```
 
 ### Table
-Editable table with cell navigation and scrolling.
+
+Editable table with cell navigation and scrolling:
 
 ```go
 table := tui.NewTable()
@@ -87,66 +197,34 @@ table.SetRows([]tui.TableRow{
     {"Key2", "Value2"},
 })
 
-// Draw in a box
-table.DrawInBox(screen, x, y, width, height, "Data", theme)
-```
-
-### Viewer
-Read-only scrollable text viewer with scroll indicators.
-
-```go
-viewer := tui.NewViewer()
-viewer.SetContent(longText)
-viewer.SetWrapText(true)
-viewer.SetSize(80, 20)
-
-// Draw it
-viewer.Draw(screen, x, y, theme)
+// Wrap in container
+container := tui.BoxWithTitle("Data", table)
+container.Draw(screen, x, y, theme)
 ```
 
 ### Modal
-Modal dialog component with customizable content.
+
+Modal dialogs that work as elevated surfaces:
 
 ```go
-modal := tui.NewModal()
-modal.SetTitle("Confirm")
-modal.SetContent("Are you sure you want to proceed?")
-modal.SetSize(40, 10)
+// Create modal content
+content := tui.VBox().
+    AddFixed(tui.NewViewer().SetContent("Are you sure?"), 3).
+    AddFixed(buttons, 3)
+
+// Create modal (just provides elevation)
+modal := tui.NewModal().SetSize(40, 10)
+
+// Wrap content in container for structure
+container := tui.BoxWithTitle("Confirm", content).
+    WithStyle(tui.BorderStyleDouble)
+
+// Set container as modal content
+modal.SetContent(container)
 modal.Show()
 
-// Draw centered by default
+// Draw modal (centers automatically)
 modal.Draw(screen, 0, 0, theme)
-```
-
-### Tabs
-Tabbed container for organizing content.
-
-```go
-tabs := tui.NewTabs()
-tabs.AddTab("General", "General settings content")
-tabs.AddTab("Advanced", advancedComponent)
-tabs.SetSize(60, 20)
-
-// Draw it
-tabs.Draw(screen, x, y, theme)
-```
-
-### Notification
-Toast-style notifications with different types.
-
-```go
-notif := tui.NewNotification()
-notif.SetPosition(tui.NotificationBottomRight)
-notif.SetDuration(3 * time.Second)
-
-// Show different types
-notif.ShowSuccess("Operation completed!")
-notif.ShowError("Something went wrong")
-notif.ShowWarning("Please check your input")
-notif.ShowInfo("New update available")
-
-// Draw it (auto-positions based on settings)
-notif.Draw(screen, 0, 0, theme)
 ```
 
 ## Theming
@@ -157,8 +235,10 @@ The library includes a comprehensive theming system with multiple built-in theme
 - **Rosé Pine** - Soho vibes with muted colors
 - **Catppuccin** - Soothing pastel theme
 - **Monochrome** - High contrast black and white
+- **Brutalist** - Bold, stark design aesthetic
 
 ```go
+// Get a theme
 theme := tui.GetTheme("tokyonight")
 
 // Themes provide semantic colors
@@ -166,15 +246,34 @@ theme.Palette.Primary    // Main brand color
 theme.Palette.Text       // Primary text
 theme.Palette.Background // Background color
 
-// And component-specific styles
+// Component-specific styles
 theme.Components.Interactive.Selected // Selected item style
 theme.Components.Container.Border.Focused // Focused border
 theme.Components.Tab.Active.Focused // Active tab style
+
+// Inline elements for special UI elements
+theme.InlineElements.CodeBlock    // For code snippets
+theme.InlineElements.Strong       // Bold/important text
+theme.InlineElements.Link         // Hyperlinks
 ```
 
-## Examples
+## Unicode Support
 
-### Basic Example
+Tint provides comprehensive Unicode support:
+
+- **Wide characters** - Proper handling of CJK characters and emojis
+- **Combining marks** - Correct rendering of diacritics
+- **Zero-width joiners** - Emoji sequences render correctly
+- **Grapheme clusters** - Multi-codepoint characters work seamlessly
+
+```go
+// All components handle Unicode properly
+input.SetValue("Hello 世界! 👨‍👩‍👧‍👦")
+textarea.SetValue("Café résumé naïve")
+table.SetCell(0, 0, "🇺🇸 🇯🇵 🇰🇷")
+```
+
+## Complete Example
 
 ```go
 package main
@@ -185,10 +284,43 @@ import (
 )
 
 type model struct {
-    screen *tui.Screen
-    input  *tui.Input
-    width  int
-    height int
+    screen     *tui.Screen
+    layout     *tui.LinearLayout
+    input      *tui.Input
+    textarea   *tui.TextArea
+    focusChain *tui.FocusChain
+    theme      *tui.Theme
+    width      int
+    height     int
+}
+
+func initialModel() model {
+    // Create components
+    input := tui.NewInput()
+    input.SetPlaceholder("Enter command...")
+    
+    textarea := tui.NewTextArea()
+    textarea.SetSize(60, 10)
+    
+    // Create layout
+    layout := tui.VBox().
+        AddFixed(tui.BoxWithTitle("Input", input), 5).
+        AddFlex(tui.BoxWithTitle("Output", textarea), 1).
+        SetPadding(tui.NewPadding(1))
+    
+    // Setup focus chain
+    focusChain := tui.NewFocusChain()
+    focusChain.Add(input)
+    focusChain.Add(textarea)
+    focusChain.Next() // Focus first component
+    
+    return model{
+        layout:     layout,
+        input:      input,
+        textarea:   textarea,
+        focusChain: focusChain,
+        theme:      tui.GetTheme("tokyonight"),
+    }
 }
 
 func (m model) Init() tea.Cmd {
@@ -198,70 +330,58 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
     case tea.KeyMsg:
-        if msg.String() == "ctrl+c" {
+        switch msg.String() {
+        case "ctrl+c", "q":
             return m, tea.Quit
+        case "tab":
+            m.focusChain.Next()
+        case "shift+tab":
+            m.focusChain.Previous()
+        default:
+            // Let focused component handle the key
+            if m.input.IsFocused() {
+                m.input.HandleKey(msg.String())
+            } else if m.textarea.IsFocused() {
+                m.textarea.HandleKey(msg.String())
+            }
         }
-        // Pass key to focused component
-        m.input.HandleKey(msg.String())
     case tea.WindowSizeMsg:
         m.width = msg.Width
         m.height = msg.Height
-        m.screen = tui.NewScreen(m.width, m.height)
+        m.screen = tui.NewScreen(m.width, m.height, *m.theme)
+        m.layout.SetSize(m.width, m.height)
     }
     return m, nil
 }
 
 func (m model) View() string {
-    theme := tui.GetTheme("tokyonight")
+    if m.screen == nil {
+        return ""
+    }
+    
     m.screen.Clear()
-    
-    // Draw input field
-    m.input.Draw(m.screen, 10, 5, theme)
-    
+    m.layout.Draw(m.screen, 0, 0, m.theme)
     return m.screen.Render()
 }
-```
 
-### Component Integration
-
-All components follow the same pattern:
-
-```go
-// Create and configure
-component := tui.NewTextArea()
-component.SetSize(60, 10)
-component.Focus()
-
-// Handle input when focused
-if component.IsFocused() {
-    handled := component.HandleKey(key)
+func main() {
+    p := tea.NewProgram(initialModel())
+    if _, err := p.Run(); err != nil {
+        panic(err)
+    }
 }
-
-// Draw at position
-component.Draw(screen, x, y, theme)
-
-// Or draw with border
-component.DrawWithBorder(screen, x, y, theme, "Title")
 ```
 
-### Complete Examples
+## Examples
 
 Check out the `examples/` directory for complete applications:
 
 - **demo** - Comprehensive demo showcasing all components
-- **api-client** - A REST API client UI demonstrating real-world usage
-
-## Why Cell-Based Rendering?
-
-Traditional TUI libraries often suffer from rendering artifacts when components overlap or when ANSI escape sequences get corrupted. This library solves these issues by:
-
-1. **Separating content from presentation** - Each cell stores its character and style separately
-2. **Atomic updates** - The entire screen is rendered in one pass
-3. **Proper layering** - Components can safely overlap without corruption
-
-## Unicode Support
-
-Note: The library currently assumes one character per cell. For proper Unicode support (including wide characters and combining characters), consider using ASCII characters for UI elements like borders and indicators.
+- **api-client** - REST API client demonstrating real-world usage
+- **text-editor** - Full-featured text editor with fuzzy finder
+- **layouts** - Interactive demonstration of all layout types
+- **container-demo** - Container styling and theming examples
+- **modals** - Various modal dialog patterns
 
 ## Contributing
 
