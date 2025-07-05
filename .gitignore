@@ -30,6 +30,21 @@ examples/text-editor/text-editor
 examples/text-editor/tint-text-editor
 examples/container-demo/container-demo
 examples/container-demo/tint-container-demo
+examples/modal-test/modal-test
+examples/modals/modals
+examples/screen/screen
+examples/layouts/layouts
+examples/layout-showcase/layout-showcase
+
+# General pattern for example binaries
+examples/*/main
+examples/*/*
+!examples/*/*.go
+!examples/*/*.md
+!examples/*/*.txt
+!examples/*/*.sh
+!examples/*/go.mod
+!examples/*/go.sum
 
 # IDE and editor files
 .idea/

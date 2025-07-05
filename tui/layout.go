@@ -93,6 +93,7 @@ func GridLayout(items, cols, itemWidth, itemHeight, spacing int) []Rectangle {
 	return positions
 }
 
+// Deprecated: Use LinearLayout from linear_layout.go instead
 // FlexLayout provides flexible box layout calculations
 type FlexLayout struct {
 	Direction LayoutDirection
@@ -100,7 +101,7 @@ type FlexLayout struct {
 	Padding   int
 }
 
-// NewFlexLayout creates a new flex layout
+// Deprecated: Use NewLinearLayout instead
 func NewFlexLayout(direction LayoutDirection) *FlexLayout {
 	return &FlexLayout{
 		Direction: direction,
@@ -139,13 +140,14 @@ func (f *FlexLayout) Calculate(containerRect Rectangle, itemSizes []int) []Recta
 	return positions
 }
 
+// Deprecated: Use Split from split_layout.go instead
 // SplitLayout calculates positions for split pane layouts
 type SplitLayout struct {
 	Vertical bool
 	Split    float64 // Percentage (0.0 to 1.0) or fixed pixels if > 1
 }
 
-// NewSplitLayout creates a new split layout
+// Deprecated: Use NewSplit instead
 func NewSplitLayout(vertical bool, split float64) *SplitLayout {
 	return &SplitLayout{
 		Vertical: vertical,

@@ -40,7 +40,6 @@ type model struct {
 	
 	// New components
 	statusBar *tui.StatusBar
-	splitView *tui.SplitView
 	
 	// Containers for different sections
 	historyContainer  *tui.Container
@@ -94,9 +93,7 @@ func initialModel() model {
 	statusBar.AddSegment("Tab: focus", "left")
 	statusBar.AddSegment("H: history | R: send | M: method | 1-3: tabs | n/d: table | arrows: nav | q: quit", "right")
 	
-	// Create split view for history sidebar
-	splitView := tui.NewSplitView(true) // vertical split
-	splitView.SetSplit(30) // 30 pixels for history
+	// Layout is handled manually in View() for more control
 	
 	// Create containers with enhanced border elements
 	historyContainer := tui.NewContainer()
@@ -157,7 +154,6 @@ func initialModel() model {
 		historyVisible: true,
 		currentTheme:      "tokyonight",
 		statusBar:         statusBar,
-		splitView:         splitView,
 		historyContainer:  historyContainer,
 		urlContainer:      urlContainer,
 		headersContainer:  headersContainer,
