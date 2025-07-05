@@ -536,32 +536,16 @@ func (m *model) drawMainArea(theme tui.Theme, x, width int) {
 }
 
 func (m *model) drawURLInput(theme tui.Theme, x, y, width, height int) {
-	var borderColors, titleColors tui.StateColors
+	// Update container focus state
 	if m.focus == "url" {
-		borderColors = theme.Components.Container.Border.Focused
-		titleColors = theme.Components.Container.Title.Focused
+		m.urlContainer.Focus()
 	} else {
-		borderColors = theme.Components.Container.Border.Unfocused
-		titleColors = theme.Components.Container.Title.Unfocused
+		m.urlContainer.Blur()
 	}
 	
-	borderStyle := lipgloss.NewStyle().
-		Foreground(borderColors.Border).
-		Background(theme.Palette.Background)
-	titleStyle := lipgloss.NewStyle().
-		Foreground(titleColors.Text).
-		Background(theme.Palette.Background)
-
-	// Fill background
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	for dy := 0; dy < height; dy++ {
-		for dx := 0; dx < width; dx++ {
-			m.screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
-		}
-	}
-	
-	// Draw box
-	m.screen.DrawBoxWithTitle(x, y, width, height, "Request", borderStyle, titleStyle)
+	// Set container size and draw
+	m.urlContainer.SetSize(width, height)
+	m.urlContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
 	
 	// Draw method
 	methodStyle := lipgloss.NewStyle().
