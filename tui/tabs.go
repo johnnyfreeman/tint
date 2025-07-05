@@ -125,13 +125,8 @@ func (t *TabsComponent) drawAtPosition(screen *Screen, x, y, width, height int, 
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
 
-	// Fill background first
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	for dy := 0; dy < height; dy++ {
-		for dx := 0; dx < width; dx++ {
-			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
-		}
-	}
+	// Clear the entire tabs area with theme background
+	ClearComponentArea(screen, x, y, width, height, theme)
 
 	// Draw based on render style
 	if t.renderStyle == TabsOnTop {

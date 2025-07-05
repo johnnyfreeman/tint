@@ -21,6 +21,7 @@ type Cell struct {
 	Italic     bool
 	Underline  bool
 	Dim        bool
+	HasContent bool // true if this cell has content to draw
 }
 
 func NewCell(r rune) Cell {
@@ -29,6 +30,7 @@ func NewCell(r rune) Cell {
 		Width:      RuneWidth(r),
 		Foreground: lipgloss.NoColor{},
 		Background: lipgloss.NoColor{},
+		HasContent: true,
 	}
 }
 
@@ -39,6 +41,18 @@ func NewContinuationCell() Cell {
 		Width:      0, // Continuation cell
 		Foreground: lipgloss.NoColor{},
 		Background: lipgloss.NoColor{},
+		HasContent: true, // Continuation cells have content
+	}
+}
+
+// NewTransparentCell creates a cell that preserves what's underneath
+func NewTransparentCell() Cell {
+	return Cell{
+		Rune:       0,
+		Width:      1,
+		Foreground: lipgloss.NoColor{},
+		Background: lipgloss.NoColor{},
+		HasContent: false, // No content - preserves what's underneath
 	}
 }
 
@@ -89,7 +103,9 @@ func (c Cell) Render() string {
 		return ""
 	}
 	
-	if c.Rune == 0 {
+	// Cells without content shouldn't happen in render (they should be merged away)
+	// But if they do, render as space
+	if !c.HasContent || c.Rune == 0 {
 		return " "
 	}
 
@@ -139,20 +155,47 @@ func (c Cell) Render() string {
 
 // Merge overlays one cell on top of another
 func (c Cell) Merge(overlay Cell) Cell {
-	// If overlay has no content, return original
-	if overlay.Rune == 0 || overlay.Rune == ' ' {
-		// But if overlay has background color, apply it
+	// If overlay has no content, preserve the original cell
+	if !overlay.HasContent {
+		// But still apply style attributes if they're set
+		result := c
+		
+		// Apply background if it's set
 		if _, isNoColor := overlay.Background.(lipgloss.NoColor); !isNoColor {
-			c.Background = overlay.Background
+			result.Background = overlay.Background
 		}
-		// If overlay is dimmed, dim the original
+		
+		// Apply foreground if it's set
+		if _, isNoColor := overlay.Foreground.(lipgloss.NoColor); !isNoColor {
+			result.Foreground = overlay.Foreground
+		}
+		
+		// Apply style attributes
+		if overlay.Bold {
+			result.Bold = true
+		}
+		if overlay.Italic {
+			result.Italic = true
+		}
+		if overlay.Underline {
+			result.Underline = true
+		}
 		if overlay.Dim {
-			c.Dim = true
+			result.Dim = true
 		}
-		return c
+		
+		return result
 	}
-	// Otherwise return the overlay
-	return overlay
+	
+	// Otherwise, overlay has content - use it but preserve background if not set
+	result := overlay
+	
+	// If overlay has no background color, preserve the original background
+	if _, isNoColor := overlay.Background.(lipgloss.NoColor); isNoColor {
+		result.Background = c.Background
+	}
+	
+	return result
 }
 
 // IsDefault checks if this is an empty/default cell
@@ -162,6 +205,7 @@ func (c Cell) IsDefault() bool {
 	
 	return c.Rune == ' ' && 
 		c.Width == 1 &&
+		c.HasContent &&
 		fgIsNoColor && 
 		bgIsNoColor && 
 		!c.Bold && 

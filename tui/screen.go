@@ -12,6 +12,14 @@ type Screen struct {
 	theme  Theme
 }
 
+// newThemedCell creates a cell with the theme's background color
+func (s *Screen) newThemedCell(r rune) Cell {
+	style := lipgloss.NewStyle().
+		Background(s.theme.Palette.Background).
+		Foreground(s.theme.Palette.Text)
+	return NewCell(r).WithStyle(style)
+}
+
 func NewScreen(width, height int, theme Theme) *Screen {
 	s := &Screen{
 		width:  width,
@@ -38,8 +46,8 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 			// Find the start of the wide character and clear it
 			for i := x - 1; i >= 0 && i > x - 3; i-- {
 				if !s.cells[y][i].IsContinuation() {
-					// Found the wide character, clear it
-					s.cells[y][i] = NewCell(' ')
+					// Found the wide character, clear it with theme background
+					s.cells[y][i] = s.newThemedCell(' ')
 					break
 				}
 			}
@@ -47,9 +55,9 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 		
 		// Check if we're overwriting the start of a wide character
 		if x+1 < s.width && s.cells[y][x+1].IsContinuation() {
-			// Clear continuation cells
+			// Clear continuation cells with theme background
 			for i := x + 1; i < s.width && s.cells[y][i].IsContinuation(); i++ {
-				s.cells[y][i] = NewCell(' ')
+				s.cells[y][i] = s.newThemedCell(' ')
 			}
 		}
 		
@@ -74,8 +82,11 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 
 func (s *Screen) DrawRune(x, y int, r rune, style lipgloss.Style) {
 	if x >= 0 && x < s.width && y >= 0 && y < s.height {
-		cell := NewCell(r).WithStyle(style)
-		s.SetCell(x, y, cell)
+		newCell := NewCell(r).WithStyle(style)
+		// Merge with existing cell to preserve background if needed
+		existingCell := s.cells[y][x]
+		mergedCell := existingCell.Merge(newCell)
+		s.SetCell(x, y, mergedCell)
 	}
 }
 
@@ -88,12 +99,9 @@ func (s *Screen) DrawString(x, y int, str string, style lipgloss.Style) {
 }
 
 func (s *Screen) Clear() {
-	style := lipgloss.NewStyle().
-		Background(s.theme.Palette.Background).
-		Foreground(s.theme.Palette.Text)
 	for y := 0; y < s.height; y++ {
 		for x := 0; x < s.width; x++ {
-			s.cells[y][x] = NewCell(' ').WithStyle(style)
+			s.cells[y][x] = s.newThemedCell(' ')
 		}
 	}
 }
@@ -250,26 +258,27 @@ func (s *Screen) DrawBrutalistBoxWithTitle(x, y, width, height int, title string
 
 // DrawBlockShadow draws a solid block shadow for a given area
 func (s *Screen) DrawBlockShadow(x, y, width, height int, shadowStyle lipgloss.Style, offsetX, offsetY int) {
-	// Draw shadow using solid blocks
+	// Draw shadow using spaces with shadow background color
+	// This creates a proper shadow effect without obscuring text
 	
 	// Draw bottom shadow (full width, offset down)
 	for i := 0; i < width; i++ {
 		for j := 0; j < offsetY; j++ {
-			s.DrawRune(x+offsetX+i, y+height+j, '█', shadowStyle)
+			s.DrawRune(x+offsetX+i, y+height+j, ' ', shadowStyle)
 		}
 	}
 	
 	// Draw right shadow (full height, offset right)
 	for i := 0; i < height; i++ {
 		for j := 0; j < offsetX; j++ {
-			s.DrawRune(x+width+j, y+offsetY+i, '█', shadowStyle)
+			s.DrawRune(x+width+j, y+offsetY+i, ' ', shadowStyle)
 		}
 	}
 	
 	// Draw corner shadow (fills the gap)
 	for i := 0; i < offsetX; i++ {
 		for j := 0; j < offsetY; j++ {
-			s.DrawRune(x+width+i, y+height+j, '█', shadowStyle)
+			s.DrawRune(x+width+i, y+height+j, ' ', shadowStyle)
 		}
 	}
 }

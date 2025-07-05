@@ -66,7 +66,7 @@ func (s *ScreenSimulation) GetCell(x, y int) Cell {
 	if x >= 0 && x < s.width && y >= 0 && y < s.height {
 		return s.cells[y][x]
 	}
-	return NewCell(' ')
+	return s.newThemedCell(' ')
 }
 
 // GetLine returns the content of a specific line as a string
@@ -169,7 +169,10 @@ func (s *ScreenSimulation) GetVisibleBounds() (minX, minY, maxX, maxY int) {
 	for y := 0; y < s.height; y++ {
 		for x := 0; x < s.width; x++ {
 			cell := s.cells[y][x]
-			if !cell.IsDefault() && !cell.IsContinuation() {
+			// For testing purposes, consider cells with only theme background as "empty"
+			isThemeBackground := cell.Rune == ' ' && cell.Background == s.theme.Palette.Background &&
+				!cell.Bold && !cell.Italic && !cell.Underline && !cell.Dim
+			if !cell.IsDefault() && !isThemeBackground && !cell.IsContinuation() {
 				if x < minX {
 					minX = x
 				}

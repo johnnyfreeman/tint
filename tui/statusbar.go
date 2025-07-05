@@ -51,12 +51,15 @@ func (s *StatusBar) Clear() {
 func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 	width := screen.Width()
 	
-	// Default style if not set
+	// Clear the entire status bar area with theme background
+	ClearComponentArea(screen, x, y, width, s.height, theme)
+	
+	// Default style if not set (status bar typically uses surface color)
 	bgStyle := lipgloss.NewStyle().
 		Background(theme.Palette.Surface).
 		Foreground(theme.Palette.TextMuted)
 	
-	// Clear the status bar area
+	// Fill the status bar with surface color
 	for i := 0; i < width; i++ {
 		screen.SetCell(x+i, y, Cell{
 			Rune:       ' ',

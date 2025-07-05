@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"strings"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -125,6 +124,9 @@ func (i *Input) adjustOffset() {
 
 // Draw renders the input field to the screen
 func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
+	// Clear the entire input area with theme background
+	ClearComponentArea(screen, x, y, i.width, 1, theme)
+	
 	style := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
@@ -168,14 +170,7 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 		screen.DrawRune(cursorX, y, cursorChar, cursorStyle)
 	}
 	
-	// Fill the rest of the input width with spaces
-	displayWidth := StringWidth(displayText)
-	remainingWidth := i.width - displayWidth
-	if remainingWidth > 0 {
-		emptyStyle := lipgloss.NewStyle().
-			Background(theme.Palette.Background)
-		screen.DrawString(x+displayWidth, y, strings.Repeat(" ", remainingWidth), emptyStyle)
-	}
+	// The rest of the input width is already cleared by ClearComponentArea
 }
 
 // DrawInBox renders the input field inside a box with a title

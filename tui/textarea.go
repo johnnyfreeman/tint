@@ -160,6 +160,9 @@ func (t *TextArea) adjustOffset() {
 
 // Draw renders the text area to the screen
 func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
+	// Clear the entire text area with theme background
+	ClearComponentArea(screen, x, y, t.width, t.height, theme)
+	
 	textStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
@@ -188,9 +191,7 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 	for row := 0; row < t.height; row++ {
 		lineIndex := t.offsetRow + row
 		if lineIndex >= len(t.lines) {
-			// Fill empty rows
-			emptyStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-			screen.DrawString(x, y+row, strings.Repeat(" ", t.width), emptyStyle)
+			// Empty rows are already cleared by ClearComponentArea
 			continue
 		}
 		
@@ -201,14 +202,6 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 		
 		// Draw the line
 		screen.DrawString(x, y+row, visibleLine, textStyle)
-		
-		// Fill the rest of the row
-		visibleWidth := StringWidth(visibleLine)
-		remainingWidth := t.width - visibleWidth
-		if remainingWidth > 0 {
-			emptyStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-			screen.DrawString(x+visibleWidth, y+row, strings.Repeat(" ", remainingWidth), emptyStyle)
-		}
 		
 		// Draw cursor if on this line and focused
 		if t.focused && lineIndex == t.cursorRow {

@@ -231,7 +231,28 @@ func (m model) View() string {
 	} else {
 		m.modal.Blur()
 	}
-	m.modal.Draw(m.screen, 0, 0, &theme)
+	
+	if m.modal.IsVisible() {
+		m.modal.Draw(m.screen, 0, 0, &theme)
+		
+		// Draw container inside modal
+		modalWidth, modalHeight := m.modal.GetSize()
+		modalX := (m.width - modalWidth) / 2
+		modalY := (m.height - modalHeight) / 2
+		
+		container := tui.NewContainer()
+		container.SetTitle("Sample Modal")
+		container.SetSize(modalWidth, modalHeight)  // Fill the modal
+		container.SetPadding(tui.NewMargin(1))
+		
+		// Create content for the container
+		textarea := tui.NewTextArea()
+		textarea.SetValue("This is a modal dialog.\n\nPress 'm' again to close it.\n\nNotice the shadow effect\nbehind the modal.")
+		textarea.SetSize(modalWidth-4, modalHeight-4)  // Account for border and padding
+		container.SetContent(textarea)
+		
+		container.Draw(m.screen, modalX, modalY, &theme)
+	}
 
 	// Draw notification (always on top)
 	m.notification.Draw(m.screen, 0, 0, &theme)
@@ -256,8 +277,8 @@ func createDemoTabs() *tui.TabsComponent {
 
 func createDemoModal() *tui.Modal {
 	modal := tui.NewModal()
-	modal.SetTitle("Sample Modal")
-	modal.SetContent("This is a modal dialog.\n\nPress 'm' again to close it.\n\nNotice the shadow effect\nbehind the modal.")
+	modal.SetSize(40, 12)
+	modal.SetCentered(true)
 	return modal
 }
 

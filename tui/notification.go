@@ -153,12 +153,9 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 		Background(theme.Palette.Surface).
 		Bold(true)
 
-	// Draw background
-	for dy := 0; dy < n.height; dy++ {
-		for dx := 0; dx < n.width; dx++ {
-			screen.DrawRune(actualX+dx, actualY+dy, ' ', bgStyle)
-		}
-	}
+	// Clear the entire notification area with surface color
+	surfaceStyle := lipgloss.NewStyle().Background(theme.Palette.Surface)
+	ClearArea(screen, actualX, actualY, n.width, n.height, surfaceStyle)
 
 	// Create title with icon
 	title := notifStyle.Icon + " Notification"

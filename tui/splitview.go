@@ -1,16 +1,11 @@
 package tui
 
-import (
-	"github.com/charmbracelet/lipgloss"
-)
-
 // SplitView represents a split pane container with two panels
 type SplitView struct {
 	left      Component
 	right     Component
 	vertical  bool    // true for left|right, false for top/bottom
 	split     float64 // 0.0-1.0 for percentage, >1 for fixed pixels
-	showBorder bool
 	focused    bool
 	focusSide  string // "left" or "right"
 	minSize    int    // minimum size for each pane
@@ -21,7 +16,6 @@ func NewSplitView(vertical bool) *SplitView {
 	return &SplitView{
 		vertical:   vertical,
 		split:      0.5, // 50% by default
-		showBorder: true,
 		focusSide:  "left",
 		minSize:    5,
 	}
@@ -43,10 +37,6 @@ func (sv *SplitView) SetSplit(split float64) {
 	sv.split = split
 }
 
-// SetShowBorder sets whether to show a border between panes
-func (sv *SplitView) SetShowBorder(show bool) {
-	sv.showBorder = show
-}
 
 // SetMinSize sets the minimum size for each pane
 func (sv *SplitView) SetMinSize(size int) {
@@ -65,12 +55,11 @@ func (sv *SplitView) draw(screen *Screen, x, y, width, height int, theme *Theme)
 		return
 	}
 
+	// Clear the entire split view area with theme background
+	ClearComponentArea(screen, x, y, width, height, theme)
+
 	// Calculate split position
 	var leftWidth, leftHeight, rightX, rightY, rightWidth, rightHeight int
-	borderSize := 0
-	if sv.showBorder {
-		borderSize = 1
-	}
 
 	if sv.vertical {
 		// Vertical split (left|right)
@@ -83,27 +72,16 @@ func (sv *SplitView) draw(screen *Screen, x, y, width, height int, theme *Theme)
 		// Ensure minimum sizes
 		if splitX < sv.minSize {
 			splitX = sv.minSize
-		} else if splitX > width-sv.minSize-borderSize {
-			splitX = width - sv.minSize - borderSize
+		} else if splitX > width-sv.minSize {
+			splitX = width - sv.minSize
 		}
 
 		leftWidth = splitX
 		leftHeight = height
-		rightX = x + splitX + borderSize
+		rightX = x + splitX
 		rightY = y
-		rightWidth = width - splitX - borderSize
+		rightWidth = width - splitX
 		rightHeight = height
-
-		// Draw border if enabled
-		if sv.showBorder {
-			borderStyle := lipgloss.NewStyle().
-				Foreground(theme.Palette.Border).
-				Background(theme.Palette.Background)
-			
-			for i := 0; i < height; i++ {
-				screen.DrawRune(x+splitX, y+i, '│', borderStyle)
-			}
-		}
 	} else {
 		// Horizontal split (top/bottom)
 		splitY := int(sv.split)
@@ -115,27 +93,16 @@ func (sv *SplitView) draw(screen *Screen, x, y, width, height int, theme *Theme)
 		// Ensure minimum sizes
 		if splitY < sv.minSize {
 			splitY = sv.minSize
-		} else if splitY > height-sv.minSize-borderSize {
-			splitY = height - sv.minSize - borderSize
+		} else if splitY > height-sv.minSize {
+			splitY = height - sv.minSize
 		}
 
 		leftWidth = width
 		leftHeight = splitY
 		rightX = x
-		rightY = y + splitY + borderSize
+		rightY = y + splitY
 		rightWidth = width
-		rightHeight = height - splitY - borderSize
-
-		// Draw border if enabled
-		if sv.showBorder {
-			borderStyle := lipgloss.NewStyle().
-				Foreground(theme.Palette.Border).
-				Background(theme.Palette.Background)
-			
-			for i := 0; i < width; i++ {
-				screen.DrawRune(x+i, y+splitY, '─', borderStyle)
-			}
-		}
+		rightHeight = height - splitY
 	}
 
 	// Draw left/top component

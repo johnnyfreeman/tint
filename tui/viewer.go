@@ -132,6 +132,9 @@ func (v *Viewer) HandleInput(key string) {
 
 // Draw renders the viewer to the screen
 func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
+	// Clear the entire viewer area with theme background
+	ClearComponentArea(screen, x, y, v.width, v.height, theme)
+	
 	textStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
@@ -141,9 +144,7 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 		lineIndex := v.scrollOffset + row
 		
 		if lineIndex >= len(v.lines) {
-			// Fill empty rows
-			emptyStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-			screen.DrawString(x, y+row, strings.Repeat(" ", v.width), emptyStyle)
+			// Empty rows are already cleared by ClearComponentArea
 			continue
 		}
 
@@ -157,14 +158,6 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 
 		// Draw the line
 		screen.DrawString(x, y+row, displayLine, textStyle)
-		
-		// Fill the rest of the row
-		displayWidth := StringWidth(displayLine)
-		remainingWidth := v.width - displayWidth
-		if remainingWidth > 0 {
-			emptyStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-			screen.DrawString(x+displayWidth, y+row, strings.Repeat(" ", remainingWidth), emptyStyle)
-		}
 	}
 
 	// Draw scroll indicators

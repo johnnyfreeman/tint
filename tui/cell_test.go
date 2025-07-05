@@ -113,26 +113,42 @@ func TestCellMerge(t *testing.T) {
 		t.Errorf("Merged cell should have overlay rune, got %c", merged.Rune)
 	}
 	
-	// Test merging with space preserves background
+	// Test merging with space overrides content but can preserve background
 	overlay = NewCell(' ')
 	overlay.Background = lipgloss.Color("#00FF00")
 	overlay.Dim = true
 	
 	merged = base.Merge(overlay)
-	if merged.Rune != 'A' {
-		t.Errorf("Merging with space should preserve base rune, got %c", merged.Rune)
+	if merged.Rune != ' ' {
+		t.Errorf("Merging with space should override with space, got %c", merged.Rune)
 	}
 	if !merged.Dim {
 		t.Error("Dim attribute should be applied from overlay")
 	}
 	
-	// Test merging with no-color background
-	overlay = NewCell(' ')
+	// Test merging with transparent cell preserves content
+	overlay = NewTransparentCell()
+	overlay.Background = lipgloss.Color("#00FF00")
+	overlay.Dim = true
+	
+	merged = base.Merge(overlay)
+	if merged.Rune != 'A' {
+		t.Errorf("Merging with transparent cell should preserve base rune, got %c", merged.Rune)
+	}
+	if !merged.Dim {
+		t.Error("Dim attribute should be applied from overlay")
+	}
+	
+	// Test merging with no-color background preserves original background
+	overlay = NewCell('C')
 	overlay.Background = lipgloss.NoColor{}
 	
 	merged = base.Merge(overlay)
 	if _, isNoColor := merged.Background.(lipgloss.NoColor); isNoColor {
 		t.Error("Original background should be preserved when overlay has no color")
+	}
+	if merged.Rune != 'C' {
+		t.Errorf("Overlay rune should be used, got %c", merged.Rune)
 	}
 }
 

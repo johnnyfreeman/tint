@@ -97,7 +97,6 @@ func initialModel() model {
 	// Create split view for history sidebar
 	splitView := tui.NewSplitView(true) // vertical split
 	splitView.SetSplit(30) // 30 pixels for history
-	splitView.SetShowBorder(true)
 	
 	// Create containers with enhanced border elements
 	historyContainer := tui.NewContainer()

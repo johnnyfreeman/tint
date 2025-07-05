@@ -212,6 +212,11 @@ func (t *Table) adjustScroll() {
 
 // Draw renders the table to the screen
 func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
+	// Clear the entire table area with theme background
+	tableWidth := t.getTableWidth()
+	tableHeight := t.height + 2 // +2 for header and separator
+	ClearComponentArea(screen, x, y, tableWidth, tableHeight, theme)
+	
 	// Header style
 	headerStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Primary).

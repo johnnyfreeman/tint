@@ -1,18 +1,15 @@
 package tui
 
 import (
-	"strings"
-
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Modal represents a modal dialog component
+// Modal represents a modal dialog component that provides an elevated surface
+// It should contain Container components for structure and content
 type Modal struct {
 	visible  bool
 	width    int
 	height   int
-	title    string
-	content  string
 	focused  bool
 	centered bool
 	x, y     int // Position (used when not centered)
@@ -24,22 +21,11 @@ func NewModal() *Modal {
 		visible:  false,
 		width:    40,
 		height:   10,
-		title:    "",
-		content:  "",
 		focused:  false,
 		centered: true,
 	}
 }
 
-// SetTitle sets the modal title
-func (m *Modal) SetTitle(title string) {
-	m.title = title
-}
-
-// SetContent sets the modal content
-func (m *Modal) SetContent(content string) {
-	m.content = content
-}
 
 // Show makes the modal visible
 func (m *Modal) Show() {
@@ -88,71 +74,19 @@ func (m *Modal) Draw(screen *Screen, x, y int, theme *Theme) {
 		actualX, actualY = m.x, m.y
 	}
 
-	// Draw block shadow with neo-brutalist style (offset by 1 cell)
+	// Clear the modal area with surface color first
+	surfaceStyle := lipgloss.NewStyle().Background(theme.Palette.Surface)
+	ClearArea(screen, actualX, actualY, m.width, m.height, surfaceStyle)
+	
+	// Draw block shadow AFTER clearing (offset by 1 cell)
 	shadowStyle := lipgloss.NewStyle().
-		Foreground(theme.Palette.Shadow).
-		Background(theme.Palette.Background)
+		Background(theme.Palette.Shadow)
+		// Shadow is created by background color on spaces
 	shadowOffsetX := 1
 	shadowOffsetY := 1
 	
 	// Use the new DrawBlockShadow method
 	screen.DrawBlockShadow(actualX, actualY, m.width, m.height, shadowStyle, shadowOffsetX, shadowOffsetY)
-
-	// Modal background uses surface color
-	bgStyle := lipgloss.NewStyle().
-		Background(theme.Palette.Surface).
-		Foreground(theme.Palette.Text)
-
-	// Get container styles for border and title
-	var borderColors, titleColors StateColors
-	if m.focused {
-		borderColors = theme.Components.Container.Border.Focused
-		titleColors = theme.Components.Container.Title.Focused
-	} else {
-		borderColors = theme.Components.Container.Border.Unfocused
-		titleColors = theme.Components.Container.Title.Unfocused
-	}
-
-	borderStyle := lipgloss.NewStyle().
-		Foreground(borderColors.Border).
-		Background(theme.Palette.Surface)
-	titleStyle := lipgloss.NewStyle().
-		Foreground(titleColors.Text).
-		Background(theme.Palette.Surface)
-
-	// Draw background fill
-	for dy := 0; dy < m.height; dy++ {
-		for dx := 0; dx < m.width; dx++ {
-			screen.DrawRune(actualX+dx, actualY+dy, ' ', bgStyle)
-		}
-	}
-
-	// Draw border with title - use heavy borders when focused
-	if m.focused {
-		screen.DrawBrutalistBoxWithTitle(actualX, actualY, m.width, m.height, m.title, borderStyle, titleStyle)
-	} else {
-		screen.DrawBoxWithTitle(actualX, actualY, m.width, m.height, m.title, borderStyle, titleStyle)
-	}
-
-	// Draw content
-	contentStyle := lipgloss.NewStyle().
-		Foreground(theme.Palette.Text).
-		Background(theme.Palette.Surface)
-	lines := strings.Split(m.content, "\n")
-	contentY := actualY + 1
-	maxLines := m.height - 2
-	
-	for i := 0; i < maxLines && i < len(lines); i++ {
-		line := lines[i]
-		maxWidth := m.width - 4
-		if len(line) > maxWidth {
-			line = line[:maxWidth]
-		}
-		// Center align the content
-		padding := (maxWidth - len(line)) / 2
-		paddedLine := strings.Repeat(" ", padding) + line
-		screen.DrawString(actualX+2, contentY+i, paddedLine, contentStyle)
-	}
 }
 
 // Focus gives keyboard focus to this component
@@ -191,10 +125,3 @@ func (m *Modal) GetSize() (width, height int) {
 	return m.width, m.height
 }
 
-// DrawWithBorder draws the component with a border and optional title
-func (m *Modal) DrawWithBorder(screen *Screen, x, y int, theme *Theme, title string) {
-	if title != "" {
-		m.title = title
-	}
-	m.Draw(screen, x, y, theme)
-}

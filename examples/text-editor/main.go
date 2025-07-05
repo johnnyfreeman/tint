@@ -317,7 +317,6 @@ func main() {
 	
 	// Create settings
 	settingsModal := tui.NewModal()
-	settingsModal.SetTitle("Settings")
 	settingsModal.SetSize(settingsWidth, settingsHeight)
 	settingsModal.SetCentered(true)
 	
@@ -349,7 +348,6 @@ func main() {
 	
 	// Create help viewer
 	helpModal := tui.NewModal()
-	helpModal.SetTitle("Help - Keyboard Shortcuts")
 	helpModal.SetSize(70, 30)
 	helpModal.SetCentered(true)
 	
@@ -845,8 +843,11 @@ func (m *model) drawFuzzyFinder() {
 	modalX := (m.width - fuzzyFinderWidth) / 2
 	modalY := (m.height - fuzzyFinderHeight) / 2
 	
+	// Clear the entire modal area with surface color for modal background
+	surfaceStyle := lipgloss.NewStyle().Background(m.theme.Palette.Surface)
+	tui.ClearArea(m.screen, modalX, modalY, fuzzyFinderWidth, fuzzyFinderHeight, surfaceStyle)
+	
 	// Draw shadow with 1 pixel offset to bottom-right
-	// This creates a subtle depth effect
 	for dy := 0; dy < fuzzyFinderHeight; dy++ {
 		m.screen.SetCell(modalX+fuzzyFinderWidth, modalY+dy+1, tui.Cell{
 			Rune:       ' ',
@@ -859,9 +860,6 @@ func (m *model) drawFuzzyFinder() {
 			Background: m.theme.Palette.Shadow,
 		})
 	}
-	
-	// Modal backdrop - we don't fill with a different color to avoid inconsistency
-	// The containers will draw their own backgrounds
 	
 	// Layout calculations
 	leftColumnWidth := resultsContainerWidth
@@ -882,7 +880,7 @@ func (m *model) drawFuzzyFinder() {
 	// Draw containers
 	// Left column: search and results
 	m.fuzzyFinder.searchContainer.Draw(m.screen, modalX + 1, modalY + 1, &m.theme)
-	m.fuzzyFinder.resultsContainer.Draw(m.screen, modalX + 1, modalY + searchContainerHeight + 1, &m.theme)  // No gap
+	m.fuzzyFinder.resultsContainer.Draw(m.screen, modalX + 1, modalY + searchContainerHeight + 1, &m.theme)
 	
 	// Right column: preview (full height)
 	m.fuzzyFinder.previewContainer.Draw(m.screen, modalX + leftColumnWidth + 2, modalY + 1, &m.theme)
@@ -960,6 +958,17 @@ func (m *model) drawSettings() {
 	m.settings.Modal.SetSize(settingsWidth, settingsHeight)
 	m.settings.Modal.Draw(m.screen, modalX, modalY, &m.theme)
 	
+	// Create and draw a container that fills the modal
+	container := tui.NewContainer()
+	container.SetTitle("Settings")
+	container.SetSize(settingsWidth, settingsHeight)
+	container.SetPadding(tui.NewMargin(1))
+	container.Draw(m.screen, modalX, modalY, &m.theme)
+	
+	// Adjust positions for container content
+	contentX := modalX + 2  // Container border + padding
+	contentY := modalY + 2  // Container border + title + padding
+	
 	// Draw settings options
 	textStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text).
@@ -969,13 +978,13 @@ func (m *model) drawSettings() {
 		Background(m.theme.Palette.Primary)
 	
 	for i, opt := range m.settings.options {
-		y := modalY + 2 + i  // Start right after title bar
+		y := contentY + i  // Start inside container content area
 		
 		// Create full-width selection bar
 		style := textStyle
 		if i == m.settings.selectedIdx {
-			// Fill entire row with selection background, respecting modal padding
-			for x := modalX + modalPadding; x < modalX + settingsWidth - modalPadding; x++ {
+			// Fill entire row with selection background, respecting container padding
+			for x := contentX; x < modalX + settingsWidth - 2; x++ {
 				m.screen.SetCell(x, y, tui.Cell{
 					Rune:       ' ',
 					Background: m.theme.Palette.Primary,
@@ -989,7 +998,7 @@ func (m *model) drawSettings() {
 		if len(label) > 25 {
 			label = label[:25]
 		}
-		m.screen.DrawString(modalX+modalPadding, y, label, style)
+		m.screen.DrawString(contentX, y, label, style)
 		
 		// Draw value aligned to the right
 		valueStyle := style
@@ -1010,11 +1019,11 @@ func (m *model) drawSettings() {
 			value = value[:12]
 		}
 		// Right-align the value
-		valueX := modalX + settingsWidth - modalPadding - len(value)
+		valueX := modalX + settingsWidth - 3 - len(value)
 		m.screen.DrawString(valueX, y, value, valueStyle)
 	}
 	
-	// Draw help text at bottom of modal
+	// Draw help text at bottom of container
 	helpStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted).
 		Background(m.theme.Palette.Surface)
@@ -1031,7 +1040,14 @@ func (m *model) drawHelp() {
 	// Draw modal
 	m.helpViewer.Modal.Draw(m.screen, modalX, modalY, &m.theme)
 	
-	// Draw viewer inside modal
+	// Create and draw a container that fills the modal
+	container := tui.NewContainer()
+	container.SetTitle("Help - Keyboard Shortcuts")
+	container.SetSize(70, 30)  // Same size as modal
+	container.SetPadding(tui.NewMargin(1))
+	container.Draw(m.screen, modalX, modalY, &m.theme)
+	
+	// Draw viewer inside container
 	m.helpViewer.viewer.Draw(m.screen, modalX+2, modalY+2, &m.theme)
 }
 

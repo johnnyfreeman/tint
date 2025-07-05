@@ -107,9 +107,8 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 		return
 	}
 
-	// Clear the container area
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	ClearArea(screen, x, y, width, height, bgStyle)
+	// Clear the entire container area with theme background
+	ClearComponentArea(screen, x, y, width, height, theme)
 
 	contentX, contentY := x, y
 	contentWidth, contentHeight := width, height
@@ -122,8 +121,7 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 		}
 		
 		borderStyle := lipgloss.NewStyle().
-			Foreground(borderColor).
-			Background(theme.Palette.Background)
+			Foreground(borderColor)
 		
 		// Draw border based on style
 		switch c.borderStyle {

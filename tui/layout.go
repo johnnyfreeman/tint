@@ -22,15 +22,19 @@ const (
 
 // ClearArea clears a rectangular area on the screen with the given style
 func ClearArea(screen *Screen, x, y, width, height int, style lipgloss.Style) {
-	bg := style.GetBackground()
 	for dy := 0; dy < height; dy++ {
 		for dx := 0; dx < width; dx++ {
-			screen.SetCell(x+dx, y+dy, Cell{
-				Rune:       ' ',
-				Background: bg,
-			})
+			screen.DrawRune(x+dx, y+dy, ' ', style)
 		}
 	}
+}
+
+// ClearComponentArea clears a rectangular area using the theme's background color
+// This should be called at the start of every component's Draw method to ensure
+// the entire component area uses the theme's background color consistently
+func ClearComponentArea(screen *Screen, x, y, width, height int, theme *Theme) {
+	style := lipgloss.NewStyle().Background(theme.Palette.Background)
+	ClearArea(screen, x, y, width, height, style)
 }
 
 // CenterComponent calculates the centered position for a component
