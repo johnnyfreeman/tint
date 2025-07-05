@@ -211,14 +211,14 @@ func TestScreenBrutalistBox(t *testing.T) {
 
 func TestScreenBlockShadow(t *testing.T) {
 	screen := NewScreenSimulation(20, 10)
-	shadowStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#666666"))
+	shadowStyle := lipgloss.NewStyle().Background(lipgloss.Color("#666666"))
 	
 	screen.DrawBlockShadow(2, 2, 5, 3, shadowStyle, 2, 1)
 	
-	// Check shadow blocks
-	AssertCellRune(t, screen, 4, 5, '█') // Bottom shadow
-	AssertCellRune(t, screen, 7, 3, '█') // Right shadow
-	AssertCellRune(t, screen, 7, 5, '█') // Corner shadow
+	// Check shadow spaces (shadows are now drawn with spaces + background color)
+	AssertCellRune(t, screen, 4, 5, ' ') // Bottom shadow
+	AssertCellRune(t, screen, 7, 3, ' ') // Right shadow
+	AssertCellRune(t, screen, 7, 5, ' ') // Corner shadow
 }
 
 func TestScreenSimulationFeatures(t *testing.T) {
