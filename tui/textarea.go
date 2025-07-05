@@ -1,17 +1,17 @@
 package tui
 
 import (
-	"strings"
 	"github.com/charmbracelet/lipgloss"
+	"strings"
 )
 
 // TextArea represents a multi-line text editor
 type TextArea struct {
 	lines       []string
 	cursorRow   int
-	cursorCol   int  // Visual column position
-	offsetRow   int  // For vertical scrolling
-	offsetCol   int  // Visual column offset for horizontal scrolling
+	cursorCol   int // Visual column position
+	offsetRow   int // For vertical scrolling
+	offsetCol   int // Visual column offset for horizontal scrolling
 	width       int
 	height      int
 	focused     bool
@@ -140,7 +140,7 @@ func (t *TextArea) adjustOffset() {
 	if t.cursorRow >= t.offsetRow+t.height {
 		t.offsetRow = t.cursorRow - t.height + 1
 	}
-	
+
 	// Horizontal scrolling
 	if t.cursorCol < t.offsetCol {
 		t.offsetCol = t.cursorCol
@@ -148,7 +148,7 @@ func (t *TextArea) adjustOffset() {
 	if t.cursorCol >= t.offsetCol+t.width {
 		t.offsetCol = t.cursorCol - t.width + 1
 	}
-	
+
 	// Don't scroll past the beginning
 	if t.offsetRow < 0 {
 		t.offsetRow = 0
@@ -162,18 +162,18 @@ func (t *TextArea) adjustOffset() {
 func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Clear the entire text area with theme background
 	ClearComponentArea(screen, x, y, t.width, t.height, theme)
-	
+
 	textStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
-	
+
 	// Show placeholder if empty
 	if len(t.lines) == 1 && t.lines[0] == "" && t.placeholder != "" && !t.focused {
 		placeholderStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.TextMuted).
 			Background(theme.Palette.Background).
 			Italic(true)
-		
+
 		lines := strings.Split(t.placeholder, "\n")
 		for i, line := range lines {
 			if i >= t.height {
@@ -186,7 +186,7 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 		}
 		return
 	}
-	
+
 	// Draw visible lines
 	for row := 0; row < t.height; row++ {
 		lineIndex := t.offsetRow + row
@@ -194,15 +194,15 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 			// Empty rows are already cleared by ClearComponentArea
 			continue
 		}
-		
+
 		line := t.lines[lineIndex]
-		
+
 		// Extract visible portion of the line
 		visibleLine := t.getVisibleLine(line)
-		
+
 		// Draw the line
 		screen.DrawString(x, y+row, visibleLine, textStyle)
-		
+
 		// Draw cursor if on this line and focused
 		if t.focused && lineIndex == t.cursorRow {
 			cursorScreenCol := t.getCursorScreenCol()
@@ -210,7 +210,7 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 				cursorStyle := lipgloss.NewStyle().
 					Foreground(theme.Palette.Background).
 					Background(theme.Palette.Text)
-				
+
 				// Get character under cursor
 				cursorChar, found := GetCharAtVisualCol(line, t.cursorCol)
 				if !found {
@@ -220,13 +220,13 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 			}
 		}
 	}
-	
+
 	// Draw line numbers or scroll indicators if needed
 	if len(t.lines) > t.height && t.focused {
 		scrollStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.TextMuted).
 			Background(theme.Palette.Background)
-		
+
 		// Top indicator
 		if t.offsetRow > 0 {
 			screen.DrawRune(x+t.width-1, y, '↑', scrollStyle)
@@ -248,7 +248,7 @@ func (t *TextArea) DrawInBox(screen *Screen, x, y, width, height int, title stri
 		borderColors = theme.Components.Container.Border.Unfocused
 		titleColors = theme.Components.Container.Title.Unfocused
 	}
-	
+
 	borderStyle := lipgloss.NewStyle().
 		Foreground(borderColors.Border).
 		Background(theme.Palette.Background)
@@ -263,17 +263,17 @@ func (t *TextArea) DrawInBox(screen *Screen, x, y, width, height int, title stri
 			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
 		}
 	}
-	
+
 	// Draw box with title - use heavy borders when focused
 	if t.focused {
 		screen.DrawBrutalistBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
 	} else {
 		screen.DrawBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
 	}
-	
+
 	// Set text area size based on box dimensions
 	t.SetSize(width-4, height-2) // -4 for borders and padding, -2 for top/bottom borders
-	
+
 	// Draw the text area inside the box
 	t.Draw(screen, x+2, y+1, theme)
 }
@@ -286,7 +286,6 @@ func (t *TextArea) HandleKey(key string) bool {
 	t.HandleInput(key)
 	return true
 }
-
 
 // GetSize returns the current width and height
 func (t *TextArea) GetSize() (width, height int) {

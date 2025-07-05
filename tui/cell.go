@@ -2,7 +2,7 @@ package tui
 
 import (
 	"sync"
-	
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -14,7 +14,7 @@ var (
 
 type Cell struct {
 	Rune       rune
-	Width      int  // 0 for continuation cell, 1-2 for actual character
+	Width      int // 0 for continuation cell, 1-2 for actual character
 	Foreground lipgloss.TerminalColor
 	Background lipgloss.TerminalColor
 	Bold       bool
@@ -70,7 +70,7 @@ func (c Cell) WithStyle(style lipgloss.Style) Cell {
 // Generate a cache key for this cell's style attributes
 func (c Cell) cacheKey() uint64 {
 	var key uint64
-	
+
 	// Simple hash combining style attributes
 	if c.Bold {
 		key |= 1 << 0
@@ -84,15 +84,15 @@ func (c Cell) cacheKey() uint64 {
 	if c.Dim {
 		key |= 1 << 3
 	}
-	
+
 	// For common cases (no color), use special values
 	_, fgIsNoColor := c.Foreground.(lipgloss.NoColor)
 	_, bgIsNoColor := c.Background.(lipgloss.NoColor)
-	
+
 	if fgIsNoColor && bgIsNoColor {
 		return key // Just the attribute flags
 	}
-	
+
 	// For now, don't cache colored styles (they're less common)
 	return 0
 }
@@ -102,7 +102,7 @@ func (c Cell) Render() string {
 	if c.Width == 0 {
 		return ""
 	}
-	
+
 	// Cells without content shouldn't happen in render (they should be merged away)
 	// But if they do, render as space
 	if !c.HasContent || c.Rune == 0 {
@@ -122,7 +122,7 @@ func (c Cell) Render() string {
 
 	// Build style
 	style := lipgloss.NewStyle()
-	
+
 	if _, isNoColor := c.Foreground.(lipgloss.NoColor); !isNoColor {
 		style = style.Foreground(c.Foreground)
 	}
@@ -159,17 +159,17 @@ func (c Cell) Merge(overlay Cell) Cell {
 	if !overlay.HasContent {
 		// But still apply style attributes if they're set
 		result := c
-		
+
 		// Apply background if it's set
 		if _, isNoColor := overlay.Background.(lipgloss.NoColor); !isNoColor {
 			result.Background = overlay.Background
 		}
-		
+
 		// Apply foreground if it's set
 		if _, isNoColor := overlay.Foreground.(lipgloss.NoColor); !isNoColor {
 			result.Foreground = overlay.Foreground
 		}
-		
+
 		// Apply style attributes
 		if overlay.Bold {
 			result.Bold = true
@@ -183,18 +183,18 @@ func (c Cell) Merge(overlay Cell) Cell {
 		if overlay.Dim {
 			result.Dim = true
 		}
-		
+
 		return result
 	}
-	
+
 	// Otherwise, overlay has content - use it but preserve background if not set
 	result := overlay
-	
+
 	// If overlay has no background color, preserve the original background
 	if _, isNoColor := overlay.Background.(lipgloss.NoColor); isNoColor {
 		result.Background = c.Background
 	}
-	
+
 	return result
 }
 
@@ -202,14 +202,14 @@ func (c Cell) Merge(overlay Cell) Cell {
 func (c Cell) IsDefault() bool {
 	_, fgIsNoColor := c.Foreground.(lipgloss.NoColor)
 	_, bgIsNoColor := c.Background.(lipgloss.NoColor)
-	
-	return c.Rune == ' ' && 
+
+	return c.Rune == ' ' &&
 		c.Width == 1 &&
 		c.HasContent &&
-		fgIsNoColor && 
-		bgIsNoColor && 
-		!c.Bold && 
-		!c.Italic && 
+		fgIsNoColor &&
+		bgIsNoColor &&
+		!c.Bold &&
+		!c.Italic &&
 		!c.Underline &&
 		!c.Dim
 }

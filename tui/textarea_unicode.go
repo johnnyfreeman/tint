@@ -23,7 +23,7 @@ func (t *TextArea) moveCursorLeft() {
 func (t *TextArea) moveCursorRight() {
 	line := t.lines[t.cursorRow]
 	lineWidth := StringWidth(line)
-	
+
 	if t.cursorCol < lineWidth {
 		// Find the byte position of current visual column
 		currentBytePos := GetByteOffset(line, t.cursorCol)
@@ -42,11 +42,11 @@ func (t *TextArea) moveCursorRight() {
 func (t *TextArea) insertAtCursor(text string) {
 	line := t.lines[t.cursorRow]
 	bytePos := GetByteOffset(line, t.cursorCol)
-	
+
 	// Insert text at byte position
 	newLine := line[:bytePos] + text + line[bytePos:]
 	t.lines[t.cursorRow] = newLine
-	
+
 	// Move cursor by the visual width of inserted text
 	t.cursorCol += StringWidth(text)
 }
@@ -57,10 +57,10 @@ func (t *TextArea) deleteBeforeCursor() {
 		line := t.lines[t.cursorRow]
 		currentBytePos := GetByteOffset(line, t.cursorCol)
 		prevBytePos := GetPrevCharBoundary(line, currentBytePos)
-		
+
 		// Delete the character
 		t.lines[t.cursorRow] = line[:prevBytePos] + line[currentBytePos:]
-		
+
 		// Update cursor position
 		t.cursorCol = GetVisualColumn(line, prevBytePos)
 	} else if t.cursorRow > 0 {
@@ -79,11 +79,11 @@ func (t *TextArea) deleteBeforeCursor() {
 func (t *TextArea) deleteAtCursor() {
 	line := t.lines[t.cursorRow]
 	lineWidth := StringWidth(line)
-	
+
 	if t.cursorCol < lineWidth {
 		currentBytePos := GetByteOffset(line, t.cursorCol)
 		nextBytePos := GetNextCharBoundary(line, currentBytePos)
-		
+
 		// Delete the character
 		t.lines[t.cursorRow] = line[:currentBytePos] + line[nextBytePos:]
 	} else if t.cursorRow < len(t.lines)-1 {
@@ -98,15 +98,15 @@ func (t *TextArea) deleteAtCursor() {
 func (t *TextArea) splitLineAtCursor() {
 	line := t.lines[t.cursorRow]
 	bytePos := GetByteOffset(line, t.cursorCol)
-	
+
 	before := line[:bytePos]
 	after := line[bytePos:]
-	
+
 	// Update current line and insert new line
 	t.lines[t.cursorRow] = before
 	newLines := append(t.lines[:t.cursorRow+1], append([]string{after}, t.lines[t.cursorRow+1:]...)...)
 	t.lines = newLines
-	
+
 	// Move cursor to beginning of new line
 	t.cursorRow++
 	t.cursorCol = 0
@@ -117,10 +117,10 @@ func (t *TextArea) getVisibleLine(line string) string {
 	if t.offsetCol >= StringWidth(line) {
 		return ""
 	}
-	
+
 	startCol := t.offsetCol
 	endCol := t.offsetCol + t.width
-	
+
 	return SafeSliceByVisual(line, startCol, endCol)
 }
 

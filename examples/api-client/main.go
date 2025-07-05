@@ -22,7 +22,7 @@ type model struct {
 	urlInput     *tui.Input
 	headersTable *tui.Table
 	bodyTextArea *tui.TextArea
-	
+
 	// Response state
 	responseStatus  string
 	responseHeaders []Header
@@ -37,20 +37,20 @@ type model struct {
 
 	// Current theme
 	currentTheme string
-	
+
 	// New components
 	statusBar *tui.StatusBar
-	
+
 	// Containers for different sections
 	historyContainer  *tui.Container
 	urlContainer      *tui.Container
 	headersContainer  *tui.Container
 	bodyContainer     *tui.Container
 	responseContainer *tui.Container
-	
+
 	// Tab elements for dynamic updates
-	responseTabs      *tui.TabsElement
-	headerCountBadge  *tui.BadgeElement
+	responseTabs     *tui.TabsElement
+	headerCountBadge *tui.BadgeElement
 }
 
 type Header struct {
@@ -70,7 +70,7 @@ func initialModel() model {
 	urlInput.SetPlaceholder("Enter URL...")
 	urlInput.SetWidth(50)
 	urlInput.Focus()
-	
+
 	headersTable := tui.NewTable()
 	headersTable.SetColumns([]tui.TableColumn{
 		{Title: "Header", Width: 20},
@@ -80,33 +80,33 @@ func initialModel() model {
 		{"Accept", "application/json"},
 		{"User-Agent", "API-Client/1.0"},
 	})
-	
+
 	bodyTextArea := tui.NewTextArea()
 	bodyTextArea.SetPlaceholder("Request body (JSON, XML, etc.)")
 	bodyTextArea.SetSize(60, 4)
-	
+
 	responseViewer := tui.NewViewer()
 	responseViewer.SetWrapText(true)
-	
+
 	// Create status bar
 	statusBar := tui.NewStatusBar()
 	statusBar.AddSegment("Tab: focus", "left")
 	statusBar.AddSegment("H: history | R: send | M: method | 1-3: tabs | n/d: table | arrows: nav | q: quit", "right")
-	
+
 	// Layout is handled manually in View() for more control
-	
+
 	// Create containers with enhanced border elements
 	historyContainer := tui.NewContainer()
 	historyContainer.SetTitle("History")
 	historyContainer.SetPadding(tui.NewMargin(1))
 	// Add a count badge for history items
 	historyContainer.AddBorderElement(tui.NewBadgeElement("3"), tui.BorderTop, tui.BorderAlignRight)
-	
+
 	urlContainer := tui.NewContainer()
 	urlContainer.SetTitle("Request URL")
 	urlContainer.SetPadding(tui.NewMargin(1))
 	urlContainer.SetContent(urlInput)
-	
+
 	headersContainer := tui.NewContainer()
 	headersContainer.SetTitle("Headers")
 	headersContainer.SetPadding(tui.NewMargin(1))
@@ -114,14 +114,14 @@ func initialModel() model {
 	// Add a count badge showing number of headers
 	headerCountBadge := tui.NewBadgeElement("2")
 	headersContainer.AddBorderElement(headerCountBadge, tui.BorderTop, tui.BorderAlignRight)
-	
+
 	bodyContainer := tui.NewContainer()
 	bodyContainer.SetTitle("Body")
 	bodyContainer.SetPadding(tui.NewMargin(1))
 	bodyContainer.SetContent(bodyTextArea)
 	// Add format indicator
 	bodyContainer.AddBorderElement(tui.NewTextElement("JSON"), tui.BorderTop, tui.BorderAlignRight)
-	
+
 	responseContainer := tui.NewContainer()
 	responseContainer.SetTitle("Response")
 	responseContainer.SetPadding(tui.NewMargin(1))
@@ -132,14 +132,14 @@ func initialModel() model {
 	responseContainer.AddBorderElement(responseTabs, tui.BorderTop, tui.BorderAlignCenter)
 	// Add status indicator
 	responseContainer.AddBorderElement(tui.NewStatusElement("Ready"), tui.BorderTop, tui.BorderAlignRight)
-	
+
 	return model{
-		width:         80,
-		height:        24,
-		screen:        tui.NewScreen(80, 24, tui.GetTheme("tokyonight")),
-		focus:         "url",
-		method:        "GET",
-		urlInput:      urlInput,
+		width:          80,
+		height:         24,
+		screen:         tui.NewScreen(80, 24, tui.GetTheme("tokyonight")),
+		focus:          "url",
+		method:         "GET",
+		urlInput:       urlInput,
 		headersTable:   headersTable,
 		bodyTextArea:   bodyTextArea,
 		responseTab:    0,
@@ -150,8 +150,8 @@ func initialModel() model {
 			{Method: "POST", URL: "https://api.example.com/users", Time: "10:15:32"},
 			{Method: "GET", URL: "https://jsonplaceholder.typicode.com/posts/1", Time: "09:45:12"},
 		},
-		historyIndex:   0,
-		historyVisible: true,
+		historyIndex:      0,
+		historyVisible:    true,
 		currentTheme:      "tokyonight",
 		statusBar:         statusBar,
 		historyContainer:  historyContainer,
@@ -185,7 +185,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		// If headers table is focused, let it handle navigation keys
 		if m.focus == "headers" && m.headersTable.IsFocused() {
 			switch msg.String() {
@@ -207,7 +207,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		// If body text area is focused, let it handle most keys
 		if m.focus == "body" && m.bodyTextArea.IsFocused() {
 			switch msg.String() {
@@ -223,7 +223,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		// If response viewer is focused, let it handle navigation keys
 		if m.focus == "response" && m.responseTab == 0 && m.responseViewer.IsFocused() {
 			switch msg.String() {
@@ -254,7 +254,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
@@ -267,7 +267,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if m.focus == "body" {
 				m.bodyTextArea.Blur()
 			}
-			
+
 			// Cycle through focus areas
 			switch m.focus {
 			case "url":
@@ -361,7 +361,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 			m.method = methods[(currentIndex+1)%len(methods)]
-			
+
 			// Show/hide body section based on method
 			if m.method == "GET" || m.method == "DELETE" {
 				// If we're focused on body, move focus to response
@@ -400,12 +400,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	theme := tui.GetTheme(m.currentTheme)
-	
+
 	// Recreate screen if theme changed
 	if m.screen.Theme().Name != theme.Name {
 		m.screen = tui.NewScreen(m.width, m.height, theme)
 	}
-	
+
 	// Clear screen (now uses theme background automatically)
 	m.screen.Clear()
 
@@ -414,7 +414,7 @@ func (m model) View() string {
 	if m.historyVisible {
 		historyWidth = 30
 	}
-	
+
 	mainX := historyWidth
 	if historyWidth > 0 {
 		mainX++ // Add spacing
@@ -439,7 +439,7 @@ func (m model) View() string {
 
 	// Draw status bar at the bottom
 	m.statusBar.Draw(m.screen, 0, m.height-1, &theme)
-	
+
 	// Render screen to string
 	return m.screen.Render()
 }
@@ -451,10 +451,10 @@ func (m *model) drawHistory(theme tui.Theme, width int) {
 	} else {
 		m.historyContainer.Blur()
 	}
-	
+
 	// Set container size
 	m.historyContainer.SetSize(width, m.height-1) // -1 for status bar
-	
+
 	// Draw container background and border
 	m.historyContainer.DrawWithBounds(m.screen, 0, 0, width, m.height-1, &theme)
 
@@ -483,7 +483,7 @@ func (m *model) drawHistory(theme tui.Theme, width int) {
 			Background(theme.Palette.Background).
 			Bold(true)
 		m.screen.DrawString(2, itemY, item.Method, methodStyle)
-		
+
 		// URL (truncated)
 		urlStart := 2 + len(item.Method) + 1
 		maxURLLen := width - urlStart - 3
@@ -492,15 +492,15 @@ func (m *model) drawHistory(theme tui.Theme, width int) {
 			url = url[:maxURLLen-3] + "..."
 		}
 		m.screen.DrawString(urlStart, itemY, url, itemStyle)
-		
+
 		itemY++
-		
+
 		// Time
 		timeStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.TextMuted).
 			Background(theme.Palette.Background)
 		m.screen.DrawString(2, itemY, "  "+item.Time, timeStyle)
-		
+
 		itemY += 2
 	}
 }
@@ -518,15 +518,15 @@ func (m *model) drawMainArea(theme tui.Theme, x, width int) {
 
 	// Draw URL input area
 	m.drawURLInput(theme, x, 0, width, urlHeight)
-	
+
 	// Draw headers area
 	m.drawHeaders(theme, x, urlHeight, width, headersHeight)
-	
+
 	// Draw request body (if not GET/DELETE)
 	if m.method != "GET" && m.method != "DELETE" {
 		m.drawRequestBody(theme, x, urlHeight+headersHeight, width, bodyHeight)
 	}
-	
+
 	// Draw response area
 	m.drawResponse(theme, x, responseY, width, responseHeight)
 }
@@ -538,18 +538,18 @@ func (m *model) drawURLInput(theme tui.Theme, x, y, width, height int) {
 	} else {
 		m.urlContainer.Blur()
 	}
-	
+
 	// Set container size and draw
 	m.urlContainer.SetSize(width, height)
 	m.urlContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
-	
+
 	// Draw method
 	methodStyle := lipgloss.NewStyle().
 		Foreground(m.getMethodColor(m.method, theme)).
 		Background(theme.Palette.Background).
 		Bold(true)
 	m.screen.DrawString(x+2, y+1, m.method, methodStyle)
-	
+
 	// Draw the URL input field
 	inputX := x + 2 + len(m.method) + 1
 	availableWidth := width - 4 - len(m.method) - 1
@@ -566,7 +566,7 @@ func (m *model) drawHeaders(theme tui.Theme, x, y, width, height int) {
 		m.headersContainer.Blur()
 		m.headersTable.Blur()
 	}
-	
+
 	// Set container size and draw
 	m.headersContainer.SetSize(width, height)
 	m.headersContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
@@ -581,7 +581,7 @@ func (m *model) drawRequestBody(theme tui.Theme, x, y, width, height int) {
 		m.bodyContainer.Blur()
 		m.bodyTextArea.Blur()
 	}
-	
+
 	// Set container size and draw
 	m.bodyContainer.SetSize(width, height)
 	m.bodyContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
@@ -594,7 +594,7 @@ func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
 	} else {
 		borderColors = theme.Components.Container.Border.Unfocused
 	}
-	
+
 	borderStyle := lipgloss.NewStyle().
 		Foreground(borderColors.Border).
 		Background(theme.Palette.Background)
@@ -606,10 +606,10 @@ func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
 			m.screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
 		}
 	}
-	
+
 	// Draw top border with tabs
 	m.screen.DrawRune(x, y, '┌', borderStyle)
-	
+
 	// Draw tabs
 	tabs := []string{"Body", "Headers", "Status"}
 	currentX := x + 1
@@ -618,10 +618,10 @@ func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
 			m.screen.DrawRune(currentX, y, '─', borderStyle)
 			currentX++
 		}
-		
+
 		title := " " + tab + " "
 		var tabStyle lipgloss.Style
-		
+
 		if i == m.responseTab {
 			if m.focus == "response" {
 				tabStyle = lipgloss.NewStyle().
@@ -638,43 +638,43 @@ func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
 				Foreground(theme.Components.Tab.Inactive.Text).
 				Background(theme.Palette.Background)
 		}
-		
+
 		m.screen.DrawString(currentX, y, title, tabStyle)
 		currentX += len(title)
 	}
-	
+
 	// Fill rest of top border
 	for currentX < x+width-1 {
 		m.screen.DrawRune(currentX, y, '─', borderStyle)
 		currentX++
 	}
 	m.screen.DrawRune(x+width-1, y, '┐', borderStyle)
-	
+
 	// Draw sides
 	for i := 1; i < height-1; i++ {
 		m.screen.DrawRune(x, y+i, '│', borderStyle)
 		m.screen.DrawRune(x+width-1, y+i, '│', borderStyle)
 	}
-	
+
 	// Draw bottom border
 	m.screen.DrawRune(x, y+height-1, '└', borderStyle)
 	for i := 1; i < width-1; i++ {
 		m.screen.DrawRune(x+i, y+height-1, '─', borderStyle)
 	}
 	m.screen.DrawRune(x+width-1, y+height-1, '┘', borderStyle)
-	
+
 	// Draw content based on active tab
 	contentStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
-	
+
 	// Set viewer focus based on current state
 	if m.focus == "response" && m.responseTab == 0 {
 		m.responseViewer.Focus()
 	} else {
 		m.responseViewer.Blur()
 	}
-	
+
 	switch m.responseTab {
 	case 0: // Body
 		if m.responseBody != "" {
@@ -689,7 +689,7 @@ func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
 				Italic(true)
 			m.screen.DrawString(x+2, y+2, "No response yet. Press Ctrl+R to send request.", noDataStyle)
 		}
-		
+
 	case 1: // Headers
 		if len(m.responseHeaders) > 0 {
 			headerY := y + 1
@@ -697,19 +697,19 @@ func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
 				if headerY >= y+height-1 {
 					break
 				}
-				
+
 				keyStyle := lipgloss.NewStyle().
 					Foreground(theme.Palette.Primary).
 					Background(theme.Palette.Background).
 					Bold(true)
 				valueStyle := contentStyle
-				
+
 				m.screen.DrawString(x+2, headerY, header.Key+":", keyStyle)
 				m.screen.DrawString(x+2+len(header.Key)+2, headerY, header.Value, valueStyle)
 				headerY++
 			}
 		}
-		
+
 	case 2: // Status
 		if m.responseStatus != "" {
 			statusStyle := lipgloss.NewStyle().

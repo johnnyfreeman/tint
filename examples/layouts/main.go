@@ -23,7 +23,7 @@ type layoutExample struct {
 func main() {
 	// Create model
 	m := initialModel()
-	
+
 	// Start tea program
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -38,7 +38,7 @@ func initialModel() model {
 		screen:        tui.NewScreen(80, 24, theme),
 		currentLayout: 0,
 	}
-	
+
 	// Define layout examples
 	m.layouts = []layoutExample{
 		{"Linear Layout - Horizontal", m.drawLinearHorizontal},
@@ -48,7 +48,7 @@ func initialModel() model {
 		{"Responsive Layout", m.drawResponsiveLayout},
 		{"Complex Layout - Fuzzy Finder", m.drawFuzzyFinder},
 	}
-	
+
 	return m
 }
 
@@ -65,7 +65,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		theme := tui.GetTheme("default")
 		m.screen = tui.NewScreen(msg.Width, msg.Height, theme)
 		return m, nil
-		
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
@@ -80,7 +80,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -88,13 +88,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	// Get theme
 	theme := tui.GetTheme("default")
-	
+
 	// Clear screen
 	m.screen.Clear()
-	
+
 	// Draw current layout
 	m.layouts[m.currentLayout].draw(m.screen, &theme)
-	
+
 	// Draw navigation hint
 	width := m.screen.Width()
 	height := m.screen.Height()
@@ -103,38 +103,37 @@ func (m model) View() string {
 	hintX := (width - len(hint)) / 2
 	hintStyle := lipgloss.NewStyle().Foreground(theme.Palette.Text)
 	m.screen.DrawString(hintX, height-1, hint, hintStyle)
-	
+
 	// Render
 	return m.screen.Render()
 }
 
-
 func (m *model) drawLinearHorizontal(screen *tui.Screen, theme *tui.Theme) {
 	width := screen.Width()
 	height := screen.Height()
-	
+
 	// Create main container
 	main := tui.NewContainer()
 	main.SetTitle("Horizontal Linear Layout")
 	main.SetSize(width-4, height-4)
-	
+
 	// Create horizontal layout
 	layout := tui.HBox()
 	layout.SetSpacing(1)
 	layout.SetPadding(tui.NewMargin(1))
-	
+
 	// Add fixed-width sidebar
 	sidebar := createPanel("Sidebar", "Fixed 20 cells", theme.Palette.Surface)
 	layout.AddFixed(sidebar, 20)
-	
+
 	// Add flexible content area
 	content := createPanel("Content", "Flex 1", theme.Palette.Background)
 	layout.AddFlex(content, 1)
-	
+
 	// Add percentage-based panel
 	info := createPanel("Info Panel", "30% width", theme.Palette.Surface)
 	layout.AddPercentage(info, 0.3)
-	
+
 	main.SetContent(layout)
 	main.Draw(screen, 2, 1, theme)
 }
@@ -142,33 +141,33 @@ func (m *model) drawLinearHorizontal(screen *tui.Screen, theme *tui.Theme) {
 func (m *model) drawLinearVertical(screen *tui.Screen, theme *tui.Theme) {
 	width := screen.Width()
 	height := screen.Height()
-	
+
 	// Create main container
 	main := tui.NewContainer()
 	main.SetTitle("Vertical Linear Layout")
 	main.SetSize(width-4, height-4)
-	
+
 	// Create vertical layout
 	layout := tui.VBox()
 	layout.SetSpacing(1)
 	layout.SetPadding(tui.NewMargin(1))
-	
+
 	// Add fixed header
 	header := createPanel("Header", "Fixed 3 rows", theme.Palette.Primary)
 	layout.AddFixed(header, 3)
-	
+
 	// Add flexible content
 	content := createPanel("Content", "Flex 2", theme.Palette.Background)
 	layout.AddFlex(content, 2)
-	
+
 	// Add another flex area
 	details := createPanel("Details", "Flex 1", theme.Palette.Surface)
 	layout.AddFlex(details, 1)
-	
+
 	// Add fixed footer
 	footer := createPanel("Footer", "Fixed 3 rows", theme.Palette.Secondary)
 	layout.AddFixed(footer, 3)
-	
+
 	main.SetContent(layout)
 	main.Draw(screen, 2, 1, theme)
 }
@@ -176,12 +175,12 @@ func (m *model) drawLinearVertical(screen *tui.Screen, theme *tui.Theme) {
 func (m *model) drawSplitLayout(screen *tui.Screen, theme *tui.Theme) {
 	width := screen.Width()
 	height := screen.Height()
-	
+
 	// Create main container
 	main := tui.NewContainer()
 	main.SetTitle("Split Layout with Constraints")
 	main.SetSize(width-4, height-4)
-	
+
 	// Create vertical split
 	vsplit := tui.NewVSplit()
 	vsplit.SetConstraint(
@@ -189,25 +188,25 @@ func (m *model) drawSplitLayout(screen *tui.Screen, theme *tui.Theme) {
 			WithMin(20).
 			WithMax(40),
 	)
-	
+
 	// Left side - file tree
 	fileTree := createPanel("File Tree", "30% (min 20, max 40)", theme.Palette.Surface)
 	vsplit.SetFirst(fileTree)
-	
+
 	// Right side - horizontal split
 	hsplit := tui.NewHSplit()
 	hsplit.SetFixed(10) // Fixed height terminal
-	
+
 	// Editor
 	editor := createPanel("Editor", "Remaining space", theme.Palette.Background)
 	hsplit.SetFirst(editor)
-	
+
 	// Terminal
 	terminal := createPanel("Terminal", "Fixed 10 rows", theme.Palette.Surface)
 	hsplit.SetSecond(terminal)
-	
+
 	vsplit.SetSecond(hsplit)
-	
+
 	main.SetContent(vsplit)
 	main.Draw(screen, 2, 1, theme)
 }
@@ -215,15 +214,15 @@ func (m *model) drawSplitLayout(screen *tui.Screen, theme *tui.Theme) {
 func (m *model) drawStackLayout(screen *tui.Screen, theme *tui.Theme) {
 	width := screen.Width()
 	height := screen.Height()
-	
+
 	// Create stack
 	stack := tui.NewStack()
 	stack.SetSize(width, height)
-	
+
 	// Background layer
 	bg := createColorPanel("Background", theme.Palette.Background)
 	stack.AddFull(bg)
-	
+
 	// Main content
 	content := tui.NewContainer()
 	content.SetTitle("Main Content")
@@ -234,63 +233,63 @@ func (m *model) drawStackLayout(screen *tui.Screen, theme *tui.Theme) {
 	stack.AddAnchored(content, tui.AlignCenter, tui.AlignCenter,
 		tui.NewConstraintSet(tui.NewPercentage(0.8)),
 		tui.NewConstraintSet(tui.NewPercentage(0.6)))
-	
+
 	// Modal overlay
 	modal := tui.NewModal()
 	modal.SetSize(60, 20)
-	
+
 	modalContainer := tui.NewContainer()
 	modalContainer.SetTitle("Modal Dialog")
 	modalContainer.SetSize(60, 20)
 	modalContainer.SetPadding(tui.NewMargin(2))
-	
+
 	modalViewer := tui.NewViewer()
 	modalViewer.SetContent("This is a modal dialog.\nIt appears on top of the content.")
 	modalContainer.SetContent(modalViewer)
-	
+
 	stack.AddCentered(modal,
 		tui.NewConstraintSet(tui.NewLength(60)),
 		tui.NewConstraintSet(tui.NewLength(20)))
-	
+
 	stack.Draw(screen, 0, 0, theme)
 }
 
 func (m *model) drawResponsiveLayout(screen *tui.Screen, theme *tui.Theme) {
 	width := screen.Width()
 	height := screen.Height()
-	
+
 	// Create responsive layout
 	responsive := tui.NewResponsiveLayout()
 	responsive.SetSize(width, height)
-	
+
 	// Mobile layout (< 80 columns)
 	mobileLayout := tui.VBox()
 	mobileLayout.SetPadding(tui.NewMargin(1))
-	
+
 	mobileHeader := createPanel("Mobile Header", "Full width", theme.Palette.Primary)
 	mobileLayout.AddFixed(mobileHeader, 3)
-	
+
 	mobileContent := createPanel("Mobile Content", "Stacked layout", theme.Palette.Background)
 	mobileLayout.AddFlex(mobileContent, 1)
-	
+
 	responsive.AddMobile(mobileLayout)
-	
+
 	// Desktop layout (>= 80 columns)
 	desktopLayout := tui.HBox()
 	desktopLayout.SetPadding(tui.NewMargin(2))
 	desktopLayout.SetSpacing(2)
-	
+
 	sidebar := createPanel("Sidebar", "Desktop only", theme.Palette.Surface)
 	desktopLayout.AddFixed(sidebar, 30)
-	
+
 	content := createPanel("Main Content", fmt.Sprintf("Width: %d", width), theme.Palette.Background)
 	desktopLayout.AddFlex(content, 1)
-	
+
 	responsive.AddDesktop(desktopLayout)
-	
+
 	// Draw with info
 	responsive.Draw(screen, 0, 0, theme)
-	
+
 	// Show current mode
 	mode := "Desktop"
 	if width < 80 {
@@ -304,17 +303,17 @@ func (m *model) drawResponsiveLayout(screen *tui.Screen, theme *tui.Theme) {
 func (m *model) drawFuzzyFinder(screen *tui.Screen, theme *tui.Theme) {
 	width := screen.Width()
 	height := screen.Height()
-	
+
 	// Create modal
 	modal := tui.NewModal()
 	modal.SetSize(90, 30)
-	
+
 	// Main vertical layout
 	mainLayout := tui.VBox()
 	mainLayout.SetSize(90, 30)
 	mainLayout.SetSpacing(1)
 	mainLayout.SetPadding(tui.NewMargin(1))
-	
+
 	// Search container
 	searchContainer := tui.NewContainer()
 	searchContainer.SetTitle("Search")
@@ -323,11 +322,11 @@ func (m *model) drawFuzzyFinder(screen *tui.Screen, theme *tui.Theme) {
 	searchViewer.SetContent("Type to search files...")
 	searchContainer.SetContent(searchViewer)
 	mainLayout.AddFixed(searchContainer, 5)
-	
+
 	// Results/Preview split
 	split := tui.NewVSplit()
 	split.SetFixed(30) // Fixed width results
-	
+
 	// Results container
 	resultsContainer := tui.NewContainer()
 	resultsContainer.SetTitle("Results")
@@ -335,7 +334,7 @@ func (m *model) drawFuzzyFinder(screen *tui.Screen, theme *tui.Theme) {
 	resultsList := createFileList()
 	resultsContainer.SetContent(resultsList)
 	split.SetFirst(resultsContainer)
-	
+
 	// Preview container
 	previewContainer := tui.NewContainer()
 	previewContainer.SetTitle("Preview")
@@ -343,16 +342,16 @@ func (m *model) drawFuzzyFinder(screen *tui.Screen, theme *tui.Theme) {
 	previewContent := createPreviewContent()
 	previewContainer.SetContent(previewContent)
 	split.SetSecond(previewContainer)
-	
+
 	mainLayout.AddFlex(split, 1)
-	
+
 	// Modal is just an elevated surface, draw mainLayout on top of it
-	
+
 	// Center the modal
 	modalX := (width - 90) / 2
 	modalY := (height - 30) / 2
 	modal.Draw(screen, modalX, modalY, theme)
-	
+
 	// Draw the layout on top of the modal
 	mainLayout.Draw(screen, modalX, modalY, theme)
 }
@@ -363,11 +362,11 @@ func createPanel(title, info string, bgColor lipgloss.TerminalColor) *tui.Contai
 	container := tui.NewContainer()
 	container.SetTitle(title)
 	container.SetPadding(tui.NewMargin(1))
-	
+
 	viewer := tui.NewViewer()
 	viewer.SetContent(info)
 	container.SetContent(viewer)
-	
+
 	return container
 }
 
@@ -391,9 +390,9 @@ func (p *colorPanel) Draw(screen *tui.Screen, x, y int, theme *tui.Theme) {
 	}
 }
 
-func (p *colorPanel) Focus() {}
-func (p *colorPanel) Blur() {}
-func (p *colorPanel) IsFocused() bool { return false }
+func (p *colorPanel) Focus()                    {}
+func (p *colorPanel) Blur()                     {}
+func (p *colorPanel) IsFocused() bool           { return false }
 func (p *colorPanel) HandleKey(key string) bool { return false }
 
 func createFileList() tui.Component {
@@ -409,12 +408,12 @@ func createFileList() tui.Component {
 		"routes.go",
 		"models.go",
 	}
-	
+
 	text := ""
 	for _, file := range files {
 		text += file + "\n"
 	}
-	
+
 	viewer := tui.NewViewer()
 	viewer.SetContent(text)
 	return viewer
@@ -437,7 +436,7 @@ func main() {
         log.Fatal(err)
     }
 }`
-	
+
 	viewer := tui.NewViewer()
 	viewer.SetContent(preview)
 	return viewer

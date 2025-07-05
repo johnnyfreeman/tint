@@ -113,21 +113,21 @@ func IconPanel(icon rune, title string, content Component) *Container {
 // MultiElementPanel demonstrates complex border composition
 func MultiElementPanel(title string, tabs []string, activeTab int, status string, content Component) *Container {
 	container := NewContainer()
-	
+
 	// Title on the left
 	container.SetTitle(title)
-	
+
 	// Tabs in the center
 	tabsElement := NewTabsElement(tabs)
 	tabsElement.SetActiveTab(activeTab)
 	container.AddBorderElement(tabsElement, BorderTop, BorderAlignCenter)
-	
+
 	// Status on the right
 	container.AddBorderElement(NewStatusElement(status), BorderTop, BorderAlignRight)
-	
+
 	// Add a badge to bottom-right
 	container.AddBorderElement(NewBadgeElement("v1.0"), BorderBottom, BorderAlignRight)
-	
+
 	container.SetContent(content)
 	return container
 }

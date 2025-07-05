@@ -30,10 +30,10 @@ func (t *Table) moveCursorRightTable() {
 // insertAtCursorTable inserts text at the current edit cursor position
 func (t *Table) insertAtCursorTable(text string) {
 	bytePos := GetByteOffset(t.editValue, t.editCursor)
-	
+
 	// Insert text at byte position
 	t.editValue = t.editValue[:bytePos] + text + t.editValue[bytePos:]
-	
+
 	// Move cursor by the visual width of inserted text
 	t.editCursor += StringWidth(text)
 }
@@ -43,10 +43,10 @@ func (t *Table) deleteBeforeCursorTable() {
 	if t.editCursor > 0 {
 		currentBytePos := GetByteOffset(t.editValue, t.editCursor)
 		prevBytePos := GetPrevCharBoundary(t.editValue, currentBytePos)
-		
+
 		// Delete the character
 		t.editValue = t.editValue[:prevBytePos] + t.editValue[currentBytePos:]
-		
+
 		// Update cursor position
 		t.editCursor = GetVisualColumn(t.editValue, prevBytePos)
 	}
@@ -55,11 +55,11 @@ func (t *Table) deleteBeforeCursorTable() {
 // deleteAtCursorTable deletes one character at the edit cursor position
 func (t *Table) deleteAtCursorTable() {
 	valueWidth := StringWidth(t.editValue)
-	
+
 	if t.editCursor < valueWidth {
 		currentBytePos := GetByteOffset(t.editValue, t.editCursor)
 		nextBytePos := GetNextCharBoundary(t.editValue, currentBytePos)
-		
+
 		// Delete the character
 		t.editValue = t.editValue[:currentBytePos] + t.editValue[nextBytePos:]
 	}

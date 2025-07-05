@@ -8,12 +8,12 @@ type StackAlignment struct {
 
 // StackItem represents an item in a stack layout
 type StackItem struct {
-	Component  Component
-	X          ConstraintSet // X position constraint
-	Y          ConstraintSet // Y position constraint
-	Width      ConstraintSet // Width constraint
-	Height     ConstraintSet // Height constraint
-	Alignment  StackAlignment
+	Component Component
+	X         ConstraintSet // X position constraint
+	Y         ConstraintSet // Y position constraint
+	Width     ConstraintSet // Width constraint
+	Height    ConstraintSet // Height constraint
+	Alignment StackAlignment
 }
 
 // Stack arranges components in layers on top of each other
@@ -63,7 +63,7 @@ func (s *Stack) AddCentered(component Component, width, height ConstraintSet) {
 // AddAnchored adds a component anchored to a specific position
 func (s *Stack) AddAnchored(component Component, horizontal, vertical Alignment, width, height ConstraintSet) {
 	var x, y ConstraintSet
-	
+
 	switch horizontal {
 	case AlignStart:
 		x = NewConstraintSet(NewLength(0))
@@ -74,7 +74,7 @@ func (s *Stack) AddAnchored(component Component, horizontal, vertical Alignment,
 	default:
 		x = NewConstraintSet(NewLength(0))
 	}
-	
+
 	switch vertical {
 	case AlignStart:
 		y = NewConstraintSet(NewLength(0))
@@ -85,7 +85,7 @@ func (s *Stack) AddAnchored(component Component, horizontal, vertical Alignment,
 	default:
 		y = NewConstraintSet(NewLength(0))
 	}
-	
+
 	s.items = append(s.items, StackItem{
 		Component: component,
 		X:         x,
@@ -135,7 +135,7 @@ func (s *Stack) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 		itemY := y + item.Y.Calculate(height, 1.0)
 		itemWidth := item.Width.Calculate(width, 1.0)
 		itemHeight := item.Height.Calculate(height, 1.0)
-		
+
 		// Apply alignment adjustments
 		switch item.Alignment.Horizontal {
 		case AlignCenter:
@@ -143,14 +143,14 @@ func (s *Stack) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 		case AlignEnd:
 			itemX -= itemWidth
 		}
-		
+
 		switch item.Alignment.Vertical {
 		case AlignCenter:
 			itemY -= itemHeight / 2
 		case AlignEnd:
 			itemY -= itemHeight
 		}
-		
+
 		// Ensure item stays within bounds
 		if itemX < x {
 			itemX = x
@@ -164,12 +164,12 @@ func (s *Stack) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 		if itemY+itemHeight > y+height {
 			itemHeight = y + height - itemY
 		}
-		
+
 		// Skip if item is outside bounds or has no size
 		if itemWidth <= 0 || itemHeight <= 0 {
 			continue
 		}
-		
+
 		// Draw the component
 		if drawer, ok := item.Component.(interface {
 			DrawWithBounds(*Screen, int, int, int, int, *Theme)

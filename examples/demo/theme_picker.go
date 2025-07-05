@@ -17,8 +17,8 @@ type ThemePicker struct {
 
 func NewThemePicker() *ThemePicker {
 	return &ThemePicker{
-		visible: false,
-		themes:  []string{"tokyonight", "rosepine", "catppuccin", "monochrome"},
+		visible:  false,
+		themes:   []string{"tokyonight", "rosepine", "catppuccin", "monochrome"},
 		selected: 3, // Default to monochrome
 		hovered:  3,
 		width:    40,
@@ -44,7 +44,7 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 		borderColors = currentTheme.Components.Container.Border.Unfocused
 		titleColors = currentTheme.Components.Container.Title.Unfocused
 	}
-	
+
 	bgStyle := lipgloss.NewStyle().
 		Background(currentTheme.Palette.Surface).
 		Foreground(currentTheme.Palette.Text)
@@ -82,17 +82,17 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 	for i, themeName := range tp.themes {
 		theme := tui.GetTheme(themeName)
 		lineY := y + 2 + i
-		
+
 		// Clear line
-		for dx := x+1; dx < x+tp.width-1; dx++ {
+		for dx := x + 1; dx < x+tp.width-1; dx++ {
 			screen.DrawRune(dx, lineY, ' ', bgStyle)
 		}
-		
+
 		// Determine item state and style
 		itemX := x + 2
 		prefix := "  "
 		var style lipgloss.Style
-		
+
 		if i == tp.selected {
 			// Selected theme
 			colors := currentTheme.Components.Interactive.Selected
@@ -100,25 +100,25 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 				Foreground(colors.Text).
 				Background(currentTheme.Palette.Surface).
 				Bold(true)
-			prefix = "◉ "  // Filled circle for selected
+			prefix = "◉ " // Filled circle for selected
 		} else if i == tp.hovered {
 			// Hovered theme
 			colors := currentTheme.Components.Interactive.Hover
 			style = lipgloss.NewStyle().
 				Foreground(colors.Text).
 				Background(currentTheme.Palette.Surface)
-			prefix = "○ "  // Empty circle for hoverable
+			prefix = "○ " // Empty circle for hoverable
 		} else {
 			// Normal theme
 			colors := currentTheme.Components.Interactive.Normal
 			style = lipgloss.NewStyle().
 				Foreground(colors.Text).
 				Background(currentTheme.Palette.Surface)
-			prefix = "○ "  // Empty circle for normal
+			prefix = "○ " // Empty circle for normal
 		}
-		
+
 		screen.DrawString(itemX, lineY, prefix+theme.Name, style)
-		
+
 		// Draw color swatches
 		swatchX := x + tp.width - 14
 		screen.DrawString(swatchX, lineY, "●", lipgloss.NewStyle().Foreground(theme.Palette.Love).Background(currentTheme.Palette.Surface))

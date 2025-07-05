@@ -263,8 +263,8 @@ func createRosePineTheme() Theme {
 			Text:       text,
 			TextMuted:  muted,
 			TextSubtle: subtle,
-			Primary:    gold,     // Gold as primary for focused elements
-			Secondary:  rose,     // Rose for selections
+			Primary:    gold, // Gold as primary for focused elements
+			Secondary:  rose, // Rose for selections
 			Love:       love,
 			Gold:       gold,
 			Rose:       rose,
@@ -287,7 +287,7 @@ func createRosePineTheme() Theme {
 					Border:     rose,
 				},
 				Selected: StateColors{
-					Text:       rose,      // Rose for selected items
+					Text:       rose, // Rose for selected items
 					Background: base,
 					Border:     rose,
 				},
@@ -305,7 +305,7 @@ func createRosePineTheme() Theme {
 				},
 				Active: FocusableStyle{
 					Focused: StateColors{
-						Text:       gold,     // Gold for focused active tab
+						Text:       gold, // Gold for focused active tab
 						Background: base,
 						Border:     gold,
 					},
@@ -319,7 +319,7 @@ func createRosePineTheme() Theme {
 			Container: ContainerStyle{
 				Border: FocusableStyle{
 					Focused: StateColors{
-						Text:       gold,     // Gold for focused borders
+						Text:       gold, // Gold for focused borders
 						Background: base,
 						Border:     gold,
 					},
@@ -331,7 +331,7 @@ func createRosePineTheme() Theme {
 				},
 				Title: FocusableStyle{
 					Focused: StateColors{
-						Text:       gold,     // Gold for focused titles
+						Text:       gold, // Gold for focused titles
 						Background: base,
 						Border:     base,
 					},

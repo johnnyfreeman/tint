@@ -339,7 +339,7 @@ func (t *TabsComponent) drawContent(screen *Screen, x, y, width, height int, the
 				break
 			}
 			// Clear the line first
-			for dx := x + 1; dx < x + width - 1; dx++ {
+			for dx := x + 1; dx < x+width-1; dx++ {
 				screen.DrawRune(dx, y+i, ' ', contentStyle)
 			}
 			// Draw content
@@ -386,14 +386,14 @@ func (t *TabsComponent) HandleKey(key string) bool {
 			return true
 		}
 	}
-	
+
 	// Pass key to active tab content if it's a component
 	if activeTab := t.GetActiveTab(); activeTab != nil {
 		if component, ok := activeTab.Content.(Component); ok {
 			return component.HandleKey(key)
 		}
 	}
-	
+
 	return false
 }
 

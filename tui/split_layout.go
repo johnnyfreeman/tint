@@ -79,12 +79,12 @@ func (s *Split) Draw(screen *Screen, x, y int, theme *Theme) {
 func (s *Split) DrawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
 	// Clear the split area
 	ClearComponentArea(screen, x, y, width, height, theme)
-	
+
 	var firstSize int
 	if s.vertical {
 		// Vertical split - calculate width for first pane
 		firstSize = s.constraint.Calculate(width, 1.0)
-		
+
 		// Draw first pane
 		if s.first != nil && firstSize > 0 {
 			if drawer, ok := s.first.(interface {
@@ -101,7 +101,7 @@ func (s *Split) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 				s.first.Draw(screen, x, y, theme)
 			}
 		}
-		
+
 		// Draw second pane
 		secondX := x + firstSize
 		secondWidth := width - firstSize
@@ -123,7 +123,7 @@ func (s *Split) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 	} else {
 		// Horizontal split - calculate height for first pane
 		firstSize = s.constraint.Calculate(height, 1.0)
-		
+
 		// Draw first pane
 		if s.first != nil && firstSize > 0 {
 			if drawer, ok := s.first.(interface {
@@ -140,7 +140,7 @@ func (s *Split) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 				s.first.Draw(screen, x, y, theme)
 			}
 		}
-		
+
 		// Draw second pane
 		secondY := y + firstSize
 		secondHeight := height - firstSize

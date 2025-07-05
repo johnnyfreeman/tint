@@ -11,10 +11,10 @@ type ConditionalItem struct {
 
 // Conditional shows different components based on conditions
 type Conditional struct {
-	items      []ConditionalItem
-	fallback   Component
-	width      int
-	height     int
+	items    []ConditionalItem
+	fallback Component
+	width    int
+	height   int
 }
 
 // NewConditional creates a new conditional layout
@@ -96,19 +96,19 @@ func (c *Conditional) Draw(screen *Screen, x, y int, theme *Theme) {
 func (c *Conditional) DrawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
 	// Find the first component whose condition is met
 	var componentToDraw Component
-	
+
 	for _, item := range c.items {
 		if item.Condition(width, height) {
 			componentToDraw = item.Component
 			break
 		}
 	}
-	
+
 	// Use fallback if no conditions matched
 	if componentToDraw == nil && c.fallback != nil {
 		componentToDraw = c.fallback
 	}
-	
+
 	// Draw the selected component
 	if componentToDraw != nil {
 		if drawer, ok := componentToDraw.(interface {

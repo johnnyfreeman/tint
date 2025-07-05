@@ -26,7 +26,6 @@ func NewModal() *Modal {
 	}
 }
 
-
 // Show makes the modal visible
 func (m *Modal) Show() {
 	m.visible = true
@@ -77,14 +76,14 @@ func (m *Modal) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Clear the modal area with surface color first
 	surfaceStyle := lipgloss.NewStyle().Background(theme.Palette.Surface)
 	ClearArea(screen, actualX, actualY, m.width, m.height, surfaceStyle)
-	
+
 	// Draw block shadow AFTER clearing (offset by 1 cell)
 	shadowStyle := lipgloss.NewStyle().
 		Background(theme.Palette.Shadow)
 		// Shadow is created by background color on spaces
 	shadowOffsetX := 1
 	shadowOffsetY := 1
-	
+
 	// Use the new DrawBlockShadow method
 	screen.DrawBlockShadow(actualX, actualY, m.width, m.height, shadowStyle, shadowOffsetX, shadowOffsetY)
 }
@@ -124,4 +123,3 @@ func (m *Modal) SetSize(width, height int) {
 func (m *Modal) GetSize() (width, height int) {
 	return m.width, m.height
 }
-

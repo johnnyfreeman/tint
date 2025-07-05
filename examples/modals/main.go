@@ -19,13 +19,13 @@ type model struct {
 	width  int
 	height int
 	theme  tui.Theme
-	
+
 	// Different modal types
-	activeModal   string
-	simpleModal   *simpleModalComponent
-	fuzzyModal    *fuzzyModalComponent
-	confirmModal  *confirmModalComponent
-	formModal     *formModalComponent
+	activeModal  string
+	simpleModal  *simpleModalComponent
+	fuzzyModal   *fuzzyModalComponent
+	confirmModal *confirmModalComponent
+	formModal    *formModalComponent
 }
 
 // Simple modal with single container
@@ -41,10 +41,10 @@ type fuzzyModalComponent struct {
 	searchContainer  *tui.Container
 	resultsContainer *tui.Container
 	previewContainer *tui.Container
-	input           *tui.Input
-	items           []string
-	filtered        []string
-	selectedIdx     int
+	input            *tui.Input
+	items            []string
+	filtered         []string
+	selectedIdx      int
 }
 
 // Confirm dialog modal
@@ -59,23 +59,23 @@ type confirmModalComponent struct {
 
 // Form modal with multiple inputs
 type formModalComponent struct {
-	visible    bool
-	container  *tui.Container
-	inputs     []*tui.Input
-	labels     []string
-	activeIdx  int
+	visible   bool
+	container *tui.Container
+	inputs    []*tui.Input
+	labels    []string
+	activeIdx int
 }
 
 func initialModel() *model {
 	// Use monochrome theme for consistent styling
 	theme := tui.GetTheme("monochrome")
-	
+
 	// Create simple modal
 	simpleContainer := tui.NewContainer()
 	simpleContainer.SetTitle("About")
 	simpleContainer.SetSize(50, 15)
 	simpleContainer.SetPadding(tui.NewMargin(2))
-	
+
 	simpleViewer := tui.NewViewer()
 	simpleViewer.SetContent(`Modal Examples Demo
 
@@ -90,34 +90,34 @@ Press the number keys (1-4) to show each modal.
 Press Escape to close any modal.`)
 	simpleViewer.SetWrapText(true)
 	simpleContainer.SetContent(simpleViewer)
-	
+
 	simpleModal := &simpleModalComponent{
 		container: simpleContainer,
 		viewer:    simpleViewer,
 	}
-	
+
 	// Create fuzzy finder modal
 	searchContainer := tui.NewContainer()
 	searchContainer.SetTitle("Search")
 	searchContainer.SetPadding(tui.NewMargin(1))
-	
+
 	searchInput := tui.NewInput()
 	searchInput.SetPlaceholder("Type to filter...")
 	searchContainer.SetContent(searchInput)
-	
+
 	resultsContainer := tui.NewContainer()
 	resultsContainer.SetTitle("Results")
 	resultsContainer.SetPadding(tui.NewMargin(1))
-	
+
 	previewContainer := tui.NewContainer()
 	previewContainer.SetTitle("Preview")
 	previewContainer.SetPadding(tui.NewMargin(1))
-	
+
 	fuzzyModal := &fuzzyModalComponent{
 		searchContainer:  searchContainer,
 		resultsContainer: resultsContainer,
 		previewContainer: previewContainer,
-		input:           searchInput,
+		input:            searchInput,
 		items: []string{
 			"main.go", "config.go", "utils.go", "server.go", "client.go",
 			"auth.go", "database.go", "middleware.go", "routes.go", "models.go",
@@ -125,13 +125,13 @@ Press Escape to close any modal.`)
 		},
 		filtered: []string{},
 	}
-	
+
 	// Create confirm modal
 	confirmContainer := tui.NewContainer()
 	confirmContainer.SetTitle("Confirm Action")
 	confirmContainer.SetSize(40, 10)
 	confirmContainer.SetPadding(tui.NewMargin(2))
-	
+
 	confirmModal := &confirmModalComponent{
 		container:   confirmContainer,
 		message:     "Are you sure you want to proceed?",
@@ -139,29 +139,29 @@ Press Escape to close any modal.`)
 		cancelText:  "No",
 		selected:    0,
 	}
-	
+
 	// Create form modal
 	formContainer := tui.NewContainer()
 	formContainer.SetTitle("User Form")
 	formContainer.SetSize(50, 20)
 	formContainer.SetPadding(tui.NewMargin(2))
-	
+
 	nameInput := tui.NewInput()
 	nameInput.SetPlaceholder("Enter your name...")
-	
+
 	emailInput := tui.NewInput()
 	emailInput.SetPlaceholder("Enter your email...")
-	
+
 	messageInput := tui.NewInput()
 	messageInput.SetPlaceholder("Enter a message...")
-	
+
 	formModal := &formModalComponent{
 		container: formContainer,
 		inputs:    []*tui.Input{nameInput, emailInput, messageInput},
 		labels:    []string{"Name:", "Email:", "Message:"},
 		activeIdx: 0,
 	}
-	
+
 	return &model{
 		screen:       tui.NewScreen(defaultWidth, defaultHeight, theme),
 		width:        defaultWidth,
@@ -185,7 +185,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.screen = tui.NewScreen(m.width, m.height, m.theme)
-		
+
 	case tea.KeyMsg:
 		// Handle escape to close modals
 		if msg.String() == "escape" || msg.String() == "esc" {
@@ -196,7 +196,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.formModal.visible = false
 			return m, nil
 		}
-		
+
 		// Route input to active modal
 		switch m.activeModal {
 		case "fuzzy":
@@ -209,7 +209,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.handleFormInput(msg)
 			return m, nil
 		}
-		
+
 		// Global shortcuts to show modals
 		switch msg.String() {
 		case "q":
@@ -224,7 +224,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.showModal("form")
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -234,7 +234,7 @@ func (m *model) showModal(modalType string) {
 	m.fuzzyModal.visible = false
 	m.confirmModal.visible = false
 	m.formModal.visible = false
-	
+
 	// Show selected modal
 	m.activeModal = modalType
 	switch modalType {
@@ -277,7 +277,7 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 
 func (m *model) updateFuzzyResults(query string) {
 	m.fuzzyModal.filtered = []string{}
-	
+
 	if query == "" {
 		m.fuzzyModal.filtered = m.fuzzyModal.items
 	} else {
@@ -288,7 +288,7 @@ func (m *model) updateFuzzyResults(query string) {
 			}
 		}
 	}
-	
+
 	m.fuzzyModal.selectedIdx = 0
 }
 
@@ -340,13 +340,13 @@ func (m *model) View() string {
 	if m.width == 0 || m.height == 0 {
 		return ""
 	}
-	
+
 	// Clear screen with theme background
 	m.screen.Clear()
-	
+
 	// Draw main content
 	m.drawMainContent()
-	
+
 	// Draw active modal
 	switch m.activeModal {
 	case "simple":
@@ -358,7 +358,7 @@ func (m *model) View() string {
 	case "form":
 		m.drawFormModal()
 	}
-	
+
 	return m.screen.Render()
 }
 
@@ -368,7 +368,7 @@ func (m *model) drawMainContent() {
 		Foreground(m.theme.Palette.Primary).
 		Bold(true)
 	m.screen.DrawString(2, 1, "Modal Examples", titleStyle)
-	
+
 	// Instructions
 	textStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text)
@@ -384,11 +384,11 @@ func (m *model) drawMainContent() {
 		"Press 'q' to quit",
 		"Press 'Escape' to close any modal",
 	}
-	
+
 	for i, line := range instructions {
 		m.screen.DrawString(4, 3+i, line, textStyle)
 	}
-	
+
 	// Status
 	statusStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted)
@@ -403,7 +403,7 @@ func (m *model) drawModalBackdrop(x, y, width, height int) {
 	// Clear the entire modal area first with surface color (for modal background)
 	surfaceStyle := lipgloss.NewStyle().Background(m.theme.Palette.Surface)
 	tui.ClearArea(m.screen, x, y, width, height, surfaceStyle)
-	
+
 	// Draw shadow with 1 pixel offset to bottom-right
 	// This creates a subtle depth effect
 	for dy := 0; dy < height; dy++ {
@@ -424,14 +424,14 @@ func (m *model) drawSimpleModal() {
 	if !m.simpleModal.visible {
 		return
 	}
-	
+
 	width, height := m.simpleModal.container.GetSize()
 	x := (m.width - width) / 2
 	y := (m.height - height) / 2
-	
+
 	// Draw backdrop
 	m.drawModalBackdrop(x, y, width, height)
-	
+
 	// Draw container
 	m.simpleModal.container.Draw(m.screen, x, y, &m.theme)
 }
@@ -440,43 +440,43 @@ func (m *model) drawFuzzyModal() {
 	if !m.fuzzyModal.visible {
 		return
 	}
-	
+
 	// Modal dimensions
 	modalWidth := 80
 	modalHeight := 25
 	modalX := (m.width - modalWidth) / 2
 	modalY := (m.height - modalHeight) / 2
-	
+
 	// Draw backdrop
 	m.drawModalBackdrop(modalX, modalY, modalWidth, modalHeight)
-	
+
 	// Layout calculations
 	searchHeight := 3
 	leftColumnWidth := 30
-	rightColumnWidth := modalWidth - leftColumnWidth - 3  // Account for margins
-	resultsHeight := modalHeight - searchHeight - 2  // No extra spacing
-	
+	rightColumnWidth := modalWidth - leftColumnWidth - 3 // Account for margins
+	resultsHeight := modalHeight - searchHeight - 2      // No extra spacing
+
 	// Update container sizes
 	m.fuzzyModal.searchContainer.SetSize(leftColumnWidth, searchHeight)
 	m.fuzzyModal.resultsContainer.SetSize(leftColumnWidth, resultsHeight)
-	m.fuzzyModal.previewContainer.SetSize(rightColumnWidth, modalHeight - 2)
-	
+	m.fuzzyModal.previewContainer.SetSize(rightColumnWidth, modalHeight-2)
+
 	// Update input width
-	m.fuzzyModal.input.SetWidth(leftColumnWidth - 4)  // Account for container padding
-	
+	m.fuzzyModal.input.SetWidth(leftColumnWidth - 4) // Account for container padding
+
 	// Draw containers
 	// Left column: search and results
-	m.fuzzyModal.searchContainer.Draw(m.screen, modalX + 1, modalY + 1, &m.theme)
-	m.fuzzyModal.resultsContainer.Draw(m.screen, modalX + 1, modalY + searchHeight + 1, &m.theme)  // No gap
-	
+	m.fuzzyModal.searchContainer.Draw(m.screen, modalX+1, modalY+1, &m.theme)
+	m.fuzzyModal.resultsContainer.Draw(m.screen, modalX+1, modalY+searchHeight+1, &m.theme) // No gap
+
 	// Right column: preview (full height)
-	m.fuzzyModal.previewContainer.Draw(m.screen, modalX + leftColumnWidth + 2, modalY + 1, &m.theme)
-	
+	m.fuzzyModal.previewContainer.Draw(m.screen, modalX+leftColumnWidth+2, modalY+1, &m.theme)
+
 	// Draw results content manually
-	m.drawFuzzyResults(modalX + 3, modalY + searchHeight + 3, leftColumnWidth - 4, resultsHeight - 4)
-	
+	m.drawFuzzyResults(modalX+3, modalY+searchHeight+3, leftColumnWidth-4, resultsHeight-4)
+
 	// Draw preview content
-	m.drawFuzzyPreview(modalX + leftColumnWidth + 4, modalY + 3, rightColumnWidth - 4, modalHeight - 6)
+	m.drawFuzzyPreview(modalX+leftColumnWidth+4, modalY+3, rightColumnWidth-4, modalHeight-6)
 }
 
 func (m *model) drawFuzzyResults(x, y, width, height int) {
@@ -486,12 +486,12 @@ func (m *model) drawFuzzyResults(x, y, width, height int) {
 	selectedStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Background).
 		Background(m.theme.Palette.Primary)
-	
+
 	for i, item := range m.fuzzyModal.filtered {
 		if i >= height {
 			break
 		}
-		
+
 		style := textStyle
 		if i == m.fuzzyModal.selectedIdx {
 			// Highlight full row
@@ -503,12 +503,12 @@ func (m *model) drawFuzzyResults(x, y, width, height int) {
 			}
 			style = selectedStyle
 		}
-		
+
 		displayName := item
 		if len(displayName) > width {
 			displayName = displayName[:width-3] + "..."
 		}
-		
+
 		m.screen.DrawString(x, y+i, displayName, style)
 	}
 }
@@ -517,11 +517,11 @@ func (m *model) drawFuzzyPreview(x, y, width, height int) {
 	previewStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted).
 		Background(m.theme.Palette.Surface)
-	
+
 	if m.fuzzyModal.selectedIdx < len(m.fuzzyModal.filtered) {
 		selected := m.fuzzyModal.filtered[m.fuzzyModal.selectedIdx]
 		preview := fmt.Sprintf("Preview of: %s\n\nThis would show the file contents\nor other relevant information.", selected)
-		
+
 		lines := strings.Split(preview, "\n")
 		for i, line := range lines {
 			if i >= height {
@@ -539,17 +539,17 @@ func (m *model) drawConfirmModal() {
 	if !m.confirmModal.visible {
 		return
 	}
-	
+
 	width, height := m.confirmModal.container.GetSize()
 	x := (m.width - width) / 2
 	y := (m.height - height) / 2
-	
+
 	// Draw backdrop
 	m.drawModalBackdrop(x, y, width, height)
-	
+
 	// Draw container
 	m.confirmModal.container.Draw(m.screen, x, y, &m.theme)
-	
+
 	// Draw message
 	messageStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text).
@@ -557,11 +557,11 @@ func (m *model) drawConfirmModal() {
 	messageX := x + 2
 	messageY := y + 3
 	m.screen.DrawString(messageX, messageY, m.confirmModal.message, messageStyle)
-	
+
 	// Draw buttons
 	buttonY := y + height - 4
 	buttonSpacing := 10
-	
+
 	// Cancel button
 	cancelStyle := messageStyle
 	if m.confirmModal.selected == 0 {
@@ -572,7 +572,7 @@ func (m *model) drawConfirmModal() {
 	}
 	cancelX := x + width/2 - buttonSpacing - len(m.confirmModal.cancelText)/2
 	m.screen.DrawString(cancelX, buttonY, m.confirmModal.cancelText, cancelStyle)
-	
+
 	// Confirm button
 	confirmStyle := messageStyle
 	if m.confirmModal.selected == 1 {
@@ -589,45 +589,45 @@ func (m *model) drawFormModal() {
 	if !m.formModal.visible {
 		return
 	}
-	
+
 	width, height := m.formModal.container.GetSize()
 	x := (m.width - width) / 2
 	y := (m.height - height) / 2
-	
+
 	// Draw backdrop
 	m.drawModalBackdrop(x, y, width, height)
-	
+
 	// Draw container
 	m.formModal.container.Draw(m.screen, x, y, &m.theme)
-	
+
 	// Draw form fields
 	labelStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text).
 		Background(m.theme.Palette.Surface)
-	
+
 	fieldY := y + 3
 	fieldSpacing := 4
-	
+
 	for i, label := range m.formModal.labels {
 		// Draw label
-		m.screen.DrawString(x + 3, fieldY, label, labelStyle)
-		
+		m.screen.DrawString(x+3, fieldY, label, labelStyle)
+
 		// Update input width
 		m.formModal.inputs[i].SetWidth(width - 8)
-		
+
 		// Draw input
-		m.formModal.inputs[i].Draw(m.screen, x + 3, fieldY + 1, &m.theme)
-		
+		m.formModal.inputs[i].Draw(m.screen, x+3, fieldY+1, &m.theme)
+
 		fieldY += fieldSpacing
 	}
-	
+
 	// Draw help text
 	helpStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted).
 		Background(m.theme.Palette.Surface)
 	helpText := "Tab: Next field | Enter: Submit | Escape: Cancel"
-	helpX := x + (width - len(helpText)) / 2
-	m.screen.DrawString(helpX, y + height - 3, helpText, helpStyle)
+	helpX := x + (width-len(helpText))/2
+	m.screen.DrawString(helpX, y+height-3, helpText, helpStyle)
 }
 
 func main() {

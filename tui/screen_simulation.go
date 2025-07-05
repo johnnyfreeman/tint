@@ -74,7 +74,7 @@ func (s *ScreenSimulation) GetLine(y int) string {
 	if y < 0 || y >= s.height {
 		return ""
 	}
-	
+
 	var builder strings.Builder
 	for x := 0; x < s.width; x++ {
 		cell := s.cells[y][x]
@@ -106,7 +106,7 @@ func (s *ScreenSimulation) GetContent() string {
 			}
 		}
 	}
-	
+
 	// Remove trailing empty lines
 	for i := len(lines) - 1; i > 0; i-- {
 		if lines[i] == "" {
@@ -115,7 +115,7 @@ func (s *ScreenSimulation) GetContent() string {
 			break
 		}
 	}
-	
+
 	return strings.Join(lines, "\n")
 }
 
@@ -165,7 +165,7 @@ func (s *ScreenSimulation) CountOccurrences(r rune) int {
 func (s *ScreenSimulation) GetVisibleBounds() (minX, minY, maxX, maxY int) {
 	minX, minY = s.width, s.height
 	maxX, maxY = -1, -1
-	
+
 	for y := 0; y < s.height; y++ {
 		for x := 0; x < s.width; x++ {
 			cell := s.cells[y][x]
@@ -188,12 +188,12 @@ func (s *ScreenSimulation) GetVisibleBounds() (minX, minY, maxX, maxY int) {
 			}
 		}
 	}
-	
+
 	if maxX == -1 {
 		// No visible content
 		return 0, 0, 0, 0
 	}
-	
+
 	return minX, minY, maxX, maxY
 }
 
@@ -203,27 +203,27 @@ func (s *ScreenSimulation) Snapshot() *ScreenSimulation {
 	snapshot.cursorX = s.cursorX
 	snapshot.cursorY = s.cursorY
 	snapshot.cursorVisible = s.cursorVisible
-	
+
 	// Deep copy cells
 	for y := 0; y < s.height; y++ {
 		for x := 0; x < s.width; x++ {
 			snapshot.cells[y][x] = s.cells[y][x]
 		}
 	}
-	
+
 	return snapshot
 }
 
 // Diff compares this screen with another and returns the differences
 func (s *ScreenSimulation) Diff(other *ScreenSimulation) []string {
 	var differences []string
-	
+
 	if s.width != other.width || s.height != other.height {
-		differences = append(differences, 
+		differences = append(differences,
 			"Screen dimensions differ")
 		return differences
 	}
-	
+
 	for y := 0; y < s.height; y++ {
 		for x := 0; x < s.width; x++ {
 			if s.cells[y][x] != other.cells[y][x] {
@@ -232,6 +232,6 @@ func (s *ScreenSimulation) Diff(other *ScreenSimulation) []string {
 			}
 		}
 	}
-	
+
 	return differences
 }

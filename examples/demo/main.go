@@ -30,7 +30,7 @@ func initialModel() model {
 	statusBar := tui.NewStatusBar()
 	statusBar.AddSegment("Tab: focus", "left")
 	statusBar.AddSegment("Ctrl+B: sidebar | 1-3: tabs | m: modal | n/s/w/e: notif | t: theme | q: quit", "right")
-	
+
 	return model{
 		screen:       tui.NewDefaultScreen(80, 24),
 		sidebar:      NewSidebar(),
@@ -93,7 +93,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		// Handle modal controls when focused
 		if m.modal.IsVisible() && m.focus == "modal" {
 			switch msg.String() {
@@ -108,7 +108,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
@@ -185,12 +185,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	// Get current theme (preview theme if hovering)
 	theme := tui.GetTheme(m.themePicker.GetPreviewTheme())
-	
+
 	// Recreate screen if theme changed
 	if m.screen.Theme().Name != theme.Name {
 		m.screen = tui.NewScreen(m.width, m.height, theme)
 	}
-	
+
 	// Clear screen (now uses theme background automatically)
 	m.screen.Clear()
 
@@ -204,7 +204,7 @@ func (m model) View() string {
 
 	// Calculate content height (minus status bar)
 	contentHeight := m.height - 1
-	
+
 	// Draw sidebar
 	m.sidebar.DrawWithTheme(m.screen, 0, 0, contentHeight, theme, m.focus == "sidebar")
 
@@ -231,26 +231,26 @@ func (m model) View() string {
 	} else {
 		m.modal.Blur()
 	}
-	
+
 	if m.modal.IsVisible() {
 		m.modal.Draw(m.screen, 0, 0, &theme)
-		
+
 		// Draw container inside modal
 		modalWidth, modalHeight := m.modal.GetSize()
 		modalX := (m.width - modalWidth) / 2
 		modalY := (m.height - modalHeight) / 2
-		
+
 		container := tui.NewContainer()
 		container.SetTitle("Sample Modal")
-		container.SetSize(modalWidth, modalHeight)  // Fill the modal
+		container.SetSize(modalWidth, modalHeight) // Fill the modal
 		container.SetPadding(tui.NewMargin(1))
-		
+
 		// Create content for the container
 		textarea := tui.NewTextArea()
 		textarea.SetValue("This is a modal dialog.\n\nPress 'm' again to close it.\n\nNotice the shadow effect\nbehind the modal.")
-		textarea.SetSize(modalWidth-4, modalHeight-4)  // Account for border and padding
+		textarea.SetSize(modalWidth-4, modalHeight-4) // Account for border and padding
 		container.SetContent(textarea)
-		
+
 		container.Draw(m.screen, modalX, modalY, &theme)
 	}
 
@@ -262,7 +262,7 @@ func (m model) View() string {
 
 	// Draw status bar at the bottom
 	m.statusBar.Draw(m.screen, 0, m.height-1, &theme)
-	
+
 	// Render screen to string
 	return m.screen.Render()
 }

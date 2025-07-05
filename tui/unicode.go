@@ -2,7 +2,7 @@ package tui
 
 import (
 	"strings"
-	
+
 	"github.com/mattn/go-runewidth"
 )
 
@@ -52,13 +52,13 @@ func Wrap(s string, width int) []string {
 	if width <= 0 || s == "" {
 		return []string{s}
 	}
-	
+
 	// Use runewidth's wrap function which returns a string with newlines
 	wrapped := runewidth.Wrap(s, width)
 	if wrapped == "" {
 		return []string{}
 	}
-	
+
 	// Split by newlines to get individual lines
 	return strings.Split(wrapped, "\n")
 }
@@ -73,10 +73,10 @@ func GetVisualColumn(s string, byteOffset int) int {
 	if byteOffset >= len(s) {
 		return StringWidth(s)
 	}
-	
+
 	visualCol := 0
 	currentByte := 0
-	
+
 	for _, r := range s {
 		if currentByte >= byteOffset {
 			break
@@ -84,7 +84,7 @@ func GetVisualColumn(s string, byteOffset int) int {
 		visualCol += RuneWidth(r)
 		currentByte += len(string(r))
 	}
-	
+
 	return visualCol
 }
 
@@ -93,23 +93,23 @@ func GetByteOffset(s string, visualCol int) int {
 	if visualCol <= 0 {
 		return 0
 	}
-	
+
 	currentCol := 0
 	byteOffset := 0
-	
+
 	for _, r := range s {
 		if currentCol >= visualCol {
 			break
 		}
 		width := RuneWidth(r)
-		if currentCol + width > visualCol {
+		if currentCol+width > visualCol {
 			// We're in the middle of a wide character, return current position
 			break
 		}
 		currentCol += width
 		byteOffset += len(string(r))
 	}
-	
+
 	return byteOffset
 }
 
@@ -123,12 +123,12 @@ func GetPrevCharBoundary(s string, byteOffset int) int {
 	if byteOffset > len(s) {
 		byteOffset = len(s)
 	}
-	
+
 	// Find the start of the current rune
 	for byteOffset > 0 && !isRuneStart(s[byteOffset-1]) {
 		byteOffset--
 	}
-	
+
 	// Move to previous rune
 	if byteOffset > 0 {
 		byteOffset--
@@ -136,7 +136,7 @@ func GetPrevCharBoundary(s string, byteOffset int) int {
 			byteOffset--
 		}
 	}
-	
+
 	return byteOffset
 }
 
@@ -148,7 +148,7 @@ func GetNextCharBoundary(s string, byteOffset int) int {
 	if byteOffset >= len(s) {
 		return len(s)
 	}
-	
+
 	// Skip current rune
 	for byteOffset < len(s) && !isRuneStart(s[byteOffset]) {
 		byteOffset++
@@ -159,7 +159,7 @@ func GetNextCharBoundary(s string, byteOffset int) int {
 			byteOffset++
 		}
 	}
-	
+
 	return byteOffset
 }
 
@@ -175,32 +175,32 @@ func SafeSliceByVisual(s string, startCol, endCol int) string {
 	if startCol < 0 {
 		startCol = 0
 	}
-	
+
 	startByte := GetByteOffset(s, startCol)
-	
+
 	if endCol < 0 {
 		return s[startByte:]
 	}
-	
+
 	endByte := GetByteOffset(s, endCol)
 	if endByte > len(s) {
 		endByte = len(s)
 	}
-	
+
 	return s[startByte:endByte]
 }
 
 // GetCharAtVisualCol returns the rune at the given visual column position
 func GetCharAtVisualCol(s string, visualCol int) (rune, bool) {
 	currentCol := 0
-	
+
 	for _, r := range s {
 		width := RuneWidth(r)
-		if currentCol <= visualCol && visualCol < currentCol + width {
+		if currentCol <= visualCol && visualCol < currentCol+width {
 			return r, true
 		}
 		currentCol += width
 	}
-	
+
 	return ' ', false
 }

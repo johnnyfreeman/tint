@@ -63,9 +63,9 @@ func NewMax(max int) Constraint {
 
 // ConstraintSet combines multiple constraints for a single dimension
 type ConstraintSet struct {
-	Base Constraint   // Primary constraint (Length, Percentage, or Ratio)
-	Min  *Constraint  // Optional minimum
-	Max  *Constraint  // Optional maximum
+	Base Constraint  // Primary constraint (Length, Percentage, or Ratio)
+	Min  *Constraint // Optional minimum
+	Max  *Constraint // Optional maximum
 }
 
 // NewConstraintSet creates a constraint set with just a base constraint
@@ -90,7 +90,7 @@ func (cs ConstraintSet) WithMax(max int) ConstraintSet {
 // Calculate computes the actual size given a parent size
 func (cs ConstraintSet) Calculate(parentSize int, ratioTotal float64) int {
 	var size int
-	
+
 	switch cs.Base.Type {
 	case Length:
 		size = int(cs.Base.Value)
@@ -101,7 +101,7 @@ func (cs ConstraintSet) Calculate(parentSize int, ratioTotal float64) int {
 			size = int(float64(parentSize) * (cs.Base.Value / ratioTotal))
 		}
 	}
-	
+
 	// Apply min/max constraints
 	if cs.Min != nil && size < int(cs.Min.Value) {
 		size = int(cs.Min.Value)
@@ -109,19 +109,19 @@ func (cs ConstraintSet) Calculate(parentSize int, ratioTotal float64) int {
 	if cs.Max != nil && size > int(cs.Max.Value) {
 		size = int(cs.Max.Value)
 	}
-	
+
 	return size
 }
 
 // CalculateConstraints calculates sizes for multiple constraint sets
 func CalculateConstraints(constraints []ConstraintSet, totalSize int) []int {
 	sizes := make([]int, len(constraints))
-	
+
 	// First pass: calculate fixed and percentage constraints
 	remainingSize := totalSize
 	ratioTotal := 0.0
 	ratioIndices := []int{}
-	
+
 	for i, cs := range constraints {
 		switch cs.Base.Type {
 		case Length:
@@ -137,20 +137,20 @@ func CalculateConstraints(constraints []ConstraintSet, totalSize int) []int {
 			ratioIndices = append(ratioIndices, i)
 		}
 	}
-	
+
 	// Second pass: distribute remaining size among ratio constraints
 	if len(ratioIndices) > 0 && remainingSize > 0 {
 		for _, i := range ratioIndices {
 			sizes[i] = constraints[i].Calculate(remainingSize, ratioTotal)
 		}
 	}
-	
+
 	// Third pass: ensure we don't exceed total size
 	totalUsed := 0
 	for _, size := range sizes {
 		totalUsed += size
 	}
-	
+
 	// If we've exceeded, scale down proportionally
 	if totalUsed > totalSize {
 		scale := float64(totalSize) / float64(totalUsed)
@@ -158,7 +158,7 @@ func CalculateConstraints(constraints []ConstraintSet, totalSize int) []int {
 			sizes[i] = int(float64(sizes[i]) * scale)
 		}
 	}
-	
+
 	return sizes
 }
 

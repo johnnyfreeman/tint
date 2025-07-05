@@ -2,10 +2,10 @@ package tui
 
 // LinearLayout arranges components in a line (horizontal or vertical)
 type LinearLayout struct {
-	config      LayoutConfig
-	items       []LinearItem
-	width       int
-	height      int
+	config LayoutConfig
+	items  []LinearItem
+	width  int
+	height int
 }
 
 // LinearItem represents an item in a linear layout
@@ -81,19 +81,19 @@ func (l *LinearLayout) DrawWithBounds(screen *Screen, x, y, width, height int, t
 	if len(l.items) == 0 {
 		return
 	}
-	
+
 	// Clear the layout area
 	ClearComponentArea(screen, x, y, width, height, theme)
-	
+
 	// Apply padding
 	contentRect := ApplyMargin(Rectangle{X: x, Y: y, Width: width, Height: height}, l.config.Padding)
-	
+
 	// Calculate item sizes
 	constraints := make([]ConstraintSet, len(l.items))
 	for i, item := range l.items {
 		constraints[i] = item.Constraint
 	}
-	
+
 	var sizes []int
 	if l.config.Direction == Horizontal {
 		// Account for spacing
@@ -104,19 +104,19 @@ func (l *LinearLayout) DrawWithBounds(screen *Screen, x, y, width, height int, t
 		availableSize := contentRect.Height - (len(l.items)-1)*l.config.Spacing
 		sizes = CalculateConstraints(constraints, availableSize)
 	}
-	
+
 	// Draw items
 	currentX := contentRect.X
 	currentY := contentRect.Y
-	
+
 	for i, item := range l.items {
 		var itemX, itemY, itemWidth, itemHeight int
-		
+
 		if l.config.Direction == Horizontal {
 			itemX = currentX
 			itemWidth = sizes[i]
 			itemHeight = contentRect.Height
-			
+
 			// Apply alignment
 			switch l.config.Alignment {
 			case AlignStart:
@@ -128,13 +128,13 @@ func (l *LinearLayout) DrawWithBounds(screen *Screen, x, y, width, height int, t
 			default: // AlignStretch
 				itemY = contentRect.Y
 			}
-			
+
 			currentX += itemWidth + l.config.Spacing
 		} else {
 			itemY = currentY
 			itemHeight = sizes[i]
 			itemWidth = contentRect.Width
-			
+
 			// Apply alignment
 			switch l.config.Alignment {
 			case AlignStart:
@@ -146,10 +146,10 @@ func (l *LinearLayout) DrawWithBounds(screen *Screen, x, y, width, height int, t
 			default: // AlignStretch
 				itemX = contentRect.X
 			}
-			
+
 			currentY += itemHeight + l.config.Spacing
 		}
-		
+
 		// Draw the component
 		if drawer, ok := item.Component.(interface {
 			DrawWithBounds(*Screen, int, int, int, int, *Theme)

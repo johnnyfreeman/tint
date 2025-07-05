@@ -14,16 +14,16 @@ type model struct {
 	width  int
 	height int
 	theme  tui.Theme
-	
+
 	// Modal states
 	showInfoModal    bool
 	showConfirmModal bool
 	showFormModal    bool
-	
+
 	// Form data
 	formName  string
 	formEmail string
-	
+
 	// UI components
 	infoModal    *tui.Modal
 	confirmModal *tui.Modal
@@ -32,20 +32,20 @@ type model struct {
 
 func initialModel() *model {
 	theme := tui.GetTheme("tokyonight")
-	
+
 	// Create modals
 	infoModal := tui.NewModal()
 	infoModal.SetSize(50, 15)
 	infoModal.SetCentered(true)
-	
+
 	confirmModal := tui.NewModal()
 	confirmModal.SetSize(40, 10)
 	confirmModal.SetCentered(true)
-	
+
 	formModal := tui.NewModal()
 	formModal.SetSize(60, 20)
 	formModal.SetCentered(true)
-	
+
 	return &model{
 		screen:       tui.NewScreen(80, 24, theme),
 		width:        80,
@@ -67,7 +67,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.screen = tui.NewScreen(m.width, m.height, m.theme)
-		
+
 	case tea.KeyMsg:
 		// Handle modal-specific input first
 		if m.showFormModal {
@@ -92,7 +92,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		if m.showConfirmModal {
 			switch msg.String() {
 			case "y", "Y":
@@ -106,14 +106,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		if m.showInfoModal {
 			if msg.String() == "escape" || msg.String() == "esc" || msg.String() == "enter" {
 				m.showInfoModal = false
 			}
 			return m, nil
 		}
-		
+
 		// Main menu input
 		switch msg.String() {
 		case "q", "ctrl+c":
@@ -127,7 +127,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.formEmail = "" // Reset form
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -135,12 +135,12 @@ func (m *model) View() string {
 	if m.width == 0 || m.height == 0 {
 		return ""
 	}
-	
+
 	m.screen.Clear()
-	
+
 	// Draw main content
 	m.drawMainContent()
-	
+
 	// Draw modals on top
 	if m.showInfoModal {
 		m.drawInfoModal()
@@ -151,7 +151,7 @@ func (m *model) View() string {
 	if m.showFormModal {
 		m.drawFormModal()
 	}
-	
+
 	return m.screen.Render()
 }
 
@@ -161,7 +161,7 @@ func (m *model) drawMainContent() {
 		Foreground(m.theme.Palette.Primary).
 		Bold(true)
 	m.screen.DrawString(2, 2, "Modal/Container Pattern Demo", titleStyle)
-	
+
 	// Instructions
 	textStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text)
@@ -175,16 +175,16 @@ func (m *model) drawMainContent() {
 		"Press number keys to show different modals:",
 		"",
 		"1. Information Modal - Simple content display",
-		"2. Confirmation Modal - Yes/No dialog",  
+		"2. Confirmation Modal - Yes/No dialog",
 		"3. Form Modal - Input fields with labels",
 		"",
 		"Press 'q' to quit",
 	}
-	
+
 	for i, line := range instructions {
 		m.screen.DrawString(4, 4+i, line, textStyle)
 	}
-	
+
 	// Show current state
 	stateStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted)
@@ -201,18 +201,18 @@ func (m *model) drawMainContent() {
 
 func (m *model) drawInfoModal() {
 	m.infoModal.Draw(m.screen, 0, 0, &m.theme)
-	
+
 	// Get modal position
 	modalWidth, modalHeight := m.infoModal.GetSize()
 	modalX := (m.width - modalWidth) / 2
 	modalY := (m.height - modalHeight) / 2
-	
+
 	// Create container that fills the modal
 	container := tui.NewContainer()
 	container.SetTitle("Information")
 	container.SetSize(modalWidth, modalHeight)
 	container.SetPadding(tui.NewMargin(2))
-	
+
 	// Create content
 	viewer := tui.NewViewer()
 	viewer.SetContent(`Welcome to the Modal Demo!
@@ -232,102 +232,101 @@ This modal demonstrates the proper pattern:
 Press ESC or ENTER to close this modal.`)
 	viewer.SetWrapText(true)
 	viewer.SetSize(modalWidth-6, modalHeight-6)
-	
+
 	container.SetContent(viewer)
 	container.Draw(m.screen, modalX, modalY, &m.theme)
 }
 
 func (m *model) drawConfirmModal() {
 	m.confirmModal.Draw(m.screen, 0, 0, &m.theme)
-	
+
 	// Get modal position
 	modalWidth, modalHeight := m.confirmModal.GetSize()
 	modalX := (m.width - modalWidth) / 2
 	modalY := (m.height - modalHeight) / 2
-	
+
 	// Create container
 	container := tui.NewContainer()
 	container.SetTitle("Confirm Action")
 	container.SetSize(modalWidth, modalHeight)
 	container.SetPadding(tui.NewMargin(2))
 	container.Draw(m.screen, modalX, modalY, &m.theme)
-	
+
 	// Draw question
 	textStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text).
 		Background(m.theme.Palette.Surface)
-	
+
 	question := "Are you sure you want to proceed?"
-	questionX := modalX + (modalWidth - len(question)) / 2
-	m.screen.DrawString(questionX, modalY + 3, question, textStyle)
-	
+	questionX := modalX + (modalWidth-len(question))/2
+	m.screen.DrawString(questionX, modalY+3, question, textStyle)
+
 	// Draw buttons
 	buttonY := modalY + modalHeight - 4
-	
+
 	yesStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Background).
 		Background(m.theme.Palette.Pine).
 		Bold(true).
 		Padding(0, 2)
-	
+
 	noStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Background).
 		Background(m.theme.Palette.Love).
 		Bold(true).
 		Padding(0, 2)
-	
+
 	yesBtn := " Y - Yes "
 	noBtn := " N - No "
-	
+
 	btnSpacing := 4
 	totalBtnWidth := len(yesBtn) + len(noBtn) + btnSpacing
-	btnStartX := modalX + (modalWidth - totalBtnWidth) / 2
-	
+	btnStartX := modalX + (modalWidth-totalBtnWidth)/2
+
 	m.screen.DrawString(btnStartX, buttonY, yesBtn, yesStyle)
-	m.screen.DrawString(btnStartX + len(yesBtn) + btnSpacing, buttonY, noBtn, noStyle)
+	m.screen.DrawString(btnStartX+len(yesBtn)+btnSpacing, buttonY, noBtn, noStyle)
 }
 
 func (m *model) drawFormModal() {
 	m.formModal.Draw(m.screen, 0, 0, &m.theme)
-	
+
 	// Get modal position
 	modalWidth, modalHeight := m.formModal.GetSize()
 	modalX := (m.width - modalWidth) / 2
 	modalY := (m.height - modalHeight) / 2
-	
+
 	// Create container
 	container := tui.NewContainer()
 	container.SetTitle("User Registration")
 	container.SetSize(modalWidth, modalHeight)
 	container.SetPadding(tui.NewMargin(2))
 	container.Draw(m.screen, modalX, modalY, &m.theme)
-	
+
 	// Draw form fields
 	labelStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Text).
 		Background(m.theme.Palette.Surface)
-	
-	
+
 	fieldY := modalY + 4
-	
+
 	// Name field
-	m.screen.DrawString(modalX + 4, fieldY, "Name:", labelStyle)
+	m.screen.DrawString(modalX+4, fieldY, "Name:", labelStyle)
 	fieldY += 1
 	nameField := tui.NewContainer()
-	nameField.SetSize(modalWidth - 8, 3)
+	nameField.SetSize(modalWidth-8, 3)
 	nameField.SetBorderStyle("single")
 	nameInput := tui.NewInput()
 	nameInput.SetValue("John Doe")
 	nameInput.SetWidth(modalWidth - 12)
 	nameField.SetContent(nameInput)
-	nameField.Draw(m.screen, modalX + 4, fieldY, &m.theme)
+	nameField.Draw(m.screen, modalX+4, fieldY, &m.theme)
 	fieldY += 4
-	
+
 	// Email field (active)
-	m.screen.DrawString(modalX + 4, fieldY, "Email:", labelStyle)
+	m.screen.DrawString(modalX+4, fieldY, "Email:", labelStyle)
 	fieldY += 1
 	emailField := tui.NewContainer()
-	emailField.SetSize(modalWidth - 8, 3)
+	emailField.SetSize(modalWidth-8, 3)
 	emailField.SetBorderStyle("heavy") // Show it's focused
 	emailInput := tui.NewInput()
 	emailInput.SetValue(m.formEmail)
@@ -335,14 +334,14 @@ func (m *model) drawFormModal() {
 	emailInput.SetWidth(modalWidth - 12)
 	emailInput.Focus()
 	emailField.SetContent(emailInput)
-	emailField.Draw(m.screen, modalX + 4, fieldY, &m.theme)
+	emailField.Draw(m.screen, modalX+4, fieldY, &m.theme)
 	fieldY += 4
-	
+
 	// Instructions
 	helpStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted).
 		Background(m.theme.Palette.Surface)
-	m.screen.DrawString(modalX + 4, modalY + modalHeight - 4, "Type to edit email, ENTER to submit, ESC to cancel", helpStyle)
+	m.screen.DrawString(modalX+4, modalY+modalHeight-4, "Type to edit email, ENTER to submit, ESC to cancel", helpStyle)
 }
 
 func main() {

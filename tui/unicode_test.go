@@ -2,7 +2,7 @@ package tui
 
 import (
 	"testing"
-	
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -71,8 +71,8 @@ func TestGetVisualColumn(t *testing.T) {
 	}{
 		{"Start of string", "Hello", 0, 0},
 		{"Middle of ASCII", "Hello", 3, 3},
-		{"After emoji", "😀Hi", 4, 2}, // Emoji is 4 bytes
-		{"After CJK", "你好", 3, 2},    // First Chinese char is 3 bytes
+		{"After emoji", "😀Hi", 4, 2},  // Emoji is 4 bytes
+		{"After CJK", "你好", 3, 2},     // First Chinese char is 3 bytes
 		{"End of mixed", "Hi你", 5, 4}, // "Hi" (2) + "你" (2 width, 3 bytes)
 	}
 
@@ -95,8 +95,8 @@ func TestGetByteOffset(t *testing.T) {
 	}{
 		{"Start of string", "Hello", 0, 0},
 		{"Middle of ASCII", "Hello", 3, 3},
-		{"After emoji width", "😀Hi", 2, 4}, // Skip 4-byte emoji
-		{"After CJK width", "你好", 2, 3},    // Skip 3-byte character
+		{"After emoji width", "😀Hi", 2, 4},  // Skip 4-byte emoji
+		{"After CJK width", "你好", 2, 3},     // Skip 3-byte character
 		{"Middle of wide char", "你好", 1, 0}, // Can't position in middle
 	}
 
@@ -113,11 +113,11 @@ func TestGetByteOffset(t *testing.T) {
 func TestCellContinuation(t *testing.T) {
 	// Test that wide characters create continuation cells
 	screen := NewDefaultScreen(10, 1)
-	
+
 	// Draw a wide character
 	style := lipgloss.NewStyle()
 	screen.DrawString(0, 0, "你", style)
-	
+
 	// Check that first cell has the character
 	if screen.cells[0][0].Rune != '你' {
 		t.Errorf("Expected '你' at position 0, got %c", screen.cells[0][0].Rune)
@@ -125,15 +125,15 @@ func TestCellContinuation(t *testing.T) {
 	if screen.cells[0][0].Width != 2 {
 		t.Errorf("Expected width 2 at position 0, got %d", screen.cells[0][0].Width)
 	}
-	
+
 	// Check that second cell is a continuation
 	if !screen.cells[0][1].IsContinuation() {
 		t.Error("Expected continuation cell at position 1")
 	}
-	
+
 	// Test overwriting part of a wide character
 	screen.DrawString(1, 0, "X", style)
-	
+
 	// Original wide character should be cleared
 	if screen.cells[0][0].Rune != ' ' {
 		t.Errorf("Expected space at position 0 after overwrite, got %c", screen.cells[0][0].Rune)

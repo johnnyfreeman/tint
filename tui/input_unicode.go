@@ -30,10 +30,10 @@ func (i *Input) moveCursorRight() {
 // insertAtCursorInput inserts text at the current cursor position
 func (i *Input) insertAtCursorInput(text string) {
 	bytePos := GetByteOffset(i.value, i.cursor)
-	
+
 	// Insert text at byte position
 	i.value = i.value[:bytePos] + text + i.value[bytePos:]
-	
+
 	// Move cursor by the visual width of inserted text
 	i.cursor += StringWidth(text)
 }
@@ -43,10 +43,10 @@ func (i *Input) deleteBeforeCursorInput() {
 	if i.cursor > 0 {
 		currentBytePos := GetByteOffset(i.value, i.cursor)
 		prevBytePos := GetPrevCharBoundary(i.value, currentBytePos)
-		
+
 		// Delete the character
 		i.value = i.value[:prevBytePos] + i.value[currentBytePos:]
-		
+
 		// Update cursor position
 		i.cursor = GetVisualColumn(i.value, prevBytePos)
 	}
@@ -55,11 +55,11 @@ func (i *Input) deleteBeforeCursorInput() {
 // deleteAtCursorInput deletes one character at the cursor position
 func (i *Input) deleteAtCursorInput() {
 	valueWidth := StringWidth(i.value)
-	
+
 	if i.cursor < valueWidth {
 		currentBytePos := GetByteOffset(i.value, i.cursor)
 		nextBytePos := GetNextCharBoundary(i.value, currentBytePos)
-		
+
 		// Delete the character
 		i.value = i.value[:currentBytePos] + i.value[nextBytePos:]
 	}
@@ -84,9 +84,9 @@ func (i *Input) getVisibleValuePortion() string {
 	if i.offset >= valueWidth {
 		return ""
 	}
-	
+
 	startCol := i.offset
 	endCol := i.offset + i.width
-	
+
 	return SafeSliceByVisual(i.value, startCol, endCol)
 }

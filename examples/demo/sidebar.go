@@ -50,7 +50,7 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 	borderStyle := lipgloss.NewStyle().
 		Foreground(containerStyle.Unfocused.Border).
 		Background(theme.Palette.Background)
-	
+
 	// Title style based on focus
 	var titleColors tui.StateColors
 	if focused {
@@ -69,7 +69,7 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
 		}
 	}
-	
+
 	// Draw box with title - use heavy borders when focused
 	if focused {
 		screen.DrawBrutalistBoxWithTitle(x, y, s.width, height, "Sidebar", borderStyle, titleStyle)
@@ -93,14 +93,14 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 		clearStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.Text).
 			Background(theme.Palette.Background)
-		for dx := x + 1; dx < x + s.width - 1; dx++ {
+		for dx := x + 1; dx < x+s.width-1; dx++ {
 			screen.DrawRune(dx, itemY, ' ', clearStyle)
 		}
 
 		// Determine item state and get appropriate style
 		var itemStyle lipgloss.Style
 		var prefix string
-		
+
 		if i == s.selected {
 			// Selected item
 			if focused {
@@ -117,7 +117,7 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 					Background(theme.Palette.Background).
 					Bold(true)
 			}
-			prefix = "▶ "  // Solid right-pointing triangle
+			prefix = "▶ " // Solid right-pointing triangle
 		} else if focused && i == s.hovered {
 			// Hovered item (only when sidebar is focused)
 			colors := theme.Components.Interactive.Hover
@@ -135,7 +135,7 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 		itemX := x + 2
 		screen.DrawString(itemX, itemY, prefix, itemStyle)
 		screen.DrawString(itemX+2, itemY, item, itemStyle)
-		
+
 		itemY++
 	}
 }

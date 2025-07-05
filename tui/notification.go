@@ -136,7 +136,7 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 		Background(theme.Palette.Background)
 	shadowOffsetX := 1
 	shadowOffsetY := 1
-	
+
 	// Use the new DrawBlockShadow method
 	screen.DrawBlockShadow(actualX, actualY, n.width, n.height, shadowStyle, shadowOffsetX, shadowOffsetY)
 
@@ -177,7 +177,7 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 // calculatePosition determines where to draw the notification
 func (n *Notification) calculatePosition(screen *Screen) (x, y int) {
 	margin := 2
-	
+
 	switch n.position {
 	case NotificationBottomRight:
 		x = screen.Width() - n.width - margin
@@ -192,7 +192,7 @@ func (n *Notification) calculatePosition(screen *Screen) (x, y int) {
 		x = margin
 		y = margin
 	}
-	
+
 	return x, y
 }
 

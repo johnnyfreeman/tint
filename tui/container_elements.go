@@ -62,7 +62,7 @@ func (t *TextElement) SetStyle(style lipgloss.Style) {
 func (t *TextElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool) int {
 	// Add spaces around text for better appearance
 	text := " " + t.text + " "
-	
+
 	// Apply default style with theme colors
 	style := t.style
 	if focused {
@@ -70,7 +70,7 @@ func (t *TextElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool)
 	} else {
 		style = style.Foreground(theme.Palette.Text)
 	}
-	
+
 	screen.DrawString(x, y, text, style)
 	return StringWidth(text)
 }
@@ -82,18 +82,18 @@ func (t *TextElement) Width() int {
 
 // TabsElement represents tabs that can be embedded in a border
 type TabsElement struct {
-	tabs       []string
-	activeTab  int
-	style      lipgloss.Style
+	tabs        []string
+	activeTab   int
+	style       lipgloss.Style
 	activeStyle lipgloss.Style
 }
 
 // NewTabsElement creates a new tabs element
 func NewTabsElement(tabs []string) *TabsElement {
 	return &TabsElement{
-		tabs:      tabs,
-		activeTab: 0,
-		style:     lipgloss.NewStyle(),
+		tabs:        tabs,
+		activeTab:   0,
+		style:       lipgloss.NewStyle(),
 		activeStyle: lipgloss.NewStyle(),
 	}
 }
@@ -108,7 +108,7 @@ func (t *TabsElement) SetActiveTab(index int) {
 // Draw renders the tabs element
 func (t *TabsElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool) int {
 	currentX := x
-	
+
 	for i, tab := range t.tabs {
 		// Add separator before tab (except first)
 		if i > 0 {
@@ -116,10 +116,10 @@ func (t *TabsElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool)
 			screen.DrawRune(currentX, y, '┃', sepStyle)
 			currentX++
 		}
-		
+
 		// Prepare tab text
 		tabText := " " + tab + " "
-		
+
 		// Determine style
 		var style lipgloss.Style
 		if i == t.activeTab {
@@ -137,12 +137,12 @@ func (t *TabsElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool)
 			style = lipgloss.NewStyle().
 				Foreground(theme.Palette.TextMuted)
 		}
-		
+
 		// Draw tab
 		screen.DrawString(currentX, y, tabText, style)
 		currentX += StringWidth(tabText)
 	}
-	
+
 	return currentX - x
 }
 
@@ -175,7 +175,7 @@ func NewIconElement(icon rune) *IconElement {
 // Draw renders the icon element
 func (i *IconElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool) int {
 	style := i.style.Foreground(theme.Palette.Primary)
-	
+
 	// Draw icon with spaces for padding
 	screen.DrawRune(x, y, ' ', style)
 	screen.DrawRune(x+1, y, i.icon, style)
@@ -226,7 +226,7 @@ func NewStatusElement(status string) *StatusElement {
 // Draw renders the status element
 func (s *StatusElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool) int {
 	text := " [" + s.status + "] "
-	
+
 	// Color based on status
 	var style lipgloss.Style
 	switch s.status {
@@ -239,7 +239,7 @@ func (s *StatusElement) Draw(screen *Screen, x, y int, theme *Theme, focused boo
 	default:
 		style = s.style.Foreground(theme.Palette.TextMuted)
 	}
-	
+
 	screen.DrawString(x, y, text, style)
 	return StringWidth(text)
 }
@@ -267,9 +267,9 @@ func NewBadgeElement(text string) *BadgeElement {
 func (b *BadgeElement) Draw(screen *Screen, x, y int, theme *Theme, focused bool) int {
 	// Format as a badge
 	text := " (" + b.text + ") "
-	
+
 	style := b.style.Foreground(theme.Palette.Primary).Bold(true)
-	
+
 	screen.DrawString(x, y, text, style)
 	return StringWidth(text)
 }

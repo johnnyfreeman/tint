@@ -7,23 +7,23 @@ import (
 // Container represents a component that can contain another component
 // with optional borders, padding, and title
 type Container struct {
-	content    Component
-	title      string
-	showBorder bool
-	padding    Margin
-	width      int
-	height     int
-	focused    bool
-	borderStyle string // "single", "double", "heavy", "rounded"
+	content        Component
+	title          string
+	showBorder     bool
+	padding        Margin
+	width          int
+	height         int
+	focused        bool
+	borderStyle    string // "single", "double", "heavy", "rounded"
 	borderElements []BorderElement
 }
 
 // NewContainer creates a new container
 func NewContainer() *Container {
 	return &Container{
-		showBorder:  true,
-		padding:     NewMargin(1),
-		borderStyle: "single",
+		showBorder:     true,
+		padding:        NewMargin(1),
+		borderStyle:    "single",
 		borderElements: []BorderElement{},
 	}
 }
@@ -32,7 +32,6 @@ func NewContainer() *Container {
 func (c *Container) SetContent(component Component) {
 	c.content = component
 }
-
 
 // SetShowBorder sets whether to show the border
 func (c *Container) SetShowBorder(show bool) {
@@ -85,7 +84,7 @@ func (c *Container) SetTitle(title string) {
 		}
 	}
 	c.borderElements = newElements
-	
+
 	// Add title as a border element if not empty
 	if title != "" {
 		c.AddBorderElementWithOffset(NewTextElement(title), BorderTop, BorderAlignLeft, 2)
@@ -119,10 +118,10 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 		if c.focused {
 			borderColor = theme.Palette.Primary
 		}
-		
+
 		borderStyle := lipgloss.NewStyle().
 			Foreground(borderColor)
-		
+
 		// Draw border based on style
 		switch c.borderStyle {
 		case "double":
@@ -171,18 +170,18 @@ func (c *Container) drawHorizontalBorderWithElements(screen *Screen, x, y, width
 	for i := 1; i < width-1; i++ {
 		screen.DrawRune(x+i, y, borderChar, borderStyle)
 	}
-	
+
 	// Then draw elements on top
 	elements := c.getElementsForPosition(position)
 	if len(elements) == 0 {
 		return
 	}
-	
+
 	// Group elements by alignment
 	leftElements := []BorderElement{}
 	centerElements := []BorderElement{}
 	rightElements := []BorderElement{}
-	
+
 	for _, elem := range elements {
 		switch elem.Alignment {
 		case BorderAlignLeft:
@@ -193,7 +192,7 @@ func (c *Container) drawHorizontalBorderWithElements(screen *Screen, x, y, width
 			rightElements = append(rightElements, elem)
 		}
 	}
-	
+
 	// Draw left-aligned elements
 	currentX := x + 1
 	for _, elem := range leftElements {
@@ -203,7 +202,7 @@ func (c *Container) drawHorizontalBorderWithElements(screen *Screen, x, y, width
 			currentX += width
 		}
 	}
-	
+
 	// Draw center-aligned elements
 	for _, elem := range centerElements {
 		elemWidth := elem.Element.Width()
@@ -212,7 +211,7 @@ func (c *Container) drawHorizontalBorderWithElements(screen *Screen, x, y, width
 			elem.Element.Draw(screen, centerX, y, theme, c.focused)
 		}
 	}
-	
+
 	// Draw right-aligned elements
 	for i := len(rightElements) - 1; i >= 0; i-- {
 		elem := rightElements[i]
@@ -244,7 +243,7 @@ func (c *Container) drawSingleBorder(screen *Screen, x, y, width, height int, st
 
 	// Top border
 	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '─', style, theme)
-	
+
 	// Bottom border
 	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '─', style, theme)
 
@@ -264,7 +263,7 @@ func (c *Container) drawDoubleBorder(screen *Screen, x, y, width, height int, st
 
 	// Top border
 	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '═', style, theme)
-	
+
 	// Bottom border
 	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '═', style, theme)
 
@@ -284,7 +283,7 @@ func (c *Container) drawHeavyBorder(screen *Screen, x, y, width, height int, sty
 
 	// Top border
 	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '━', style, theme)
-	
+
 	// Bottom border
 	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '━', style, theme)
 
@@ -304,7 +303,7 @@ func (c *Container) drawRoundedBorder(screen *Screen, x, y, width, height int, s
 
 	// Top border
 	c.drawHorizontalBorderWithElements(screen, x, y, width, BorderTop, '─', style, theme)
-	
+
 	// Bottom border
 	c.drawHorizontalBorderWithElements(screen, x, y+height-1, width, BorderBottom, '─', style, theme)
 
@@ -366,11 +365,11 @@ func (c *Container) GetSize() (width, height int) {
 func (c *Container) DrawWithBorder(screen *Screen, x, y int, theme *Theme, title string) {
 	oldTitle := c.title
 	oldShowBorder := c.showBorder
-	
+
 	c.title = title
 	c.showBorder = true
 	c.Draw(screen, x, y, theme)
-	
+
 	c.title = oldTitle
 	c.showBorder = oldShowBorder
 }

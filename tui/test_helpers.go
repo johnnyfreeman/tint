@@ -1,9 +1,9 @@
 package tui
 
 import (
+	"github.com/charmbracelet/lipgloss"
 	"strings"
 	"testing"
-	"github.com/charmbracelet/lipgloss"
 )
 
 // NewTestTheme creates a simple theme for testing
@@ -53,7 +53,7 @@ func AssertCellWidth(t *testing.T, screen *ScreenSimulation, x, y int, expected 
 func AssertCellStyle(t *testing.T, screen *ScreenSimulation, x, y int, bold, italic, underline, dim bool) {
 	t.Helper()
 	cell := screen.GetCell(x, y)
-	
+
 	if cell.Bold != bold {
 		t.Errorf("Cell at (%d,%d) bold mismatch\nExpected: %v\nActual: %v", x, y, bold, cell.Bold)
 	}
@@ -91,7 +91,7 @@ func AssertCursorPosition(t *testing.T, screen *ScreenSimulation, expectedX, exp
 	t.Helper()
 	actualX, actualY := screen.GetCursor()
 	if actualX != expectedX || actualY != expectedY {
-		t.Errorf("Cursor position mismatch\nExpected: (%d,%d)\nActual: (%d,%d)", 
+		t.Errorf("Cursor position mismatch\nExpected: (%d,%d)\nActual: (%d,%d)",
 			expectedX, expectedY, actualX, actualY)
 	}
 }
@@ -127,7 +127,7 @@ func (tc *TestComponent) Draw(screen *Screen, x, y int, theme *Theme) {
 	} else {
 		style = lipgloss.NewStyle().Foreground(theme.Palette.Text)
 	}
-	
+
 	// Handle multi-line content
 	lines := strings.Split(tc.content, "\n")
 	for i, line := range lines {

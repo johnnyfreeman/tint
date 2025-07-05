@@ -7,8 +7,8 @@ import (
 // Input represents a single-line text input field
 type Input struct {
 	value       string
-	cursor      int  // Visual column position
-	offset      int  // Visual column offset for horizontal scrolling
+	cursor      int // Visual column position
+	offset      int // Visual column offset for horizontal scrolling
 	width       int
 	placeholder string
 	focused     bool
@@ -126,15 +126,15 @@ func (i *Input) adjustOffset() {
 func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Clear the entire input area with theme background
 	ClearComponentArea(screen, x, y, i.width, 1, theme)
-	
+
 	style := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
-	
+
 	if i.focused {
 		style = style.Underline(true)
 	}
-	
+
 	// Draw the visible portion of the text or placeholder
 	var displayText string
 	if i.value == "" && i.placeholder != "" {
@@ -143,7 +143,7 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 			Foreground(theme.Palette.TextMuted).
 			Background(theme.Palette.Background).
 			Italic(true)
-		
+
 		displayText = i.placeholder
 		if StringWidth(displayText) > i.width {
 			displayText = TruncateWithEllipsis(displayText, i.width)
@@ -154,14 +154,14 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 		displayText = i.getVisibleValuePortion()
 		screen.DrawString(x, y, displayText, style)
 	}
-	
+
 	// Draw cursor if focused
 	if i.focused && i.cursor >= i.offset && i.cursor <= i.offset+i.width {
 		cursorX := x + i.cursor - i.offset
 		cursorStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.Background).
 			Background(theme.Palette.Text)
-		
+
 		// Get the character under the cursor or use space if at end
 		cursorChar, found := GetCharAtVisualCol(i.value, i.cursor)
 		if !found {
@@ -169,7 +169,7 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 		}
 		screen.DrawRune(cursorX, y, cursorChar, cursorStyle)
 	}
-	
+
 	// The rest of the input width is already cleared by ClearComponentArea
 }
 
@@ -177,8 +177,8 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 func (i *Input) DrawInBox(screen *Screen, x, y int, title string, theme *Theme) {
 	// Determine box width based on input width + padding
 	boxWidth := i.width + 4 // 2 chars padding on each side
-	boxHeight := 3 // Top border, content, bottom border
-	
+	boxHeight := 3          // Top border, content, bottom border
+
 	var borderColors, titleColors StateColors
 	if i.focused {
 		borderColors = theme.Components.Container.Border.Focused
@@ -187,14 +187,14 @@ func (i *Input) DrawInBox(screen *Screen, x, y int, title string, theme *Theme) 
 		borderColors = theme.Components.Container.Border.Unfocused
 		titleColors = theme.Components.Container.Title.Unfocused
 	}
-	
+
 	borderStyle := lipgloss.NewStyle().
 		Foreground(borderColors.Border).
 		Background(theme.Palette.Background)
 	titleStyle := lipgloss.NewStyle().
 		Foreground(titleColors.Text).
 		Background(theme.Palette.Background)
-	
+
 	// Fill background
 	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
 	for dy := 0; dy < boxHeight; dy++ {
@@ -202,14 +202,14 @@ func (i *Input) DrawInBox(screen *Screen, x, y int, title string, theme *Theme) 
 			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
 		}
 	}
-	
+
 	// Draw box with title - use heavy borders when focused
 	if i.focused {
 		screen.DrawBrutalistBoxWithTitle(x, y, boxWidth, boxHeight, title, borderStyle, titleStyle)
 	} else {
 		screen.DrawBoxWithTitle(x, y, boxWidth, boxHeight, title, borderStyle, titleStyle)
 	}
-	
+
 	// Draw the input inside the box
 	i.Draw(screen, x+2, y+1, theme)
 }

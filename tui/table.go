@@ -1,8 +1,8 @@
 package tui
 
 import (
-	"strings"
 	"github.com/charmbracelet/lipgloss"
+	"strings"
 )
 
 // TableColumn defines a column in the table
@@ -216,7 +216,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 	tableWidth := t.getTableWidth()
 	tableHeight := t.height + 2 // +2 for header and separator
 	ClearComponentArea(screen, x, y, tableWidth, tableHeight, theme)
-	
+
 	// Header style
 	headerStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Primary).
@@ -236,7 +236,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 			header = header + strings.Repeat(" ", col.Width-headerWidth)
 		}
 		screen.DrawString(currentX, y, header, headerStyle)
-		
+
 		// Draw bold column separator (except after last column)
 		if colIdx < len(t.columns)-1 {
 			separatorStyle := lipgloss.NewStyle().
@@ -244,10 +244,10 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 				Background(theme.Palette.Background)
 			screen.DrawRune(currentX+col.Width, y, '┃', separatorStyle)
 		}
-		
+
 		currentX += col.Width + 1 // +1 for separator
 	}
-	
+
 	// Draw bold horizontal line under headers
 	lineStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Border).
@@ -318,11 +318,11 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 			// Draw cursor if editing this cell
 			if t.editingCell && isSelected {
 				cursorX := currentX + t.editCursor
-				if cursorX < currentX + col.Width {
+				if cursorX < currentX+col.Width {
 					cursorStyle := lipgloss.NewStyle().
 						Foreground(theme.Palette.Surface).
 						Background(theme.Palette.Text)
-					
+
 					var cursorChar rune = ' '
 					if t.editCursor < len(t.editValue) {
 						cursorChar = rune(t.editValue[t.editCursor])
@@ -330,7 +330,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 					screen.DrawRune(cursorX, rowY, cursorChar, cursorStyle)
 				}
 			}
-			
+
 			// Draw column separator (except after last column)
 			if colIndex < len(t.columns)-1 {
 				separatorStyle := lipgloss.NewStyle().
@@ -357,7 +357,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 		scrollStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.TextMuted).
 			Background(theme.Palette.Background)
-		
+
 		scrollText := ""
 		if t.scrollOffset > 0 {
 			scrollText += "↑ "
@@ -366,7 +366,7 @@ func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
 		if t.scrollOffset+t.height < len(t.rows) {
 			scrollText += " ↓"
 		}
-		
+
 		scrollX := x + t.getTableWidth() - StringWidth(scrollText)
 		screen.DrawString(scrollX, y, scrollText, scrollStyle)
 	}
@@ -390,7 +390,7 @@ func (t *Table) DrawInBox(screen *Screen, x, y, width, height int, title string,
 		borderColors = theme.Components.Container.Border.Unfocused
 		titleColors = theme.Components.Container.Title.Unfocused
 	}
-	
+
 	borderStyle := lipgloss.NewStyle().
 		Foreground(borderColors.Border).
 		Background(theme.Palette.Background)
@@ -405,17 +405,17 @@ func (t *Table) DrawInBox(screen *Screen, x, y, width, height int, title string,
 			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
 		}
 	}
-	
+
 	// Draw box with title - use heavy borders when focused
 	if t.focused {
 		screen.DrawBrutalistBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
 	} else {
 		screen.DrawBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
 	}
-	
+
 	// Set table height based on box height (minus borders and header)
 	t.SetHeight(height - 3) // -2 for borders, -1 for header
-	
+
 	// Draw the table inside the box
 	t.Draw(screen, x+2, y+1, theme)
 }

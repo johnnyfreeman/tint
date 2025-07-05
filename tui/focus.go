@@ -35,7 +35,7 @@ func (fm *FocusManager) Add(id string, component Focusable) {
 		ID:        id,
 		Component: component,
 	})
-	
+
 	// If this is the first component, focus it
 	if len(fm.components) == 1 {
 		fm.current = 0
@@ -51,22 +51,22 @@ func (fm *FocusManager) Remove(id string) {
 			if i == fm.current {
 				fc.Component.Blur()
 			}
-			
+
 			// Remove from slice
 			fm.components = append(fm.components[:i], fm.components[i+1:]...)
-			
+
 			// Adjust current index
 			if fm.current >= len(fm.components) && len(fm.components) > 0 {
 				fm.current = len(fm.components) - 1
 			} else if len(fm.components) == 0 {
 				fm.current = -1
 			}
-			
+
 			// Focus the new current component
 			if fm.current >= 0 && fm.current < len(fm.components) {
 				fm.components[fm.current].Component.Focus()
 			}
-			
+
 			break
 		}
 	}
@@ -87,7 +87,7 @@ func (fm *FocusManager) FocusNext() {
 	if len(fm.components) == 0 {
 		return
 	}
-	
+
 	newIndex := fm.current + 1
 	if newIndex >= len(fm.components) {
 		if fm.wrapAround {
@@ -96,7 +96,7 @@ func (fm *FocusManager) FocusNext() {
 			return
 		}
 	}
-	
+
 	fm.setFocus(newIndex)
 }
 
@@ -105,7 +105,7 @@ func (fm *FocusManager) FocusPrevious() {
 	if len(fm.components) == 0 {
 		return
 	}
-	
+
 	newIndex := fm.current - 1
 	if newIndex < 0 {
 		if fm.wrapAround {
@@ -114,7 +114,7 @@ func (fm *FocusManager) FocusPrevious() {
 			return
 		}
 	}
-	
+
 	fm.setFocus(newIndex)
 }
 
@@ -160,7 +160,7 @@ func (fm *FocusManager) Clear() {
 	if fm.current >= 0 && fm.current < len(fm.components) {
 		fm.components[fm.current].Component.Blur()
 	}
-	
+
 	fm.components = []FocusableComponent{}
 	fm.current = -1
 }
@@ -170,12 +170,12 @@ func (fm *FocusManager) setFocus(index int) {
 	if index < 0 || index >= len(fm.components) {
 		return
 	}
-	
+
 	// Blur current component
 	if fm.current >= 0 && fm.current < len(fm.components) {
 		fm.components[fm.current].Component.Blur()
 	}
-	
+
 	// Focus new component
 	fm.current = index
 	fm.components[fm.current].Component.Focus()
@@ -200,7 +200,7 @@ func NewFocusGroup() *FocusGroup {
 func (fg *FocusGroup) AddManager(id string, manager *FocusManager) {
 	fg.managers[id] = manager
 	fg.groupOrder = append(fg.groupOrder, id)
-	
+
 	// If this is the first manager, make it active
 	if len(fg.managers) == 1 {
 		fg.activeID = id

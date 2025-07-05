@@ -50,15 +50,15 @@ func (s *StatusBar) Clear() {
 // Draw renders the status bar to the screen
 func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 	width := screen.Width()
-	
+
 	// Clear the entire status bar area with theme background
 	ClearComponentArea(screen, x, y, width, s.height, theme)
-	
+
 	// Default style if not set (status bar typically uses surface color)
 	bgStyle := lipgloss.NewStyle().
 		Background(theme.Palette.Surface).
 		Foreground(theme.Palette.TextMuted)
-	
+
 	// Fill the status bar with surface color
 	for i := 0; i < width; i++ {
 		screen.SetCell(x+i, y, Cell{
@@ -66,7 +66,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 			Background: theme.Palette.Surface,
 		})
 	}
-	
+
 	// Group segments by alignment
 	var leftSegments, centerSegments, rightSegments []StatusBarSegment
 	for _, segment := range s.segments {
@@ -79,7 +79,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 			leftSegments = append(leftSegments, segment)
 		}
 	}
-	
+
 	// Draw left-aligned segments
 	currentX := x
 	for i, segment := range leftSegments {
@@ -94,7 +94,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 		screen.DrawString(currentX, y, segment.Text, style)
 		currentX += StringWidth(segment.Text)
 	}
-	
+
 	// Draw center-aligned segments
 	if len(centerSegments) > 0 {
 		centerText := ""
@@ -107,7 +107,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 		centerX := x + (width-StringWidth(centerText))/2
 		screen.DrawString(centerX, y, centerText, bgStyle)
 	}
-	
+
 	// Draw right-aligned segments
 	if len(rightSegments) > 0 {
 		rightText := ""
@@ -137,14 +137,14 @@ func (s *StatusBar) GetHeight() int {
 // NewHelpStatusBar creates a status bar with common help text
 func NewHelpStatusBar(shortcuts map[string]string) *StatusBar {
 	sb := NewStatusBar()
-	
+
 	// Build help text from shortcuts map
 	var parts []string
 	for key, action := range shortcuts {
 		parts = append(parts, key+":"+action)
 	}
 	helpText := strings.Join(parts, " ")
-	
+
 	sb.AddSegment(helpText, "right")
 	return sb
 }
@@ -152,16 +152,16 @@ func NewHelpStatusBar(shortcuts map[string]string) *StatusBar {
 // NewFileStatusBar creates a status bar for file editing
 func NewFileStatusBar(filename, mode string, line, col int) *StatusBar {
 	sb := NewStatusBar()
-	
+
 	// Left: mode and filename
 	sb.AddSegment(mode+" | "+filename, "left")
-	
+
 	// Center: cursor position
 	cursorText := fmt.Sprintf("Ln %d, Col %d", line, col)
 	sb.AddSegment(cursorText, "center")
-	
+
 	// Right: encoding and settings
 	sb.AddSegment("UTF-8 | Spaces: 4", "right")
-	
+
 	return sb
 }

@@ -1,8 +1,8 @@
 package tui
 
 import (
-	"strings"
 	"github.com/charmbracelet/lipgloss"
+	"strings"
 )
 
 type Screen struct {
@@ -44,7 +44,7 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 		// Check if we're overwriting a continuation cell
 		if x > 0 && s.cells[y][x].IsContinuation() {
 			// Find the start of the wide character and clear it
-			for i := x - 1; i >= 0 && i > x - 3; i-- {
+			for i := x - 1; i >= 0 && i > x-3; i-- {
 				if !s.cells[y][i].IsContinuation() {
 					// Found the wide character, clear it with theme background
 					s.cells[y][i] = s.newThemedCell(' ')
@@ -52,7 +52,7 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 				}
 			}
 		}
-		
+
 		// Check if we're overwriting the start of a wide character
 		if x+1 < s.width && s.cells[y][x+1].IsContinuation() {
 			// Clear continuation cells with theme background
@@ -60,9 +60,9 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 				s.cells[y][i] = s.newThemedCell(' ')
 			}
 		}
-		
+
 		s.cells[y][x] = cell
-		
+
 		// For wide characters, set continuation cells
 		if cell.Width > 1 {
 			continuationCell := NewContinuationCell()
@@ -72,7 +72,7 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 			continuationCell.Italic = cell.Italic
 			continuationCell.Underline = cell.Underline
 			continuationCell.Dim = cell.Dim
-			
+
 			for i := 1; i < cell.Width && x+i < s.width; i++ {
 				s.cells[y][x+i] = continuationCell
 			}
@@ -105,7 +105,6 @@ func (s *Screen) Clear() {
 		}
 	}
 }
-
 
 func (s *Screen) Width() int {
 	return s.width
@@ -144,25 +143,25 @@ func (s *Screen) DrawBox(x, y, width, height int, style lipgloss.Style) {
 func (s *Screen) DrawBoxWithTitle(x, y, width, height int, title string, borderStyle, titleStyle lipgloss.Style) {
 	// Top left corner
 	s.DrawRune(x, y, '┌', borderStyle)
-	
+
 	// Calculate title position (centered)
 	titleWithSpaces := " " + title + " "
 	titleLen := StringWidth(titleWithSpaces)
 	titleStart := x + (width-titleLen)/2
-	
+
 	// Draw left border segment
 	for i := x + 1; i < titleStart; i++ {
 		s.DrawRune(i, y, '─', borderStyle)
 	}
-	
+
 	// Draw title
 	s.DrawString(titleStart, y, titleWithSpaces, titleStyle)
-	
+
 	// Draw right border segment
 	for i := titleStart + titleLen; i < x+width-1; i++ {
 		s.DrawRune(i, y, '─', borderStyle)
 	}
-	
+
 	// Top right corner
 	s.DrawRune(x+width-1, y, '┐', borderStyle)
 
@@ -220,25 +219,25 @@ func (s *Screen) DrawBrutalistBox(x, y, width, height int, style lipgloss.Style)
 func (s *Screen) DrawBrutalistBoxWithTitle(x, y, width, height int, title string, borderStyle, titleStyle lipgloss.Style) {
 	// Top left corner
 	s.DrawRune(x, y, '┏', borderStyle)
-	
+
 	// Calculate title position (centered)
 	titleWithSpaces := " " + title + " "
 	titleLen := StringWidth(titleWithSpaces)
 	titleStart := x + (width-titleLen)/2
-	
+
 	// Draw left border segment
 	for i := x + 1; i < titleStart; i++ {
 		s.DrawRune(i, y, '━', borderStyle)
 	}
-	
+
 	// Draw title
 	s.DrawString(titleStart, y, titleWithSpaces, titleStyle)
-	
+
 	// Draw right border segment
 	for i := titleStart + titleLen; i < x+width-1; i++ {
 		s.DrawRune(i, y, '━', borderStyle)
 	}
-	
+
 	// Top right corner
 	s.DrawRune(x+width-1, y, '┓', borderStyle)
 
@@ -260,21 +259,21 @@ func (s *Screen) DrawBrutalistBoxWithTitle(x, y, width, height int, title string
 func (s *Screen) DrawBlockShadow(x, y, width, height int, shadowStyle lipgloss.Style, offsetX, offsetY int) {
 	// Draw shadow using spaces with shadow background color
 	// This creates a proper shadow effect without obscuring text
-	
+
 	// Draw bottom shadow (full width, offset down)
 	for i := 0; i < width; i++ {
 		for j := 0; j < offsetY; j++ {
 			s.DrawRune(x+offsetX+i, y+height+j, ' ', shadowStyle)
 		}
 	}
-	
+
 	// Draw right shadow (full height, offset right)
 	for i := 0; i < height; i++ {
 		for j := 0; j < offsetX; j++ {
 			s.DrawRune(x+width+j, y+offsetY+i, ' ', shadowStyle)
 		}
 	}
-	
+
 	// Draw corner shadow (fills the gap)
 	for i := 0; i < offsetX; i++ {
 		for j := 0; j < offsetY; j++ {
@@ -286,7 +285,7 @@ func (s *Screen) DrawBlockShadow(x, y, width, height int, shadowStyle lipgloss.S
 func (s *Screen) Render() string {
 	var builder strings.Builder
 	builder.Grow(s.width * s.height * 2) // Pre-allocate space
-	
+
 	for y := 0; y < s.height; y++ {
 		for x := 0; x < s.width; x++ {
 			builder.WriteString(s.cells[y][x].Render())

@@ -9,33 +9,33 @@ import (
 )
 
 type model struct {
-	screen    *tui.Screen
-	width     int
-	height    int
-	theme     tui.Theme
-	
+	screen *tui.Screen
+	width  int
+	height int
+	theme  tui.Theme
+
 	containers []*tui.Container
 	activeTab  int
 }
 
 func initialModel() *model {
 	theme := tui.GetTheme("tokyonight")
-	
+
 	// Create various container examples
 	containers := []*tui.Container{}
-	
+
 	// Example 1: Simple titled container
 	input1 := tui.NewInput()
 	input1.SetPlaceholder("Enter text...")
 	container1 := tui.TitledPanel("Simple Title", input1)
 	containers = append(containers, container1)
-	
+
 	// Example 2: Container with tabs
 	viewer := tui.NewViewer()
 	viewer.SetContent("This container has tabs embedded in the border.\n\nThe active tab is highlighted.")
 	container2 := tui.TabbedPanel([]string{"Code", "Preview", "Console"}, 1, viewer)
 	containers = append(containers, container2)
-	
+
 	// Example 3: Container with status
 	table := tui.NewTable()
 	table.SetColumns([]tui.TableColumn{
@@ -48,13 +48,13 @@ func initialModel() *model {
 	})
 	container3 := tui.StatusPanel("Services", "Connected", table)
 	containers = append(containers, container3)
-	
+
 	// Example 4: Container with icon
 	viewer2 := tui.NewViewer()
 	viewer2.SetContent("This container has an icon in the border.\n\nIcons help identify the purpose of a container.")
 	container4 := tui.IconPanel('🚀', "Launch Control", viewer2)
 	containers = append(containers, container4)
-	
+
 	// Example 5: Complex multi-element container
 	textArea := tui.NewTextArea()
 	textArea.SetValue("This container demonstrates multiple border elements:\n- Title on the left\n- Tabs in the center\n- Status on the right\n- Version badge on bottom")
@@ -66,7 +66,7 @@ func initialModel() *model {
 		textArea,
 	)
 	containers = append(containers, container5)
-	
+
 	// Example 6: Custom container with mixed elements
 	container6 := tui.NewContainer()
 	container6.SetTitle("Mixed Elements")
@@ -74,18 +74,18 @@ func initialModel() *model {
 	container6.AddBorderElement(tui.NewBadgeElement("New"), tui.BorderTop, tui.BorderAlignRight)
 	container6.AddBorderElement(tui.NewStatusElement("OK"), tui.BorderBottom, tui.BorderAlignLeft)
 	container6.AddBorderElement(tui.NewTextElement("Footer Text"), tui.BorderBottom, tui.BorderAlignCenter)
-	
+
 	input2 := tui.NewInput()
 	input2.SetPlaceholder("Search...")
 	container6.SetContent(input2)
 	containers = append(containers, container6)
-	
+
 	// Set sizes for all containers
 	for _, c := range containers {
 		c.SetSize(40, 12)
 		c.SetPadding(tui.NewMargin(1))
 	}
-	
+
 	return &model{
 		screen:     tui.NewScreen(80, 24, theme),
 		width:      80,
@@ -106,7 +106,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.screen = tui.NewScreen(m.width, m.height, m.theme)
-		
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
@@ -135,7 +135,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -143,51 +143,51 @@ func (m *model) View() string {
 	if m.width == 0 || m.height == 0 {
 		return ""
 	}
-	
+
 	m.screen.Clear()
-	
+
 	// Draw title
 	titleStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Primary).
 		Bold(true)
 	title := "Container Border Elements Demo"
 	m.screen.DrawString((m.width-len(title))/2, 0, title, titleStyle)
-	
+
 	// Draw subtitle
 	subtitleStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted)
 	subtitle := "Press Tab or 1-6 to switch containers, q to quit"
 	m.screen.DrawString((m.width-len(subtitle))/2, 1, subtitle, subtitleStyle)
-	
+
 	// Calculate grid layout (2x3)
 	cols := 2
 	containerWidth := 38
 	containerHeight := 10
 	startY := 3
-	
+
 	// Draw containers in a grid
 	for i, container := range m.containers {
 		row := i / cols
 		col := i % cols
-		
-		x := col * (containerWidth + 2) + 1
-		y := startY + row * (containerHeight + 1)
-		
+
+		x := col*(containerWidth+2) + 1
+		y := startY + row*(containerHeight+1)
+
 		// Set border style based on focus
 		if i == m.activeTab {
 			container.SetBorderStyle("heavy")
 		} else {
 			container.SetBorderStyle("single")
 		}
-		
+
 		container.DrawWithBounds(m.screen, x, y, containerWidth, containerHeight, &m.theme)
 	}
-	
+
 	// Draw example labels
 	labelStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.Pine).
 		Bold(true)
-	
+
 	labels := []string{
 		"1. Simple Title",
 		"2. Tabs",
@@ -196,13 +196,13 @@ func (m *model) View() string {
 		"5. Multi-Element",
 		"6. Custom Mix",
 	}
-	
+
 	for i, label := range labels {
 		row := i / cols
 		col := i % cols
-		x := col * (containerWidth + 2) + 1
-		y := startY + row * (containerHeight + 1) - 1
-		
+		x := col*(containerWidth+2) + 1
+		y := startY + row*(containerHeight+1) - 1
+
 		if i == m.activeTab {
 			label = "▶ " + label
 		} else {
@@ -210,13 +210,13 @@ func (m *model) View() string {
 		}
 		m.screen.DrawString(x, y, label, labelStyle)
 	}
-	
+
 	// Draw help text at bottom
 	helpStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Palette.TextMuted)
 	helpText := "Border elements can be titles, tabs, status indicators, icons, badges, and more!"
 	m.screen.DrawString((m.width-len(helpText))/2, m.height-2, helpText, helpStyle)
-	
+
 	return m.screen.Render()
 }
 
@@ -226,7 +226,7 @@ func main() {
 	if len(m.containers) > 0 {
 		m.containers[0].Focus()
 	}
-	
+
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error: %v", err)

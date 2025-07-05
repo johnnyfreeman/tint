@@ -1,8 +1,8 @@
 package tui
 
 import (
-	"strings"
 	"github.com/charmbracelet/lipgloss"
+	"strings"
 )
 
 // Viewer represents a read-only scrollable text viewer
@@ -134,7 +134,7 @@ func (v *Viewer) HandleInput(key string) {
 func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Clear the entire viewer area with theme background
 	ClearComponentArea(screen, x, y, v.width, v.height, theme)
-	
+
 	textStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
@@ -142,14 +142,14 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Draw visible lines
 	for row := 0; row < v.height; row++ {
 		lineIndex := v.scrollOffset + row
-		
+
 		if lineIndex >= len(v.lines) {
 			// Empty rows are already cleared by ClearComponentArea
 			continue
 		}
 
 		line := v.lines[lineIndex]
-		
+
 		// Truncate if line is still too long (shouldn't happen with wrapping)
 		displayLine := line
 		if StringWidth(displayLine) > v.width {
@@ -181,7 +181,7 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 		if thumbHeight > v.height {
 			thumbHeight = v.height
 		}
-		
+
 		// Calculate thumb position more accurately
 		var thumbPos int
 		maxScroll := len(v.lines) - v.height
@@ -193,11 +193,11 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 			maxThumbPos := v.height - thumbHeight
 			thumbPos = int(scrollRatio * float64(maxThumbPos))
 		}
-		
+
 		thumbStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.Primary).
 			Background(theme.Palette.Background)
-		
+
 		for i := 0; i < thumbHeight; i++ {
 			if thumbPos+i < v.height {
 				screen.DrawRune(scrollBarX, y+thumbPos+i, '█', thumbStyle)
@@ -215,11 +215,11 @@ func (v *Viewer) DrawInBox(screen *Screen, x, y, width, height int, theme *Theme
 			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
 		}
 	}
-	
+
 	// No box border for viewer - it will be drawn by parent
 	// Set viewer size to use full area minus padding
 	v.SetSize(width-4, height-2) // Leave room for padding
-	
+
 	// Draw the viewer
 	v.Draw(screen, x+2, y+1, theme)
 }
@@ -247,7 +247,6 @@ func (v *Viewer) HandleKey(key string) bool {
 	v.HandleInput(key)
 	return true
 }
-
 
 // GetSize returns the current width and height
 func (v *Viewer) GetSize() (width, height int) {

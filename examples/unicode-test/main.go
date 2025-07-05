@@ -95,7 +95,7 @@ func main() {
 
 	// Display for 2 seconds then exit
 	time.Sleep(2 * time.Second)
-	
+
 	// Clear screen and exit
 	fmt.Print("\033[2J\033[H")
 	fmt.Println("Unicode test completed successfully!")

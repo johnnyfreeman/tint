@@ -41,7 +41,7 @@ func ClearComponentArea(screen *Screen, x, y, width, height int, theme *Theme) {
 func CenterComponent(containerWidth, containerHeight, componentWidth, componentHeight int) Position {
 	x := (containerWidth - componentWidth) / 2
 	y := (containerHeight - componentHeight) / 2
-	
+
 	// Ensure non-negative values
 	if x < 0 {
 		x = 0
@@ -49,7 +49,7 @@ func CenterComponent(containerWidth, containerHeight, componentWidth, componentH
 	if y < 0 {
 		y = 0
 	}
-	
+
 	return Position{X: x, Y: y}
 }
 
@@ -74,14 +74,14 @@ func AlignBottom(containerHeight, componentHeight, margin int) int {
 // GridLayout calculates positions for components in a grid
 func GridLayout(items, cols, itemWidth, itemHeight, spacing int) []Rectangle {
 	positions := make([]Rectangle, items)
-	
+
 	for i := 0; i < items; i++ {
 		col := i % cols
 		row := i / cols
-		
+
 		x := col * (itemWidth + spacing)
 		y := row * (itemHeight + spacing)
-		
+
 		positions[i] = Rectangle{
 			X:      x,
 			Y:      y,
@@ -89,7 +89,7 @@ func GridLayout(items, cols, itemWidth, itemHeight, spacing int) []Rectangle {
 			Height: itemHeight,
 		}
 	}
-	
+
 	return positions
 }
 
@@ -113,10 +113,10 @@ func NewFlexLayout(direction LayoutDirection) *FlexLayout {
 // Calculate computes positions for flex items
 func (f *FlexLayout) Calculate(containerRect Rectangle, itemSizes []int) []Rectangle {
 	positions := make([]Rectangle, len(itemSizes))
-	
+
 	// Starting position
 	currentPos := f.Padding
-	
+
 	for i, size := range itemSizes {
 		if f.Direction == LayoutHorizontal {
 			positions[i] = Rectangle{
@@ -136,7 +136,7 @@ func (f *FlexLayout) Calculate(containerRect Rectangle, itemSizes []int) []Recta
 			currentPos += size + f.Spacing
 		}
 	}
-	
+
 	return positions
 }
 
@@ -164,14 +164,14 @@ func (s *SplitLayout) Calculate(container Rectangle) (left, right Rectangle) {
 			// Percentage
 			splitX = int(float64(container.Width) * s.Split)
 		}
-		
+
 		left = Rectangle{
 			X:      container.X,
 			Y:      container.Y,
 			Width:  splitX,
 			Height: container.Height,
 		}
-		
+
 		right = Rectangle{
 			X:      container.X + splitX,
 			Y:      container.Y,
@@ -185,14 +185,14 @@ func (s *SplitLayout) Calculate(container Rectangle) (left, right Rectangle) {
 			// Percentage
 			splitY = int(float64(container.Height) * s.Split)
 		}
-		
+
 		left = Rectangle{
 			X:      container.X,
 			Y:      container.Y,
 			Width:  container.Width,
 			Height: splitY,
 		}
-		
+
 		right = Rectangle{
 			X:      container.X,
 			Y:      container.Y + splitY,
@@ -200,7 +200,7 @@ func (s *SplitLayout) Calculate(container Rectangle) (left, right Rectangle) {
 			Height: container.Height - splitY,
 		}
 	}
-	
+
 	return left, right
 }
 
