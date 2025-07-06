@@ -132,6 +132,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.modal.Toggle()
 			if m.modal.IsVisible() {
 				m.focus = "modal"
+				m.modal.Focus()
 			}
 		case "n":
 			m.notification.ShowInfo("This is a sample notification!")
@@ -244,6 +245,13 @@ func (m model) View() string {
 		container.SetTitle("Sample Modal")
 		container.SetSize(modalWidth, modalHeight) // Fill the modal
 		container.SetPadding(tui.NewMargin(1))
+
+		// Focus the container when modal is focused
+		if m.focus == "modal" {
+			container.Focus()
+		} else {
+			container.Blur()
+		}
 
 		// Create content for the container
 		textarea := tui.NewTextArea()
