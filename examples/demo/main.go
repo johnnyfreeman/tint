@@ -268,10 +268,11 @@ func (m model) View() string {
 }
 
 func createDemoTabs() *tui.TabsComponent {
+	themeCount := len(tui.GetAvailableThemes())
 	tabs := tui.NewTabs()
-	tabs.AddTab("Overview", "Welcome to the theme demo!\n\nNotice how each UI element uses\nstate-based colors from the theme.\n\nFocused elements are highlighted.\nHover states provide feedback.")
-	tabs.AddTab("Stats", "Performance Metrics:\n\nCPU: 45% | Memory: 2.3GB\nDisk: 145GB / 256GB\n\nPress 't' to change themes\nand see how colors transform!")
-	tabs.AddTab("Logs", "System Activity:\n\n[10:23:45] App started...\n[10:23:46] Theme loaded\n[10:23:47] Colors applied\n[10:23:48] Ready!\n\nEach theme brings its own\nunique personality.")
+	tabs.AddTab("Overview", fmt.Sprintf("Welcome to the theme demo!\n\nNotice how each UI element uses\nstate-based colors from the theme.\n\nFocused elements are highlighted.\nHover states provide feedback.\n\nPress 't' to browse %d themes!", themeCount))
+	tabs.AddTab("Themes", "Available Themes:\n\n• Tokyo Night (from glamour)\n• Rosé Pine (3 variants)\n• Catppuccin (4 variants)\n• Monochrome (custom)\n\nThemes are imported from\nofficial packages for\nconsistency and accuracy!")
+	tabs.AddTab("Logs", "System Activity:\n\n[10:23:45] App started...\n[10:23:46] Theme loaded\n[10:23:47] Colors applied\n[10:23:48] Ready!\n\nEach theme brings its own\nunique personality and\ncolor combinations.")
 	return tabs
 }
 

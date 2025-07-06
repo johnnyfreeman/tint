@@ -16,13 +16,23 @@ type ThemePicker struct {
 }
 
 func NewThemePicker() *ThemePicker {
+	themes := tui.GetAvailableThemes()
+	// Find monochrome index for default
+	monochromeIndex := 0
+	for i, theme := range themes {
+		if theme == "monochrome" {
+			monochromeIndex = i
+			break
+		}
+	}
+	
 	return &ThemePicker{
 		visible:  false,
-		themes:   []string{"tokyonight", "rosepine", "catppuccin", "monochrome"},
-		selected: 3, // Default to monochrome
-		hovered:  3,
-		width:    40,
-		height:   8,
+		themes:   themes,
+		selected: monochromeIndex,
+		hovered:  monochromeIndex,
+		width:    45, // Wider to accommodate longer theme names
+		height:   len(themes) + 4, // Dynamic height based on theme count
 	}
 }
 
