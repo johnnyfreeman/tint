@@ -538,7 +538,7 @@ func (m *model) focusFuzzyContainer() {
 	m.fuzzyFinder.searchContainer.Blur()
 	m.fuzzyFinder.resultsContainer.Blur()
 	m.fuzzyFinder.previewContainer.Blur()
-	
+
 	// Focus only the current one
 	switch m.fuzzyFinder.internalFocus {
 	case FocusSearch:
@@ -688,7 +688,7 @@ func (m *model) View() string {
 
 func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 	switch msg.String() {
-	case "up", "k":
+	case "up", "ctrl+p":
 		// Auto-shift to results and navigate up
 		if m.fuzzyFinder.internalFocus != FocusResults {
 			m.fuzzyFinder.internalFocus = FocusResults
@@ -697,8 +697,8 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 		if m.fuzzyFinder.selectedIdx > 0 {
 			m.fuzzyFinder.selectedIdx--
 		}
-		
-	case "down", "j":
+
+	case "down", "ctrl+n":
 		// Auto-shift to results and navigate down
 		if m.fuzzyFinder.internalFocus != FocusResults {
 			m.fuzzyFinder.internalFocus = FocusResults
@@ -707,7 +707,7 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 		if m.fuzzyFinder.selectedIdx < len(m.fuzzyFinder.filtered)-1 && m.fuzzyFinder.selectedIdx < maxFuzzyResults-1 {
 			m.fuzzyFinder.selectedIdx++
 		}
-		
+
 	case "ctrl+u":
 		// Auto-shift to preview and page up
 		if m.fuzzyFinder.internalFocus != FocusPreview {
@@ -717,7 +717,7 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 		for i := 0; i < 5; i++ {
 			m.fuzzyFinder.previewViewer.HandleInput("up")
 		}
-		
+
 	case "ctrl+d":
 		// Auto-shift to preview and page down
 		if m.fuzzyFinder.internalFocus != FocusPreview {
@@ -727,7 +727,7 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 		for i := 0; i < 5; i++ {
 			m.fuzzyFinder.previewViewer.HandleInput("down")
 		}
-		
+
 	case "enter":
 		if m.fuzzyFinder.selectedIdx < len(m.fuzzyFinder.filtered) {
 			// Open selected file
@@ -736,11 +736,11 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 			m.fuzzyFinder.Hide()
 			m.activeView = "editor"
 		}
-		
+
 	case "escape", "esc":
 		// Close fuzzy finder without action
 		return
-		
+
 	default:
 		// Auto-shift to search for typing
 		if len(msg.String()) == 1 || msg.Type == tea.KeyBackspace || msg.Type == tea.KeyDelete {
