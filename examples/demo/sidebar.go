@@ -1,22 +1,35 @@
 package main
 
 import (
-	"github.com/charmbracelet/lipgloss"
 	"github.com/johnnyfreeman/tint/tui"
 )
 
 type Sidebar struct {
-	visible  bool
-	width    int
-	items    []string
-	selected int
-	hovered  int // For keyboard navigation (not yet selected)
+	container *tui.Container
+	viewer    *tui.Viewer
+	visible   bool
+	width     int
+	items     []string
+	selected  int
+	hovered   int // For keyboard navigation (not yet selected)
 }
 
 func NewSidebar() *Sidebar {
+	// Create container for sidebar
+	container := tui.NewContainer()
+	container.SetTitle("Sidebar")
+	container.SetSize(20, 0) // Height will be set dynamically
+	container.SetPadding(tui.NewMargin(1))
+	
+	// Create viewer for sidebar content
+	viewer := tui.NewViewer()
+	container.SetContent(viewer)
+	
 	return &Sidebar{
-		visible: true,
-		width:   20,
+		container: container,
+		viewer:    viewer,
+		visible:   true,
+		width:     20,
 		items: []string{
 			"Dashboard",
 			"Files",
@@ -33,111 +46,35 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 		return
 	}
 
-	// Get appropriate container styles based on focus
-	var containerStyle tui.FocusableStyle
+	// Set container size and focus state
+	s.container.SetSize(s.width, height)
 	if focused {
-		containerStyle = tui.FocusableStyle{
-			Focused:   theme.Components.Container.Border.Focused,
-			Unfocused: theme.Components.Container.Border.Focused,
-		}
+		s.container.Focus()
 	} else {
-		containerStyle = tui.FocusableStyle{
-			Focused:   theme.Components.Container.Border.Unfocused,
-			Unfocused: theme.Components.Container.Border.Unfocused,
-		}
+		s.container.Blur()
 	}
 
-	borderStyle := lipgloss.NewStyle().
-		Foreground(containerStyle.Unfocused.Border).
-		Background(theme.Palette.Background)
-
-	// Title style based on focus
-	var titleColors tui.StateColors
-	if focused {
-		titleColors = theme.Components.Container.Title.Focused
-	} else {
-		titleColors = theme.Components.Container.Title.Unfocused
-	}
-	titleStyle := lipgloss.NewStyle().
-		Foreground(titleColors.Text).
-		Background(theme.Palette.Background)
-
-	// Fill background first
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	for dy := 0; dy < height; dy++ {
-		for dx := 0; dx < s.width; dx++ {
-			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
-		}
-	}
-
-	// Draw box with title - use heavy borders when focused
-	if focused {
-		screen.DrawBrutalistBoxWithTitle(x, y, s.width, height, "Sidebar", borderStyle, titleStyle)
-	} else {
-		screen.DrawBoxWithTitle(x, y, s.width, height, "Sidebar", borderStyle, titleStyle)
-	}
-
-	// Normal item style from theme
-	normalItemStyle := lipgloss.NewStyle().
-		Foreground(theme.Palette.Text).
-		Background(theme.Palette.Background)
-
-	// Draw items
-	itemY := y + 2 // Start after border and spacing
+	// Build sidebar content with styled items
+	content := ""
 	for i, item := range s.items {
-		if itemY >= y+height-1 {
-			break // Don't draw past bottom border
-		}
-
-		// Clear the line first (inside the box) with background color
-		clearStyle := lipgloss.NewStyle().
-			Foreground(theme.Palette.Text).
-			Background(theme.Palette.Background)
-		for dx := x + 1; dx < x+s.width-1; dx++ {
-			screen.DrawRune(dx, itemY, ' ', clearStyle)
-		}
-
-		// Determine item state and get appropriate style
-		var itemStyle lipgloss.Style
 		var prefix string
-
 		if i == s.selected {
-			// Selected item
-			if focused {
-				// Sidebar is focused, use interactive selected style
-				colors := theme.Components.Interactive.Selected
-				itemStyle = lipgloss.NewStyle().
-					Foreground(colors.Text).
-					Background(theme.Palette.Background).
-					Bold(true)
-			} else {
-				// Sidebar not focused, use dimmer version
-				itemStyle = lipgloss.NewStyle().
-					Foreground(theme.Palette.TextMuted).
-					Background(theme.Palette.Background).
-					Bold(true)
-			}
 			prefix = "▶ " // Solid right-pointing triangle
-		} else if focused && i == s.hovered {
-			// Hovered item (only when sidebar is focused)
-			colors := theme.Components.Interactive.Hover
-			itemStyle = lipgloss.NewStyle().
-				Foreground(colors.Text).
-				Background(theme.Palette.Background)
-			prefix = "  "
 		} else {
-			// Normal item
-			itemStyle = normalItemStyle
 			prefix = "  "
 		}
-
-		// Draw item
-		itemX := x + 2
-		screen.DrawString(itemX, itemY, prefix, itemStyle)
-		screen.DrawString(itemX+2, itemY, item, itemStyle)
-
-		itemY++
+		
+		if i > 0 {
+			content += "\n"
+		}
+		content += prefix + item
 	}
+	
+	// Update viewer content
+	s.viewer.SetContent(content)
+	
+	// Draw the container (which handles borders, focus, etc.)
+	s.container.Draw(screen, x, y, &theme)
 }
 
 func (s *Sidebar) Toggle() {

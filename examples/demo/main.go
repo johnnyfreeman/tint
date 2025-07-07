@@ -13,16 +13,18 @@ import (
 type tickMsg time.Time
 
 type model struct {
-	screen       *tui.Screen
-	sidebar      *Sidebar
-	tabs         *tui.TabsComponent
-	modal        *tui.Modal
-	notification *tui.Notification
-	themePicker  *ThemePicker
-	statusBar    *tui.StatusBar
-	width        int
-	height       int
-	focus        string // "sidebar", "tabs", "modal", "themepicker"
+	screen          *tui.Screen
+	sidebar         *Sidebar
+	tabs            *tui.TabsComponent
+	modal           *tui.Modal
+	modalContainer  *tui.Container
+	modalContent    *tui.TextArea
+	notification    *tui.Notification
+	themePicker     *ThemePicker
+	statusBar       *tui.StatusBar
+	width           int
+	height          int
+	focus           string // "sidebar", "tabs", "modal", "themepicker"
 }
 
 func initialModel() model {
@@ -31,17 +33,22 @@ func initialModel() model {
 	statusBar.AddSegment("Tab: focus", "left")
 	statusBar.AddSegment("Ctrl+B: sidebar | 1-3: tabs | m: modal | n/s/w/e: notif | t: theme | q: quit", "right")
 
+	// Create modal with container and content (Modal → Container → Content pattern)
+	modal, modalContainer, modalContent := createDemoModal()
+
 	return model{
-		screen:       tui.NewDefaultScreen(80, 24),
-		sidebar:      NewSidebar(),
-		tabs:         createDemoTabs(),
-		modal:        createDemoModal(),
-		notification: tui.NewNotification(),
-		themePicker:  NewThemePicker(),
-		statusBar:    statusBar,
-		width:        80,
-		height:       24,
-		focus:        "tabs",
+		screen:         tui.NewDefaultScreen(80, 24),
+		sidebar:        NewSidebar(),
+		tabs:           createDemoTabs(),
+		modal:          modal,
+		modalContainer: modalContainer,
+		modalContent:   modalContent,
+		notification:   tui.NewNotification(),
+		themePicker:    NewThemePicker(),
+		statusBar:      statusBar,
+		width:          80,
+		height:         24,
+		focus:          "tabs",
 	}
 }
 
@@ -99,6 +106,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "m", "esc":
 				m.modal.Toggle()
+				m.modalContainer.Blur()
 				// Return focus to previous component
 				if m.sidebar.IsVisible() {
 					m.focus = "sidebar"
@@ -133,6 +141,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.modal.IsVisible() {
 				m.focus = "modal"
 				m.modal.Focus()
+				m.modalContainer.Focus()
+			} else {
+				m.modalContainer.Blur()
 			}
 		case "n":
 			m.notification.ShowInfo("This is a sample notification!")
@@ -234,32 +245,23 @@ func (m model) View() string {
 	}
 
 	if m.modal.IsVisible() {
+		// Draw modal surface (provides backdrop and elevation)
 		m.modal.Draw(m.screen, 0, 0, &theme)
 
-		// Draw container inside modal
+		// Get modal position for container placement
 		modalWidth, modalHeight := m.modal.GetSize()
 		modalX := (m.width - modalWidth) / 2
 		modalY := (m.height - modalHeight) / 2
 
-		container := tui.NewContainer()
-		container.SetTitle("Sample Modal")
-		container.SetSize(modalWidth, modalHeight) // Fill the modal
-		container.SetPadding(tui.NewMargin(1))
-
 		// Focus the container when modal is focused
 		if m.focus == "modal" {
-			container.Focus()
+			m.modalContainer.Focus()
 		} else {
-			container.Blur()
+			m.modalContainer.Blur()
 		}
 
-		// Create content for the container
-		textarea := tui.NewTextArea()
-		textarea.SetValue("This is a modal dialog.\n\nPress 'm' again to close it.\n\nNotice the shadow effect\nbehind the modal.")
-		textarea.SetSize(modalWidth-4, modalHeight-4) // Account for border and padding
-		container.SetContent(textarea)
-
-		container.Draw(m.screen, modalX, modalY, &theme)
+		// Draw container filling the entire modal surface
+		m.modalContainer.Draw(m.screen, modalX, modalY, &theme)
 	}
 
 	// Draw notification (always on top)
@@ -284,11 +286,26 @@ func createDemoTabs() *tui.TabsComponent {
 	return tabs
 }
 
-func createDemoModal() *tui.Modal {
+func createDemoModal() (*tui.Modal, *tui.Container, *tui.TextArea) {
+	// Create modal
 	modal := tui.NewModal()
 	modal.SetSize(40, 12)
 	modal.SetCentered(true)
-	return modal
+
+	// Create container that fills the modal
+	container := tui.NewContainer()
+	container.SetTitle("Sample Modal")
+	container.SetSize(40, 12) // Fill the entire modal surface
+	container.SetPadding(tui.NewMargin(1))
+	container.SetUseSurface(true) // Use surface color for modal
+
+	// Create content for the container
+	textarea := tui.NewTextArea()
+	textarea.SetValue("This is a modal dialog.\n\nPress 'm' again to close it.\n\nNotice the shadow effect\nbehind the modal.")
+	textarea.SetSize(36, 8) // Account for border and padding
+	container.SetContent(textarea)
+
+	return modal, container, textarea
 }
 
 func main() {

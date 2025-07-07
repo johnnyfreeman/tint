@@ -6,7 +6,8 @@ import (
 )
 
 type ThemePicker struct {
-	visible      bool
+	modal        *tui.Modal
+	container    *tui.Container
 	themes       []string
 	selected     int
 	hovered      int
@@ -26,89 +27,77 @@ func NewThemePicker() *ThemePicker {
 		}
 	}
 	
+	// Create modal (Modal → Container → Content pattern)
+	width := 45 // Wider to accommodate longer theme names
+	height := len(themes) + 4 // Dynamic height based on theme count
+	
+	modal := tui.NewModal()
+	modal.SetSize(width, height)
+	modal.SetCentered(true)
+
+	// Create container that fills the modal
+	container := tui.NewContainer()
+	container.SetTitle("Choose Theme")
+	container.SetSize(width, height) // Fill the entire modal surface
+	container.SetPadding(tui.NewMargin(1))
+	container.SetUseSurface(true) // Use surface color for modal
+	
 	return &ThemePicker{
-		visible:  false,
-		themes:   themes,
-		selected: monochromeIndex,
-		hovered:  monochromeIndex,
-		width:    45, // Wider to accommodate longer theme names
-		height:   len(themes) + 4, // Dynamic height based on theme count
+		modal:        modal,
+		container:    container,
+		themes:       themes,
+		selected:     monochromeIndex,
+		hovered:      monochromeIndex,
+		width:        width,
+		height:       height,
 	}
 }
 
 func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme, focused bool) {
-	if !tp.visible {
+	if !tp.modal.IsVisible() {
 		return
 	}
 
-	// Calculate center position
-	x := (screen.Width() - tp.width) / 2
-	y := (screen.Height() - tp.height) / 2
+	// Draw modal surface (provides backdrop and elevation)
+	tp.modal.Draw(screen, 0, 0, currentTheme)
 
-	// Get container styles
-	var borderColors, titleColors tui.StateColors
+	// Get modal position for container placement
+	modalWidth, modalHeight := tp.modal.GetSize()
+	modalX := (screen.Width() - modalWidth) / 2
+	modalY := (screen.Height() - modalHeight) / 2
+
+	// Focus the container when theme picker is focused
 	if focused {
-		borderColors = currentTheme.Components.Container.Border.Focused
-		titleColors = currentTheme.Components.Container.Title.Focused
+		tp.container.Focus()
 	} else {
-		borderColors = currentTheme.Components.Container.Border.Unfocused
-		titleColors = currentTheme.Components.Container.Title.Unfocused
+		tp.container.Blur()
 	}
 
-	bgStyle := lipgloss.NewStyle().
-		Background(currentTheme.Palette.Surface).
-		Foreground(currentTheme.Palette.Text)
-	borderStyle := lipgloss.NewStyle().
-		Foreground(borderColors.Border).
-		Background(currentTheme.Palette.Surface)
-	titleStyle := lipgloss.NewStyle().
-		Foreground(titleColors.Text).
-		Background(currentTheme.Palette.Surface).
-		Bold(true)
+	// Draw container filling the entire modal surface
+	tp.container.Draw(screen, modalX, modalY, currentTheme)
 
-	// Draw block shadow with 1 cell offset (same as modal)
-	shadowStyle := lipgloss.NewStyle().
-		Foreground(currentTheme.Palette.Shadow).
-		Background(currentTheme.Palette.Background)
-	shadowOffsetX := 1
-	shadowOffsetY := 1
-	screen.DrawBlockShadow(x, y, tp.width, tp.height, shadowStyle, shadowOffsetX, shadowOffsetY)
-
-	// Draw background
-	for dy := 0; dy < tp.height; dy++ {
-		for dx := 0; dx < tp.width; dx++ {
-			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
-		}
-	}
-
-	// Draw border with title - use heavy borders when focused
-	if focused {
-		screen.DrawBrutalistBoxWithTitle(x, y, tp.width, tp.height, "Choose Theme", borderStyle, titleStyle)
-	} else {
-		screen.DrawBoxWithTitle(x, y, tp.width, tp.height, "Choose Theme", borderStyle, titleStyle)
-	}
-
-	// Draw theme options with color swatches
+	// Draw theme options with color swatches inside container
 	for i, themeName := range tp.themes {
 		theme := tui.GetTheme(themeName)
-		lineY := y + 2 + i
-
-		// Clear line
-		for dx := x + 1; dx < x+tp.width-1; dx++ {
-			screen.DrawRune(dx, lineY, ' ', bgStyle)
-		}
+		lineY := modalY + 2 + i // Position relative to modal
 
 		// Determine item state and style
-		itemX := x + 2
+		itemX := modalX + 2 // Position relative to modal
 		prefix := "  "
 		var style lipgloss.Style
 
 		if i == tp.selected {
-			// Selected theme
+			// Selected theme - highlight full row
+			for dx := modalX + 1; dx < modalX+tp.width-1; dx++ {
+				screen.SetCell(dx, lineY, tui.Cell{
+					Rune:       ' ',
+					Background: currentTheme.Palette.Primary,
+				})
+			}
 			colors := currentTheme.Components.Interactive.Selected
 			style = lipgloss.NewStyle().
 				Foreground(colors.Text).
-				Background(currentTheme.Palette.Surface).
+				Background(currentTheme.Palette.Primary).
 				Bold(true)
 			prefix = "◉ " // Filled circle for selected
 		} else if i == tp.hovered {
@@ -130,7 +119,7 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 		screen.DrawString(itemX, lineY, prefix+theme.Name, style)
 
 		// Draw color swatches
-		swatchX := x + tp.width - 14
+		swatchX := modalX + tp.width - 14
 		screen.DrawString(swatchX, lineY, "●", lipgloss.NewStyle().Foreground(theme.Palette.Love).Background(currentTheme.Palette.Surface))
 		screen.DrawString(swatchX+2, lineY, "●", lipgloss.NewStyle().Foreground(theme.Palette.Gold).Background(currentTheme.Palette.Surface))
 		screen.DrawString(swatchX+4, lineY, "●", lipgloss.NewStyle().Foreground(theme.Palette.Rose).Background(currentTheme.Palette.Surface))
@@ -141,14 +130,19 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 }
 
 func (tp *ThemePicker) Toggle() {
-	tp.visible = !tp.visible
-	if tp.visible {
+	tp.modal.Toggle()
+	if tp.modal.IsVisible() {
 		tp.hovered = tp.selected
+		tp.modal.Focus()
+		tp.container.Focus()
+	} else {
+		tp.modal.Blur()
+		tp.container.Blur()
 	}
 }
 
 func (tp *ThemePicker) IsVisible() bool {
-	return tp.visible
+	return tp.modal.IsVisible()
 }
 
 func (tp *ThemePicker) MoveUp() {
@@ -167,7 +161,7 @@ func (tp *ThemePicker) MoveDown() {
 
 func (tp *ThemePicker) Select() {
 	tp.selected = tp.hovered
-	tp.visible = false
+	tp.modal.Hide()
 }
 
 func (tp *ThemePicker) GetSelectedTheme() string {
@@ -175,7 +169,7 @@ func (tp *ThemePicker) GetSelectedTheme() string {
 }
 
 func (tp *ThemePicker) GetPreviewTheme() string {
-	if tp.visible && tp.previewTheme != "" {
+	if tp.modal.IsVisible() && tp.previewTheme != "" {
 		return tp.previewTheme
 	}
 	return tp.GetSelectedTheme()

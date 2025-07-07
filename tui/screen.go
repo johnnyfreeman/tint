@@ -140,44 +140,6 @@ func (s *Screen) DrawBox(x, y, width, height int, style lipgloss.Style) {
 	s.DrawRune(x+width-1, y+height-1, '┘', style)
 }
 
-func (s *Screen) DrawBoxWithTitle(x, y, width, height int, title string, borderStyle, titleStyle lipgloss.Style) {
-	// Top left corner
-	s.DrawRune(x, y, '┌', borderStyle)
-
-	// Calculate title position (centered)
-	titleWithSpaces := " " + title + " "
-	titleLen := StringWidth(titleWithSpaces)
-	titleStart := x + (width-titleLen)/2
-
-	// Draw left border segment
-	for i := x + 1; i < titleStart; i++ {
-		s.DrawRune(i, y, '─', borderStyle)
-	}
-
-	// Draw title
-	s.DrawString(titleStart, y, titleWithSpaces, titleStyle)
-
-	// Draw right border segment
-	for i := titleStart + titleLen; i < x+width-1; i++ {
-		s.DrawRune(i, y, '─', borderStyle)
-	}
-
-	// Top right corner
-	s.DrawRune(x+width-1, y, '┐', borderStyle)
-
-	// Sides
-	for i := 1; i < height-1; i++ {
-		s.DrawRune(x, y+i, '│', borderStyle)
-		s.DrawRune(x+width-1, y+i, '│', borderStyle)
-	}
-
-	// Bottom border
-	s.DrawRune(x, y+height-1, '└', borderStyle)
-	for i := 1; i < width-1; i++ {
-		s.DrawRune(x+i, y+height-1, '─', borderStyle)
-	}
-	s.DrawRune(x+width-1, y+height-1, '┘', borderStyle)
-}
 
 func (s *Screen) DimArea(x, y, width, height int) {
 	for dy := 0; dy < height; dy++ {
@@ -215,45 +177,6 @@ func (s *Screen) DrawBrutalistBox(x, y, width, height int, style lipgloss.Style)
 	s.DrawRune(x+width-1, y+height-1, '┛', style)
 }
 
-// DrawBrutalistBoxWithTitle draws a brutalist box with a title
-func (s *Screen) DrawBrutalistBoxWithTitle(x, y, width, height int, title string, borderStyle, titleStyle lipgloss.Style) {
-	// Top left corner
-	s.DrawRune(x, y, '┏', borderStyle)
-
-	// Calculate title position (centered)
-	titleWithSpaces := " " + title + " "
-	titleLen := StringWidth(titleWithSpaces)
-	titleStart := x + (width-titleLen)/2
-
-	// Draw left border segment
-	for i := x + 1; i < titleStart; i++ {
-		s.DrawRune(i, y, '━', borderStyle)
-	}
-
-	// Draw title
-	s.DrawString(titleStart, y, titleWithSpaces, titleStyle)
-
-	// Draw right border segment
-	for i := titleStart + titleLen; i < x+width-1; i++ {
-		s.DrawRune(i, y, '━', borderStyle)
-	}
-
-	// Top right corner
-	s.DrawRune(x+width-1, y, '┓', borderStyle)
-
-	// Sides (heavy)
-	for i := 1; i < height-1; i++ {
-		s.DrawRune(x, y+i, '┃', borderStyle)
-		s.DrawRune(x+width-1, y+i, '┃', borderStyle)
-	}
-
-	// Bottom border (heavy)
-	s.DrawRune(x, y+height-1, '┗', borderStyle)
-	for i := 1; i < width-1; i++ {
-		s.DrawRune(x+i, y+height-1, '━', borderStyle)
-	}
-	s.DrawRune(x+width-1, y+height-1, '┛', borderStyle)
-}
 
 // DrawBlockShadow draws a solid block shadow for a given area
 func (s *Screen) DrawBlockShadow(x, y, width, height int, shadowStyle lipgloss.Style, offsetX, offsetY int) {

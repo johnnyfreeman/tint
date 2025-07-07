@@ -173,45 +173,24 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 	// The rest of the input width is already cleared by ClearComponentArea
 }
 
-// DrawInBox renders the input field inside a box with a title
+// DrawInBox renders the input field inside a container with a title
 func (i *Input) DrawInBox(screen *Screen, x, y int, title string, theme *Theme) {
-	// Determine box width based on input width + padding
-	boxWidth := i.width + 4 // 2 chars padding on each side
-	boxHeight := 3          // Top border, content, bottom border
-
-	var borderColors, titleColors StateColors
+	// Create a temporary container for this draw operation
+	container := NewContainer()
+	container.SetTitle(title)
+	container.SetSize(i.width+4, 3) // 2 chars padding on each side + borders
+	container.SetPadding(NewMargin(1))
+	container.SetContent(i)
+	
+	// Set focus state to match input focus
 	if i.focused {
-		borderColors = theme.Components.Container.Border.Focused
-		titleColors = theme.Components.Container.Title.Focused
+		container.Focus()
 	} else {
-		borderColors = theme.Components.Container.Border.Unfocused
-		titleColors = theme.Components.Container.Title.Unfocused
+		container.Blur()
 	}
-
-	borderStyle := lipgloss.NewStyle().
-		Foreground(borderColors.Border).
-		Background(theme.Palette.Background)
-	titleStyle := lipgloss.NewStyle().
-		Foreground(titleColors.Text).
-		Background(theme.Palette.Background)
-
-	// Fill background
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	for dy := 0; dy < boxHeight; dy++ {
-		for dx := 0; dx < boxWidth; dx++ {
-			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
-		}
-	}
-
-	// Draw box with title - use heavy borders when focused
-	if i.focused {
-		screen.DrawBrutalistBoxWithTitle(x, y, boxWidth, boxHeight, title, borderStyle, titleStyle)
-	} else {
-		screen.DrawBoxWithTitle(x, y, boxWidth, boxHeight, title, borderStyle, titleStyle)
-	}
-
-	// Draw the input inside the box
-	i.Draw(screen, x+2, y+1, theme)
+	
+	// Draw the container
+	container.Draw(screen, x, y, theme)
 }
 
 // GetSize returns the current width and height

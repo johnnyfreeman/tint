@@ -288,13 +288,17 @@ func main() {
 		{"📄 go.sum"},
 	})
 
-	// Create fuzzy finder
-	fuzzyModal := tui.NewModal() // Still keep modal for Show/Hide state
+	// Create fuzzy finder modal (Modal → Container → Content pattern)
+	fuzzyModal := tui.NewModal()
+	fuzzyModal.SetSize(fuzzyFinderWidth, fuzzyFinderHeight)
+	fuzzyModal.SetCentered(true)
 
 	// Search container
 	searchContainer := tui.NewContainer()
 	searchContainer.SetTitle("Search")
+	searchContainer.SetSize(resultsContainerWidth, searchContainerHeight)
 	searchContainer.SetPadding(tui.NewMargin(1))
+	searchContainer.SetUseSurface(true) // Use surface color for modal
 
 	fuzzyInput := tui.NewInput()
 	fuzzyInput.SetPlaceholder("Type to search files...")
@@ -303,12 +307,16 @@ func main() {
 	// Results container
 	resultsContainer := tui.NewContainer()
 	resultsContainer.SetTitle("Results")
+	resultsContainer.SetSize(resultsContainerWidth, fuzzyFinderHeight-searchContainerHeight-2)
 	resultsContainer.SetPadding(tui.NewMargin(1))
+	resultsContainer.SetUseSurface(true) // Use surface color for modal
 
 	// Preview container
 	previewContainer := tui.NewContainer()
 	previewContainer.SetTitle("Preview")
+	previewContainer.SetSize(fuzzyFinderWidth-resultsContainerWidth-1, fuzzyFinderHeight)
 	previewContainer.SetPadding(tui.NewMargin(1))
+	previewContainer.SetUseSurface(true) // Use surface color for modal
 
 	previewViewer := tui.NewViewer()
 	previewContainer.SetContent(previewViewer)
@@ -479,6 +487,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "p":
 			m.activeView = "fuzzy"
 			m.fuzzyFinder.Show()
+			m.fuzzyFinder.Modal.Focus()
 			m.fuzzyFinder.internalFocus = FocusSearch // Start with search
 			m.focusFuzzyContainer()
 			m.fuzzyFinder.input.SetValue("")
@@ -556,6 +565,10 @@ func (m *model) handleEscape() *model {
 	switch m.activeView {
 	case "fuzzy":
 		m.fuzzyFinder.Hide()
+		m.fuzzyFinder.Modal.Blur()
+		m.fuzzyFinder.searchContainer.Blur()
+		m.fuzzyFinder.resultsContainer.Blur()
+		m.fuzzyFinder.previewContainer.Blur()
 	case "settings":
 		m.settings.Hide()
 	case "help":
@@ -734,6 +747,10 @@ func (m *model) handleFuzzyInput(msg tea.KeyMsg) {
 			filename := m.fuzzyFinder.filtered[m.fuzzyFinder.selectedIdx]
 			m.openFile(filename)
 			m.fuzzyFinder.Hide()
+			m.fuzzyFinder.Modal.Blur()
+			m.fuzzyFinder.searchContainer.Blur()
+			m.fuzzyFinder.resultsContainer.Blur()
+			m.fuzzyFinder.previewContainer.Blur()
 			m.activeView = "editor"
 		}
 
@@ -895,50 +912,28 @@ func (m *model) drawStatusBar() {
 }
 
 func (m *model) drawFuzzyFinder() {
-	modalX := (m.width - fuzzyFinderWidth) / 2
-	modalY := (m.height - fuzzyFinderHeight) / 2
+	// Draw modal surface (provides backdrop and elevation)
+	m.fuzzyFinder.Modal.Draw(m.screen, 0, 0, &m.theme)
 
-	// Clear the entire modal area with surface color for modal background
-	surfaceStyle := lipgloss.NewStyle().Background(m.theme.Palette.Surface)
-	tui.ClearArea(m.screen, modalX, modalY, fuzzyFinderWidth, fuzzyFinderHeight, surfaceStyle)
-
-	// Draw shadow with 1 pixel offset to bottom-right
-	for dy := 0; dy < fuzzyFinderHeight; dy++ {
-		m.screen.SetCell(modalX+fuzzyFinderWidth, modalY+dy+1, tui.Cell{
-			Rune:       ' ',
-			Background: m.theme.Palette.Shadow,
-		})
-	}
-	for dx := 0; dx < fuzzyFinderWidth+1; dx++ {
-		m.screen.SetCell(modalX+dx, modalY+fuzzyFinderHeight, tui.Cell{
-			Rune:       ' ',
-			Background: m.theme.Palette.Shadow,
-		})
-	}
-
-	// Layout calculations
-	leftColumnWidth := resultsContainerWidth
-	rightColumnWidth := fuzzyFinderWidth - leftColumnWidth - 3     // Account for margins
-	resultsHeight := fuzzyFinderHeight - searchContainerHeight - 2 // No extra spacing
-
-	// Update container sizes
-	m.fuzzyFinder.searchContainer.SetSize(leftColumnWidth, searchContainerHeight)
-	m.fuzzyFinder.resultsContainer.SetSize(leftColumnWidth, resultsHeight)
-	m.fuzzyFinder.previewContainer.SetSize(rightColumnWidth, fuzzyFinderHeight-2)
+	// Get modal position for container placement
+	modalWidth, modalHeight := m.fuzzyFinder.Modal.GetSize()
+	modalX := (m.width - modalWidth) / 2
+	modalY := (m.height - modalHeight) / 2
 
 	// Update input width to fit in search container
-	m.fuzzyFinder.input.SetWidth(leftColumnWidth - 4) // Account for container padding
+	m.fuzzyFinder.input.SetWidth(resultsContainerWidth - 4) // Account for container padding
 
 	// Update preview viewer size to fit in preview container
-	m.fuzzyFinder.previewViewer.SetSize(rightColumnWidth-4, fuzzyFinderHeight-6)
+	rightColumnWidth := fuzzyFinderWidth - resultsContainerWidth - 1
+	m.fuzzyFinder.previewViewer.SetSize(rightColumnWidth-4, fuzzyFinderHeight-4)
 
-	// Draw containers
+	// Draw containers filling modal surface area with 1-column gap
 	// Left column: search and results
-	m.fuzzyFinder.searchContainer.Draw(m.screen, modalX+1, modalY+1, &m.theme)
-	m.fuzzyFinder.resultsContainer.Draw(m.screen, modalX+1, modalY+searchContainerHeight+1, &m.theme)
+	m.fuzzyFinder.searchContainer.Draw(m.screen, modalX, modalY, &m.theme)
+	m.fuzzyFinder.resultsContainer.Draw(m.screen, modalX, modalY+searchContainerHeight, &m.theme)
 
-	// Right column: preview (full height)
-	m.fuzzyFinder.previewContainer.Draw(m.screen, modalX+leftColumnWidth+2, modalY+1, &m.theme)
+	// Right column: preview (with 1-column gap)
+	m.fuzzyFinder.previewContainer.Draw(m.screen, modalX+resultsContainerWidth+1, modalY, &m.theme)
 
 	// Draw results manually with selection highlighting inside results container
 	textStyle := lipgloss.NewStyle().
@@ -949,8 +944,9 @@ func (m *model) drawFuzzyFinder() {
 		Background(m.theme.Palette.Primary)
 
 	// Draw filtered results inside the results container (accounting for borders and padding)
-	resultsContentX := modalX + 3                         // modalX + 1 for position, +2 for border and padding
-	resultsContentY := modalY + searchContainerHeight + 3 // +1 for position, +2 for border and title
+	resultsContentX := modalX + 2                         // modalX + 2 for border and padding
+	resultsContentY := modalY + searchContainerHeight + 2 // +2 for border and title
+	resultsHeight := fuzzyFinderHeight - searchContainerHeight - 2
 	maxResultsHeight := resultsHeight - 4                 // Account for top/bottom borders and title
 
 	for i, file := range m.fuzzyFinder.filtered {

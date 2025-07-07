@@ -140,19 +140,6 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Use the new DrawBlockShadow method
 	screen.DrawBlockShadow(actualX, actualY, n.width, n.height, shadowStyle, shadowOffsetX, shadowOffsetY)
 
-	// Notification background
-	bgStyle := lipgloss.NewStyle().
-		Background(theme.Palette.Surface).
-		Foreground(notifStyle.Text)
-
-	borderStyle := lipgloss.NewStyle().
-		Foreground(notifStyle.Border).
-		Background(theme.Palette.Surface)
-	titleStyle := lipgloss.NewStyle().
-		Foreground(notifStyle.Title).
-		Background(theme.Palette.Surface).
-		Bold(true)
-
 	// Clear the entire notification area with surface color
 	surfaceStyle := lipgloss.NewStyle().Background(theme.Palette.Surface)
 	ClearArea(screen, actualX, actualY, n.width, n.height, surfaceStyle)
@@ -160,18 +147,27 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Create title with icon
 	title := notifStyle.Icon + " Notification"
 
-	// Draw border with title - use heavy borders when focused
+	// Create a temporary container for the notification
+	container := NewContainer()
+	container.SetTitle(title)
+	container.SetSize(n.width, n.height)
+	container.SetPadding(NewMargin(1))
+	
+	// Create a viewer for the message content
+	viewer := NewViewer()
+	viewer.SetContent(n.message)
+	viewer.SetWrapText(true)
+	container.SetContent(viewer)
+	
+	// Set focus state
 	if n.focused {
-		screen.DrawBrutalistBoxWithTitle(actualX, actualY, n.width, n.height, title, borderStyle, titleStyle)
+		container.Focus()
 	} else {
-		screen.DrawBoxWithTitle(actualX, actualY, n.width, n.height, title, borderStyle, titleStyle)
+		container.Blur()
 	}
-
-	// Draw message
-	lines := n.wrapText(n.message, n.width-4)
-	for dy := 1; dy < n.height-1 && dy-1 < len(lines); dy++ {
-		screen.DrawString(actualX+2, actualY+dy, lines[dy-1], bgStyle)
-	}
+	
+	// Draw the container
+	container.Draw(screen, actualX, actualY, theme)
 }
 
 // calculatePosition determines where to draw the notification

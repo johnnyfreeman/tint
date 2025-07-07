@@ -380,44 +380,27 @@ func (t *Table) getTableWidth() int {
 	return width - 1 // Remove last separator
 }
 
-// DrawInBox renders the table inside a box with a title
+// DrawInBox renders the table inside a container with a title
 func (t *Table) DrawInBox(screen *Screen, x, y, width, height int, title string, theme *Theme) {
-	var borderColors, titleColors StateColors
+	// Create a temporary container for this draw operation
+	container := NewContainer()
+	container.SetTitle(title)
+	container.SetSize(width, height)
+	container.SetPadding(NewMargin(1))
+	container.SetContent(t)
+	
+	// Set focus state to match table focus
 	if t.focused {
-		borderColors = theme.Components.Container.Border.Focused
-		titleColors = theme.Components.Container.Title.Focused
+		container.Focus()
 	} else {
-		borderColors = theme.Components.Container.Border.Unfocused
-		titleColors = theme.Components.Container.Title.Unfocused
+		container.Blur()
 	}
-
-	borderStyle := lipgloss.NewStyle().
-		Foreground(borderColors.Border).
-		Background(theme.Palette.Background)
-	titleStyle := lipgloss.NewStyle().
-		Foreground(titleColors.Text).
-		Background(theme.Palette.Background)
-
-	// Fill background
-	bgStyle := lipgloss.NewStyle().Background(theme.Palette.Background)
-	for dy := 0; dy < height; dy++ {
-		for dx := 0; dx < width; dx++ {
-			screen.DrawRune(x+dx, y+dy, ' ', bgStyle)
-		}
-	}
-
-	// Draw box with title - use heavy borders when focused
-	if t.focused {
-		screen.DrawBrutalistBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
-	} else {
-		screen.DrawBoxWithTitle(x, y, width, height, title, borderStyle, titleStyle)
-	}
-
-	// Set table height based on box height (minus borders and header)
+	
+	// Set table height based on container height (minus borders and header)
 	t.SetHeight(height - 3) // -2 for borders, -1 for header
-
-	// Draw the table inside the box
-	t.Draw(screen, x+2, y+1, theme)
+	
+	// Draw the container
+	container.Draw(screen, x, y, theme)
 }
 
 // HandleKey processes keyboard input when focused
