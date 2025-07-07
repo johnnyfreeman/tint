@@ -37,6 +37,13 @@ func ClearComponentArea(screen *Screen, x, y, width, height int, theme *Theme) {
 	ClearArea(screen, x, y, width, height, style)
 }
 
+// ClearSurfaceArea clears a rectangular area using the theme's surface color
+// This should be used for containers inside modals to maintain the modal surface color
+func ClearSurfaceArea(screen *Screen, x, y, width, height int, theme *Theme) {
+	style := lipgloss.NewStyle().Background(theme.Palette.Surface)
+	ClearArea(screen, x, y, width, height, style)
+}
+
 // CenterComponent calculates the centered position for a component
 func CenterComponent(containerWidth, containerHeight, componentWidth, componentHeight int) Position {
 	x := (containerWidth - componentWidth) / 2

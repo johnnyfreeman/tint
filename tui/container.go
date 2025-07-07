@@ -16,6 +16,7 @@ type Container struct {
 	focused        bool
 	borderStyle    string // "single", "double", "heavy", "rounded"
 	borderElements []BorderElement
+	useSurface     bool   // Whether to use Surface color instead of Background
 }
 
 // NewContainer creates a new container
@@ -47,6 +48,12 @@ func (c *Container) SetPadding(padding Margin) {
 // Options: "single", "double", "heavy", "rounded"
 func (c *Container) SetBorderStyle(style string) {
 	c.borderStyle = style
+}
+
+// SetUseSurface sets whether the container should use Surface color instead of Background
+// This should be set to true for containers inside modals
+func (c *Container) SetUseSurface(useSurface bool) {
+	c.useSurface = useSurface
 }
 
 // AddBorderElement adds an inline element to the border
@@ -106,8 +113,12 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 		return
 	}
 
-	// Clear the entire container area with theme background
-	ClearComponentArea(screen, x, y, width, height, theme)
+	// Clear the entire container area with appropriate background
+	if c.useSurface {
+		ClearSurfaceArea(screen, x, y, width, height, theme)
+	} else {
+		ClearComponentArea(screen, x, y, width, height, theme)
+	}
 
 	contentX, contentY := x, y
 	contentWidth, contentHeight := width, height
