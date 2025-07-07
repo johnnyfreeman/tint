@@ -18,7 +18,6 @@ type StatusBarSegment struct {
 type StatusBar struct {
 	segments []StatusBarSegment
 	height   int
-	style    lipgloss.Style
 }
 
 // NewStatusBar creates a new status bar

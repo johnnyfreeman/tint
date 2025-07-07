@@ -19,7 +19,7 @@ type TabsComponent struct {
 	width       int
 	height      int
 	focused     bool
-	x, y        int
+	y           int
 	renderStyle TabRenderStyle
 }
 
