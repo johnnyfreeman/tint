@@ -307,7 +307,7 @@ func main() {
 	// Results container
 	resultsContainer := tui.NewContainer()
 	resultsContainer.SetTitle("Results")
-	resultsContainer.SetSize(resultsContainerWidth, fuzzyFinderHeight-searchContainerHeight-2)
+	resultsContainer.SetSize(resultsContainerWidth, fuzzyFinderHeight-searchContainerHeight)
 	resultsContainer.SetPadding(tui.NewMargin(1))
 	resultsContainer.SetUseSurface(true) // Use surface color for modal
 
@@ -947,7 +947,7 @@ func (m *model) drawFuzzyFinder() {
 	resultsContentX := modalX + 2                         // modalX + 2 for border and padding
 	resultsContentY := modalY + searchContainerHeight + 2 // +2 for border and title
 	resultsHeight := fuzzyFinderHeight - searchContainerHeight - 2
-	maxResultsHeight := resultsHeight - 4                 // Account for top/bottom borders and title
+	maxResultsHeight := resultsHeight - 4 // Account for top/bottom borders and title
 
 	for i, file := range m.fuzzyFinder.filtered {
 		if i >= maxFuzzyResults || i >= maxResultsHeight {
