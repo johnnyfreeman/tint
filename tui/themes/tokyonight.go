@@ -8,21 +8,21 @@ import (
 // TokyoNight creates a Tokyo Night theme using colors from the glamour package
 func TokyoNight() types.Theme {
 	// Tokyo Night color definitions (extracted from glamour/styles)
-	bg := lipgloss.Color("#1a1b26")
-	bgDark := lipgloss.Color("#16161e")
-	bgHighlight := lipgloss.Color("#292e42")
-	fg := lipgloss.Color("#a9b1d6")
-	fgGutter := lipgloss.Color("#363b54")
-	dark3 := lipgloss.Color("#545c7e")
-	comment := lipgloss.Color("#565f89")
-	blue := lipgloss.Color("#7aa2f7")
-	cyan := lipgloss.Color("#7dcfff")
-	magenta := lipgloss.Color("#bb9af7")
-	purple := lipgloss.Color("#9d7cd8")
-	orange := lipgloss.Color("#ff9e64")
-	yellow := lipgloss.Color("#e0af68")
-	green := lipgloss.Color("#9ece6a")
-	red := lipgloss.Color("#f7768e")
+	bg := lipgloss.CompleteColor{TrueColor: "#1a1b26", ANSI256: "235", ANSI: "0"}
+	bgDark := lipgloss.CompleteColor{TrueColor: "#16161e", ANSI256: "234", ANSI: "0"}
+	bgHighlight := lipgloss.CompleteColor{TrueColor: "#292e42", ANSI256: "237", ANSI: "8"}
+	fg := lipgloss.CompleteColor{TrueColor: "#a9b1d6", ANSI256: "146", ANSI: "7"}
+	fgGutter := lipgloss.CompleteColor{TrueColor: "#363b54", ANSI256: "238", ANSI: "8"}
+	dark3 := lipgloss.CompleteColor{TrueColor: "#545c7e", ANSI256: "243", ANSI: "8"}
+	comment := lipgloss.CompleteColor{TrueColor: "#565f89", ANSI256: "244", ANSI: "8"}
+	blue := lipgloss.CompleteColor{TrueColor: "#7aa2f7", ANSI256: "75", ANSI: "4"}
+	cyan := lipgloss.CompleteColor{TrueColor: "#7dcfff", ANSI256: "123", ANSI: "6"}
+	magenta := lipgloss.CompleteColor{TrueColor: "#bb9af7", ANSI256: "177", ANSI: "5"}
+	purple := lipgloss.CompleteColor{TrueColor: "#9d7cd8", ANSI256: "141", ANSI: "5"}
+	orange := lipgloss.CompleteColor{TrueColor: "#ff9e64", ANSI256: "215", ANSI: "3"}
+	yellow := lipgloss.CompleteColor{TrueColor: "#e0af68", ANSI256: "179", ANSI: "3"}
+	green := lipgloss.CompleteColor{TrueColor: "#9ece6a", ANSI256: "149", ANSI: "2"}
+	red := lipgloss.CompleteColor{TrueColor: "#f7768e", ANSI256: "210", ANSI: "1"}
 
 	return types.Theme{
 		Name: "Tokyo Night",

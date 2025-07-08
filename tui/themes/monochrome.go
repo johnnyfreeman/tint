@@ -7,13 +7,13 @@ import (
 
 // Monochrome creates a monochrome theme for terminals with limited color support
 func Monochrome() types.Theme {
-	// Monochrome color definitions
-	white := lipgloss.Color("255")
-	lightGray := lipgloss.Color("250")
-	gray := lipgloss.Color("240")
-	darkGray := lipgloss.Color("235")
-	veryDarkGray := lipgloss.Color("234")
-	black := lipgloss.Color("233")
+	// Monochrome color definitions using CompleteColor for better compatibility
+	white := lipgloss.CompleteColor{TrueColor: "#ffffff", ANSI256: "255", ANSI: "7"}
+	lightGray := lipgloss.CompleteColor{TrueColor: "#bcbcbc", ANSI256: "250", ANSI: "7"}
+	gray := lipgloss.CompleteColor{TrueColor: "#585858", ANSI256: "240", ANSI: "8"}
+	darkGray := lipgloss.CompleteColor{TrueColor: "#262626", ANSI256: "235", ANSI: "0"}
+	veryDarkGray := lipgloss.CompleteColor{TrueColor: "#1c1c1c", ANSI256: "234", ANSI: "0"}
+	black := lipgloss.CompleteColor{TrueColor: "#121212", ANSI256: "233", ANSI: "0"}
 
 	return types.Theme{
 		Name: "Monochrome",

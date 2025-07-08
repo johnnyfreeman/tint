@@ -13,11 +13,10 @@ var Registry = map[string]func() types.Theme{
 	"rosepine-moon": RosePineMoon,
 
 	// Catppuccin variants
-	"catppuccin":          CatppuccinMocha, // Default to Mocha
-	"catppuccin-mocha":    CatppuccinMocha,
-	"catppuccin-latte":    CatppuccinLatte,
-	"catppuccin-frappe":   CatppuccinFrappe,
+	"catppuccin-latte":     CatppuccinLatte,
+	"catppuccin-frappe":    CatppuccinFrappe,
 	"catppuccin-macchiato": CatppuccinMacchiato,
+	"catppuccin-mocha":     CatppuccinMocha,
 
 	// Custom themes
 	"monochrome": Monochrome,
