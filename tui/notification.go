@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -192,41 +191,6 @@ func (n *Notification) calculatePosition(screen *Screen) (x, y int) {
 	return x, y
 }
 
-// wrapText wraps text to fit within the given width
-func (n *Notification) wrapText(text string, width int) []string {
-	words := strings.Fields(text)
-	var lines []string
-	var currentLine string
-
-	for _, word := range words {
-		if len(currentLine)+len(word)+1 > width {
-			if currentLine != "" {
-				lines = append(lines, currentLine)
-				currentLine = word
-			} else {
-				// Word is longer than width, truncate it
-				if len(word) > width {
-					lines = append(lines, word[:width])
-					currentLine = ""
-				} else {
-					lines = append(lines, word)
-					currentLine = ""
-				}
-			}
-		} else {
-			if currentLine != "" {
-				currentLine += " "
-			}
-			currentLine += word
-		}
-	}
-
-	if currentLine != "" {
-		lines = append(lines, currentLine)
-	}
-
-	return lines
-}
 
 // Focus gives keyboard focus to this component
 func (n *Notification) Focus() {
