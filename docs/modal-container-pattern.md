@@ -38,7 +38,7 @@ modal.SetCentered(true)
 modal.Show()
 
 // 2. Draw the modal
-modal.Draw(screen, 0, 0, theme)
+modal.Draw(screen, 0, 0, screenWidth, screenHeight, theme)
 
 // 3. Get modal position for container placement
 modalWidth, modalHeight := modal.GetSize()
@@ -58,7 +58,7 @@ content.SetSize(modalWidth-4, modalHeight-4)  // Account for border + padding
 container.SetContent(content)
 
 // 6. Draw container at modal position
-container.Draw(screen, modalX, modalY, theme)
+container.Draw(screen, modalX, modalY, modalWidth, modalHeight, theme)
 ```
 
 ## Examples
@@ -72,7 +72,7 @@ func drawInfoModal(screen *tui.Screen, theme *tui.Theme) {
     modal.SetSize(40, 10)
     modal.SetCentered(true)
     modal.Show()
-    modal.Draw(screen, 0, 0, theme)
+    modal.Draw(screen, 0, 0, screen.Width(), screen.Height(), theme)
     
     // Calculate position
     modalX := (screen.Width() - 40) / 2
@@ -89,7 +89,7 @@ func drawInfoModal(screen *tui.Screen, theme *tui.Theme) {
     viewer.SetSize(36, 6)
     container.SetContent(viewer)
     
-    container.Draw(screen, modalX, modalY, theme)
+    container.Draw(screen, modalX, modalY, 40, 10, theme)
 }
 ```
 
@@ -101,7 +101,7 @@ func drawConfirmModal(screen *tui.Screen, theme *tui.Theme) {
     modal.SetSize(40, 8)
     modal.SetCentered(true)
     modal.Show()
-    modal.Draw(screen, 0, 0, theme)
+    modal.Draw(screen, 0, 0, screen.Width(), screen.Height(), theme)
     
     modalX := (screen.Width() - 40) / 2
     modalY := (screen.Height() - 8) / 2
@@ -109,7 +109,7 @@ func drawConfirmModal(screen *tui.Screen, theme *tui.Theme) {
     container := tui.NewContainer()
     container.SetTitle("Confirm")
     container.SetSize(40, 8)
-    container.Draw(screen, modalX, modalY, theme)
+    container.Draw(screen, modalX, modalY, 40, 8, theme)
     
     // Draw custom content for yes/no buttons
     question := "Are you sure?"
@@ -129,7 +129,7 @@ func drawFormModal(screen *tui.Screen, theme *tui.Theme) {
     modal.SetSize(60, 20)
     modal.SetCentered(true)
     modal.Show()
-    modal.Draw(screen, 0, 0, theme)
+    modal.Draw(screen, 0, 0, screen.Width(), screen.Height(), theme)
     
     modalX := (screen.Width() - 60) / 2
     modalY := (screen.Height() - 20) / 2
@@ -138,7 +138,7 @@ func drawFormModal(screen *tui.Screen, theme *tui.Theme) {
     container.SetTitle("User Registration")
     container.SetSize(60, 20)
     container.SetPadding(tui.NewMargin(2))
-    container.Draw(screen, modalX, modalY, theme)
+    container.Draw(screen, modalX, modalY, 60, 20, theme)
     
     // Create form fields...
 }
@@ -161,13 +161,13 @@ func drawFormModal(screen *tui.Screen, theme *tui.Theme) {
 ❌ **Don't add padding between modal and container**
 ```go
 // Wrong - adds unnecessary spacing
-container.Draw(screen, modalX + 2, modalY + 2, theme)
+container.Draw(screen, modalX + 2, modalY + 2, modalWidth, modalHeight, theme)
 ```
 
 ✅ **Do fill the modal completely**
 ```go
 // Correct - container fills modal
-container.Draw(screen, modalX, modalY, theme)
+container.Draw(screen, modalX, modalY, modalWidth, modalHeight, theme)
 ```
 
 ❌ **Don't try to add borders to modals**

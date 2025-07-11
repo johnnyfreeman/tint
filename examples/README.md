@@ -109,7 +109,7 @@ modal.SetSize(40, 10)
 modal.SetCentered(true)
 
 // Draw modal
-modal.Draw(screen, 0, 0, theme)
+modal.Draw(screen, 0, 0, screenWidth, screenHeight, theme)
 
 // Create container (structure)
 container := tui.NewContainer()
@@ -118,7 +118,7 @@ container.SetSize(40, 10)  // Fill the modal
 container.SetContent(content)
 
 // Draw container at modal position
-container.Draw(screen, modalX, modalY, theme)
+container.Draw(screen, modalX, modalY, 40, 10, theme)
 ```
 
 ### Theme Support

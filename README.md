@@ -57,7 +57,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         case "ctrl+c", "esc":
             return m, tea.Quit
         default:
-            m.input.HandleKey(msg.String())
+            m.input.HandleInput(msg.String())
         }
     case tea.WindowSizeMsg:
         m.screen = tui.NewScreen(msg.Width, msg.Height, *m.theme)
@@ -73,8 +73,10 @@ func (m model) View() string {
     m.screen.Clear()
     
     // Draw input in a nice container
-    container := tui.BoxWithTitle("Input Example", m.input)
-    container.Draw(m.screen, 2, 2, m.theme)
+    container := tui.NewContainer()
+    container.SetTitle("Input Example")
+    container.SetContent(m.input)
+    container.Draw(m.screen, 2, 2, m.screen.Width()-4, 5, m.theme)
     
     return m.screen.Render()
 }
@@ -86,7 +88,14 @@ func main() {
 }
 ```
 
-## Layout System
+## Component Architecture
+
+Tint uses a "Parent Offers, Child Decides" model where:
+- **Parent components** offer available space to their children
+- **Child components** decide how much of that space to use
+- All components implement `Draw(screen, x, y, availableWidth, availableHeight, theme)`
+
+### Layout System
 
 Tint provides a powerful constraint-based layout system that makes it easy to build responsive terminal UIs:
 
@@ -94,47 +103,56 @@ Tint provides a powerful constraint-based layout system that makes it easy to bu
 
 ```go
 // Create a typical application layout
-appLayout := tui.VBox().
-    AddFixed(header, 3).          // Fixed height header
-    AddFlex(tui.HBox().          // Main content area
-        AddFixed(sidebar, 30).    // Fixed width sidebar
-        AddFlex(content, 1),      // Content takes remaining space
-    1).
-    AddFixed(statusBar, 1)        // Fixed height status bar
+appLayout := tui.VBox()
+appLayout.SetSpacing(0)
+appLayout.AddFixed(header, 3)          // Fixed height header
+appLayout.AddFlex(tui.HBox().          // Main content area
+    AddFixed(sidebar, 30).             // Fixed width sidebar
+    AddFlex(content, 1), 1)            // Content takes remaining space
+appLayout.AddFixed(statusBar, 1)       // Fixed height status bar
+
+// Draw with available space
+appLayout.Draw(screen, 0, 0, screenWidth, screenHeight, theme)
 ```
 
 ### Split Panes
 
 ```go
 // Create resizable split views
-split := tui.NewVSplit().
-    SetRatio(0.3).               // 30/70 split
-    SetFirst(fileTree).
-    SetSecond(editor)
+split := tui.NewVSplit()
+split.SetConstraint(tui.NewConstraintSet(tui.NewPercentage(0.3))) // 30/70 split
+split.SetFirst(fileTree)
+split.SetSecond(editor)
+
+// Draw with available space
+split.Draw(screen, 0, 0, screenWidth, screenHeight, theme)
 ```
 
 ### Stacked Layers
 
 ```go
 // Layer components for modals and overlays
-stack := tui.NewStack().
-    AddLayer(mainView).
-    AddLayer(modal, tui.StackItem{
-        X: tui.Percentage(0.25),
-        Y: tui.Percentage(0.25),
-        Width: tui.Percentage(0.5),
-        Height: tui.Percentage(0.5),
-    })
+stack := tui.NewStack()
+stack.AddFull(mainView)  // Background layer
+stack.AddCentered(modal, 
+    tui.NewConstraintSet(tui.NewPercentage(0.5)),  // 50% width
+    tui.NewConstraintSet(tui.NewPercentage(0.5)))  // 50% height
+
+// Draw with available space
+stack.Draw(screen, 0, 0, screenWidth, screenHeight, theme)
 ```
 
 ### Responsive Layouts
 
 ```go
 // Different layouts for different terminal sizes
-layout := tui.NewConditional().
-    When(func(w, h int) bool { return w < 80 }, mobileLayout).
-    When(func(w, h int) bool { return w < 120 }, tabletLayout).
-    Otherwise(desktopLayout)
+layout := tui.NewResponsiveLayout()
+layout.AddMaxSize(mobileLayout, 79, 9999)     // Width < 80
+layout.AddWidthRange(tabletLayout, 80, 119)   // 80 <= width < 120
+layout.AddMinSize(desktopLayout, 120, 0)      // Width >= 120
+
+// Draw with available space
+layout.Draw(screen, 0, 0, screenWidth, screenHeight, theme)
 ```
 
 ## Components
@@ -144,15 +162,20 @@ layout := tui.NewConditional().
 The fundamental building block for creating structured UIs:
 
 ```go
-// Simple box with title
-box := tui.BoxWithTitle("Settings", settingsForm)
+// Simple container with title
+container := tui.NewContainer()
+container.SetTitle("Settings")
+container.SetContent(settingsForm)
 
 // Customized container
-container := tui.NewContainer().
-    SetTitle("User Profile").
-    SetBorderStyle(tui.BorderStyleDouble).
-    SetPadding(tui.NewPadding(1, 2, 1, 2)).
-    SetContent(profileView)
+container := tui.NewContainer()
+container.SetTitle("User Profile")
+container.SetBorderStyle("double")
+container.SetPadding(tui.NewMargin(1))
+container.SetContent(profileView)
+
+// Draw with available space
+container.Draw(screen, x, y, availableWidth, availableHeight, theme)
 ```
 
 ### Input
@@ -163,9 +186,11 @@ Unicode-aware text input with placeholder support:
 input := tui.NewInput()
 input.SetPlaceholder("Search...")
 input.SetWidth(40)
-input.OnChange(func(value string) {
-    // Handle input changes
-})
+// Handle input in your Update method
+switch msg := msg.(type) {
+case tea.KeyMsg:
+    input.HandleInput(msg.String())
+}
 ```
 
 ### TextArea
@@ -199,15 +224,28 @@ table.SetEditable(true)
 Elevated surfaces for dialogs and overlays:
 
 ```go
-// Create modal content
-confirmDialog := tui.VBox().
-    AddFixed(tui.NewViewer().SetContent("Delete this file?"), 3).
-    AddFixed(buttonRow, 3)
+// Create modal (elevated surface)
+modal := tui.NewModal()
+modal.SetSize(40, 10)
+modal.SetCentered(true)
+modal.Show()
 
-// Wrap in modal for elevation
-modal := tui.NewModal().
-    SetSize(40, 10).
-    SetContent(tui.BoxWithTitle("Confirm", confirmDialog))
+// Draw modal
+modal.Draw(screen, 0, 0, screenWidth, screenHeight, theme)
+
+// Get modal position
+modalWidth, modalHeight := modal.GetSize()
+modalX := (screenWidth - modalWidth) / 2
+modalY := (screenHeight - modalHeight) / 2
+
+// Create container for structure
+container := tui.NewContainer()
+container.SetTitle("Confirm")
+container.SetSize(modalWidth, modalHeight)
+container.SetContent(confirmDialog)
+
+// Draw container at modal position
+container.Draw(screen, modalX, modalY, modalWidth, modalHeight, theme)
 ```
 
 ### Additional Components
@@ -246,11 +284,15 @@ All components implement a consistent interface:
 
 ```go
 type Component interface {
-    Draw(screen *Screen, x, y int, theme *Theme)
+    Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme)
+    HandleInput(key string)
+}
+
+// Optional interface for components that can receive focus
+type Focusable interface {
     Focus()
     Blur()
     IsFocused() bool
-    HandleKey(key string) bool
 }
 ```
 
@@ -332,7 +374,7 @@ func (a app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             // Send to focused component
             focused := a.focusChain.Current()
             if focused != nil {
-                focused.HandleKey(msg.String())
+                focused.HandleInput(msg.String())
             }
         }
     case tea.WindowSizeMsg:
@@ -348,7 +390,7 @@ func (a app) View() string {
     }
     
     a.screen.Clear()
-    a.layout.Draw(a.screen, 0, 0, a.theme)
+    a.layout.Draw(a.screen, 0, 0, a.screen.Width(), a.screen.Height(), a.theme)
     return a.screen.Render()
 }
 
