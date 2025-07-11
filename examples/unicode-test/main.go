@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/example/tint/tui"
+	"github.com/johnnyfreeman/tint/tui"
 )
 
 func main() {
@@ -70,7 +70,8 @@ func main() {
 	titleStyle = lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Bold(true)
-	screen.DrawBoxWithTitle(2, y, 40, 8, "Unicode Box 📦", boxStyle, titleStyle)
+	screen.DrawBox(2, y, 40, 8, boxStyle)
+	screen.DrawString(4, y, "Unicode Box 📦", titleStyle)
 
 	// Test overwriting wide characters
 	y += 2
@@ -88,7 +89,11 @@ func main() {
 	input.SetWidth(30)
 	input.SetPlaceholder("Type emojis here... 🌟")
 	input.Focus()
-	input.DrawInBox(screen, 45, y, "Unicode Input", &theme)
+	// Create container for input
+	container := tui.NewContainer()
+	container.SetTitle("Unicode Input")
+	container.SetContent(input)
+	container.Draw(screen, 45, y, 30, 5, &theme)
 
 	// Render initial screen
 	fmt.Print(screen.Render())

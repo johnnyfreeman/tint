@@ -1,19 +1,19 @@
-module github.com/example/unicode-theme-test
+module github.com/johnnyfreeman/tint/examples/unicode-theme-test
 
 go 1.24.1
 
-replace github.com/example/tint => ../..
+replace github.com/johnnyfreeman/tint => ../..
 
 require (
-	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/example/tint v0.0.0-00010101000000-000000000000
+	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834
+	github.com/johnnyfreeman/tint v0.0.0-20250711031717-f96132962617
 )
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
 	github.com/charmbracelet/x/ansi v0.8.0 // indirect
-	github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/example/tint/tui"
+	"github.com/johnnyfreeman/tint/tui"
 )
 
 func main() {
@@ -22,7 +22,8 @@ func main() {
 	// Draw border
 	borderStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Primary)
-	screen.DrawBoxWithTitle(x, y, width, height, "🎨 Choose Theme", borderStyle, borderStyle)
+	screen.DrawBox(x, y, width, height, borderStyle)
+	screen.DrawString(x+2, y, "🎨 Choose Theme", borderStyle)
 
 	// Draw theme options with unicode selectors
 	for i, themeName := range themes {
