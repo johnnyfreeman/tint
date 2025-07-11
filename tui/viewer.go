@@ -131,16 +131,25 @@ func (v *Viewer) HandleInput(key string) {
 }
 
 // Draw renders the viewer to the screen
-func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
+func (v *Viewer) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// Viewer decides to use available space for content display
+	viewerWidth := availableWidth
+	viewerHeight := availableHeight
+	
+	// Update internal dimensions
+	v.width = viewerWidth
+	v.height = viewerHeight
+	v.processContent()
+	
 	// Clear the entire viewer area with theme background
-	ClearComponentArea(screen, x, y, v.width, v.height, theme)
+	ClearComponentArea(screen, x, y, viewerWidth, viewerHeight, theme)
 
 	textStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
 		Background(theme.Palette.Background)
 
 	// Draw visible lines
-	for row := 0; row < v.height; row++ {
+	for row := 0; row < viewerHeight; row++ {
 		lineIndex := v.scrollOffset + row
 
 		if lineIndex >= len(v.lines) {
@@ -152,8 +161,8 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 
 		// Truncate if line is still too long (shouldn't happen with wrapping)
 		displayLine := line
-		if StringWidth(displayLine) > v.width {
-			displayLine = TruncateWithEllipsis(displayLine, v.width)
+		if StringWidth(displayLine) > viewerWidth {
+			displayLine = TruncateWithEllipsis(displayLine, viewerWidth)
 		}
 
 		// Draw the line
@@ -161,36 +170,36 @@ func (v *Viewer) Draw(screen *Screen, x, y int, theme *Theme) {
 	}
 
 	// Draw scroll indicators
-	if v.focused && len(v.lines) > v.height {
+	if v.focused && len(v.lines) > viewerHeight {
 		scrollStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.TextMuted).
 			Background(theme.Palette.Background)
 
 		// Scroll bar track
-		scrollBarX := x + v.width - 1
-		for i := 0; i < v.height; i++ {
+		scrollBarX := x + viewerWidth - 1
+		for i := 0; i < viewerHeight; i++ {
 			screen.DrawRune(scrollBarX, y+i, '│', scrollStyle)
 		}
 
 		// Scroll bar thumb
 		// Calculate thumb height as a proportion of visible content
-		thumbHeight := int(float64(v.height) * float64(v.height) / float64(len(v.lines)))
+		thumbHeight := int(float64(viewerHeight) * float64(viewerHeight) / float64(len(v.lines)))
 		if thumbHeight < 1 {
 			thumbHeight = 1
 		}
-		if thumbHeight > v.height {
-			thumbHeight = v.height
+		if thumbHeight > viewerHeight {
+			thumbHeight = viewerHeight
 		}
 
 		// Calculate thumb position more accurately
 		var thumbPos int
-		maxScroll := len(v.lines) - v.height
+		maxScroll := len(v.lines) - viewerHeight
 		if maxScroll <= 0 {
 			thumbPos = 0
 		} else {
 			// Use floating point for accurate position calculation
 			scrollRatio := float64(v.scrollOffset) / float64(maxScroll)
-			maxThumbPos := v.height - thumbHeight
+			maxThumbPos := viewerHeight - thumbHeight
 			thumbPos = int(scrollRatio * float64(maxThumbPos))
 		}
 
@@ -221,7 +230,7 @@ func (v *Viewer) DrawInBox(screen *Screen, x, y, width, height int, theme *Theme
 	v.SetSize(width-4, height-2) // Leave room for padding
 
 	// Draw the viewer
-	v.Draw(screen, x+2, y+1, theme)
+	v.Draw(screen, x+2, y+1, width-4, height-2, theme)
 }
 
 // GetLineCount returns the total number of lines

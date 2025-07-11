@@ -123,9 +123,17 @@ func (i *Input) adjustOffset() {
 }
 
 // Draw renders the input field to the screen
-func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
+func (i *Input) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// Input decides to use available width but always height=1
+	inputWidth := availableWidth
+	inputHeight := 1
+	
+	// Update internal width from decision
+	i.width = inputWidth
+	i.adjustOffset()
+	
 	// Clear the entire input area with theme background
-	ClearComponentArea(screen, x, y, i.width, 1, theme)
+	ClearComponentArea(screen, x, y, inputWidth, inputHeight, theme)
 
 	style := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
@@ -145,8 +153,8 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 			Italic(true)
 
 		displayText = i.placeholder
-		if StringWidth(displayText) > i.width {
-			displayText = TruncateWithEllipsis(displayText, i.width)
+		if StringWidth(displayText) > inputWidth {
+			displayText = TruncateWithEllipsis(displayText, inputWidth)
 		}
 		screen.DrawString(x, y, displayText, placeholderStyle)
 	} else {
@@ -156,7 +164,7 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 	}
 
 	// Draw cursor if focused
-	if i.focused && i.cursor >= i.offset && i.cursor <= i.offset+i.width {
+	if i.focused && i.cursor >= i.offset && i.cursor <= i.offset+inputWidth {
 		cursorX := x + i.cursor - i.offset
 		cursorStyle := lipgloss.NewStyle().
 			Foreground(theme.Palette.Background).
@@ -173,47 +181,4 @@ func (i *Input) Draw(screen *Screen, x, y int, theme *Theme) {
 	// The rest of the input width is already cleared by ClearComponentArea
 }
 
-// DrawInBox renders the input field inside a container with a title
-func (i *Input) DrawInBox(screen *Screen, x, y int, title string, theme *Theme) {
-	// Create a temporary container for this draw operation
-	container := NewContainer()
-	container.SetTitle(title)
-	container.SetSize(i.width+4, 3) // 2 chars padding on each side + borders
-	container.SetPadding(NewMargin(1))
-	container.SetContent(i)
-	
-	// Set focus state to match input focus
-	if i.focused {
-		container.Focus()
-	} else {
-		container.Blur()
-	}
-	
-	// Draw the container
-	container.Draw(screen, x, y, theme)
-}
 
-// GetSize returns the current width and height
-func (i *Input) GetSize() (width, height int) {
-	return i.width, 1
-}
-
-// SetSize sets the width and height of the component
-func (i *Input) SetSize(width, height int) {
-	i.width = width
-	// Input is always 1 line high
-}
-
-// DrawWithBorder draws the component with a border and optional title
-func (i *Input) DrawWithBorder(screen *Screen, x, y int, theme *Theme, title string) {
-	i.DrawInBox(screen, x, y, title, theme)
-}
-
-// HandleKey processes keyboard input when focused (Component interface)
-func (i *Input) HandleKey(key string) bool {
-	if !i.focused {
-		return false
-	}
-	i.HandleInput(key)
-	return true
-}

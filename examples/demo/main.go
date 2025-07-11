@@ -235,7 +235,7 @@ func (m model) View() string {
 		m.tabs.Blur()
 	}
 	m.tabs.SetSize(tabsWidth, contentHeight)
-	m.tabs.Draw(m.screen, tabsX, 0, &theme)
+	m.tabs.Draw(m.screen, tabsX, 0, tabsWidth, contentHeight, &theme)
 
 	// Draw modal
 	if m.focus == "modal" {
@@ -246,7 +246,7 @@ func (m model) View() string {
 
 	if m.modal.IsVisible() {
 		// Draw modal surface (provides backdrop and elevation)
-		m.modal.Draw(m.screen, 0, 0, &theme)
+		m.modal.Draw(m.screen, 0, 0, m.width, m.height, &theme)
 
 		// Get modal position for container placement
 		modalWidth, modalHeight := m.modal.GetSize()
@@ -261,7 +261,7 @@ func (m model) View() string {
 		}
 
 		// Draw container filling the entire modal surface
-		m.modalContainer.Draw(m.screen, modalX, modalY, &theme)
+		m.modalContainer.Draw(m.screen, modalX, modalY, modalWidth, modalHeight, &theme)
 	}
 
 	// Draw notification (always on top)
@@ -271,7 +271,7 @@ func (m model) View() string {
 	m.themePicker.DrawWithTheme(m.screen, &theme, m.focus == "themepicker")
 
 	// Draw status bar at the bottom
-	m.statusBar.Draw(m.screen, 0, m.height-1, &theme)
+	m.statusBar.Draw(m.screen, 0, m.height-1, m.width, 1, &theme)
 
 	// Render screen to string
 	return m.screen.Render()
@@ -297,7 +297,6 @@ func createDemoModal() (*tui.Modal, *tui.Container, *tui.TextArea) {
 	container.SetTitle("Sample Modal")
 	container.SetSize(40, 12) // Fill the entire modal surface
 	container.SetPadding(tui.NewMargin(1))
-	container.SetUseSurface(true) // Use surface color for modal
 
 	// Create content for the container
 	textarea := tui.NewTextArea()

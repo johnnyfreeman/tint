@@ -167,7 +167,7 @@ func (n *Notification) Draw(screen *Screen, x, y int, theme *Theme) {
 	}
 	
 	// Draw the container
-	container.Draw(screen, actualX, actualY, theme)
+	container.Draw(screen, actualX, actualY, n.width, n.height, theme)
 }
 
 // calculatePosition determines where to draw the notification

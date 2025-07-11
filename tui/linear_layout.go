@@ -72,12 +72,16 @@ func (l *LinearLayout) GetSize() (width, height int) {
 }
 
 // Draw renders the linear layout to the screen
-func (l *LinearLayout) Draw(screen *Screen, x, y int, theme *Theme) {
-	l.DrawWithBounds(screen, x, y, l.width, l.height, theme)
+func (l *LinearLayout) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// LinearLayout decides to use available space for layout
+	layoutWidth := availableWidth
+	layoutHeight := availableHeight
+	
+	l.drawWithBounds(screen, x, y, layoutWidth, layoutHeight, theme)
 }
 
-// DrawWithBounds draws the layout with specific bounds
-func (l *LinearLayout) DrawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
+// drawWithBounds draws the layout with specific bounds
+func (l *LinearLayout) drawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
 	if len(l.items) == 0 {
 		return
 	}
@@ -151,25 +155,18 @@ func (l *LinearLayout) DrawWithBounds(screen *Screen, x, y, width, height int, t
 		}
 
 		// Draw the component
-		if drawer, ok := item.Component.(interface {
-			DrawWithBounds(*Screen, int, int, int, int, *Theme)
-		}); ok {
-			drawer.DrawWithBounds(screen, itemX, itemY, itemWidth, itemHeight, theme)
-		} else if sizable, ok := item.Component.(interface {
-			SetSize(int, int)
-			Draw(*Screen, int, int, *Theme)
-		}); ok {
-			sizable.SetSize(itemWidth, itemHeight)
-			sizable.Draw(screen, itemX, itemY, theme)
-		} else {
-			item.Component.Draw(screen, itemX, itemY, theme)
-		}
+		item.Component.Draw(screen, itemX, itemY, itemWidth, itemHeight, theme)
 	}
 }
 
 // Clear removes all items from the layout
 func (l *LinearLayout) Clear() {
 	l.items = []LinearItem{}
+}
+
+// HandleInput processes keyboard input
+func (l *LinearLayout) HandleInput(key string) {
+	// LinearLayout doesn't handle input itself
 }
 
 // Count returns the number of items in the layout

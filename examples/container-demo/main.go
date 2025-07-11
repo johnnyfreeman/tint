@@ -180,7 +180,7 @@ func (m *model) View() string {
 			container.SetBorderStyle("single")
 		}
 
-		container.DrawWithBounds(m.screen, x, y, containerWidth, containerHeight, &m.theme)
+		container.Draw(m.screen, x, y, containerWidth, containerHeight, &m.theme)
 	}
 
 	// Draw example labels

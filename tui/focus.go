@@ -1,11 +1,5 @@
 package tui
 
-// Focusable is an interface for components that can receive keyboard focus
-type Focusable interface {
-	Focus()
-	Blur()
-	IsFocused() bool
-}
 
 // FocusManager manages focus state between multiple components
 type FocusManager struct {

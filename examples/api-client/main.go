@@ -181,7 +181,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focus = "headers"
 			default:
 				// Let the input handle the key
-				m.urlInput.HandleKey(msg.String())
+				m.urlInput.HandleInput(msg.String())
 			}
 			return m, nil
 		}
@@ -203,7 +203,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			default:
 				// Let the table handle the key
-				m.headersTable.HandleKey(msg.String())
+				m.headersTable.HandleInput(msg.String())
 			}
 			return m, nil
 		}
@@ -219,7 +219,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focus = "response"
 			default:
 				// Let the text area handle the key
-				m.bodyTextArea.HandleKey(msg.String())
+				m.bodyTextArea.HandleInput(msg.String())
 			}
 			return m, nil
 		}
@@ -250,7 +250,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			default:
 				// Let the viewer handle navigation
-				m.responseViewer.HandleKey(msg.String())
+				m.responseViewer.HandleInput(msg.String())
 			}
 			return m, nil
 		}
@@ -438,7 +438,7 @@ func (m model) View() string {
 	m.drawMainArea(theme, mainX, mainWidth)
 
 	// Draw status bar at the bottom
-	m.statusBar.Draw(m.screen, 0, m.height-1, &theme)
+	m.statusBar.Draw(m.screen, 0, m.height-1, m.width, 1, &theme)
 
 	// Render screen to string
 	return m.screen.Render()
@@ -456,7 +456,7 @@ func (m *model) drawHistory(theme tui.Theme, width int) {
 	m.historyContainer.SetSize(width, m.height-1) // -1 for status bar
 
 	// Draw container background and border
-	m.historyContainer.DrawWithBounds(m.screen, 0, 0, width, m.height-1, &theme)
+	m.historyContainer.Draw(m.screen, 0, 0, width, m.height-1, &theme)
 
 	// Draw history items
 	itemY := 2
@@ -541,7 +541,7 @@ func (m *model) drawURLInput(theme tui.Theme, x, y, width, height int) {
 
 	// Set container size and draw
 	m.urlContainer.SetSize(width, height)
-	m.urlContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
+	m.urlContainer.Draw(m.screen, x, y, width, height, &theme)
 
 	// Draw method
 	methodStyle := lipgloss.NewStyle().
@@ -554,7 +554,7 @@ func (m *model) drawURLInput(theme tui.Theme, x, y, width, height int) {
 	inputX := x + 2 + len(m.method) + 1
 	availableWidth := width - 4 - len(m.method) - 1
 	m.urlInput.SetWidth(availableWidth)
-	m.urlInput.Draw(m.screen, inputX, y+1, &theme)
+	m.urlInput.Draw(m.screen, inputX, y+1, availableWidth, 1, &theme)
 }
 
 func (m *model) drawHeaders(theme tui.Theme, x, y, width, height int) {
@@ -569,7 +569,7 @@ func (m *model) drawHeaders(theme tui.Theme, x, y, width, height int) {
 
 	// Set container size and draw
 	m.headersContainer.SetSize(width, height)
-	m.headersContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
+	m.headersContainer.Draw(m.screen, x, y, width, height, &theme)
 }
 
 func (m *model) drawRequestBody(theme tui.Theme, x, y, width, height int) {
@@ -584,7 +584,7 @@ func (m *model) drawRequestBody(theme tui.Theme, x, y, width, height int) {
 
 	// Set container size and draw
 	m.bodyContainer.SetSize(width, height)
-	m.bodyContainer.DrawWithBounds(m.screen, x, y, width, height, &theme)
+	m.bodyContainer.Draw(m.screen, x, y, width, height, &theme)
 }
 
 func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
@@ -681,7 +681,7 @@ func (m *model) drawResponse(theme tui.Theme, x, y, width, height int) {
 			// Use the viewer to display the response body
 			// The viewer needs the inner area (excluding the border we already drew)
 			m.responseViewer.SetSize(width-4, height-2)
-			m.responseViewer.Draw(m.screen, x+2, y+1, &theme)
+			m.responseViewer.Draw(m.screen, x+2, y+1, width-4, height-2, &theme)
 		} else {
 			noDataStyle := lipgloss.NewStyle().
 				Foreground(theme.Palette.TextMuted).

@@ -159,9 +159,19 @@ func (t *TextArea) adjustOffset() {
 }
 
 // Draw renders the text area to the screen
-func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
+func (t *TextArea) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// TextArea decides to use available space but may prefer smaller size
+	// For now, use all available space (but could be smarter about content size)
+	textWidth := availableWidth
+	textHeight := availableHeight
+	
+	// Update internal dimensions
+	t.width = textWidth
+	t.height = textHeight
+	t.adjustOffset()
+	
 	// Clear the entire text area with theme background
-	ClearComponentArea(screen, x, y, t.width, t.height, theme)
+	ClearComponentArea(screen, x, y, textWidth, textHeight, theme)
 
 	textStyle := lipgloss.NewStyle().
 		Foreground(theme.Palette.Text).
@@ -176,11 +186,11 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 
 		lines := strings.Split(t.placeholder, "\n")
 		for i, line := range lines {
-			if i >= t.height {
+			if i >= textHeight {
 				break
 			}
-			if StringWidth(line) > t.width {
-				line = TruncateWithEllipsis(line, t.width)
+			if StringWidth(line) > textWidth {
+				line = TruncateWithEllipsis(line, textWidth)
 			}
 			screen.DrawString(x, y+i, line, placeholderStyle)
 		}
@@ -188,7 +198,7 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 	}
 
 	// Draw visible lines
-	for row := 0; row < t.height; row++ {
+	for row := 0; row < textHeight; row++ {
 		lineIndex := t.offsetRow + row
 		if lineIndex >= len(t.lines) {
 			// Empty rows are already cleared by ClearComponentArea
@@ -206,7 +216,7 @@ func (t *TextArea) Draw(screen *Screen, x, y int, theme *Theme) {
 		// Draw cursor if on this line and focused
 		if t.focused && lineIndex == t.cursorRow {
 			cursorScreenCol := t.getCursorScreenCol()
-			if cursorScreenCol >= 0 && cursorScreenCol < t.width {
+			if cursorScreenCol >= 0 && cursorScreenCol < textWidth {
 				cursorStyle := lipgloss.NewStyle().
 					Foreground(theme.Palette.Background).
 					Background(theme.Palette.Text)
@@ -258,17 +268,9 @@ func (t *TextArea) DrawInBox(screen *Screen, x, y, width, height int, title stri
 	t.SetSize(width-4, height-2) // -4 for borders and padding, -2 for top/bottom borders
 	
 	// Draw the container
-	container.Draw(screen, x, y, theme)
+	container.Draw(screen, x, y, width, height, theme)
 }
 
-// HandleKey processes keyboard input when focused
-func (t *TextArea) HandleKey(key string) bool {
-	if !t.focused {
-		return false
-	}
-	t.HandleInput(key)
-	return true
-}
 
 // GetSize returns the current width and height
 func (t *TextArea) GetSize() (width, height int) {

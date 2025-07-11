@@ -74,7 +74,7 @@ func (s *Sidebar) DrawWithTheme(screen *tui.Screen, x, y, height int, theme tui.
 	s.viewer.SetContent(content)
 	
 	// Draw the container (which handles borders, focus, etc.)
-	s.container.Draw(screen, x, y, &theme)
+	s.container.Draw(screen, x, y, s.width, height, &theme)
 }
 
 func (s *Sidebar) Toggle() {

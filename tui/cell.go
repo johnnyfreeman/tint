@@ -10,6 +10,8 @@ import (
 var (
 	styleCache = make(map[uint64]lipgloss.Style)
 	styleMutex sync.RWMutex
+	cacheSize  = 0
+	maxCacheSize = 100
 )
 
 type Cell struct {
@@ -113,11 +115,11 @@ func (c Cell) Render() string {
 	cacheKey := c.cacheKey()
 	if cacheKey != 0 {
 		styleMutex.RLock()
-		if cachedStyle, ok := styleCache[cacheKey]; ok {
-			styleMutex.RUnlock()
+		cachedStyle, ok := styleCache[cacheKey]
+		styleMutex.RUnlock()
+		if ok {
 			return cachedStyle.Render(string(c.Rune))
 		}
-		styleMutex.RUnlock()
 	}
 
 	// Build style
@@ -143,10 +145,18 @@ func (c Cell) Render() string {
 		style = style.Faint(true)
 	}
 
-	// Cache common styles
-	if cacheKey != 0 && len(styleCache) < 100 { // Limit cache size
+	// Cache common styles with eviction
+	if cacheKey != 0 {
 		styleMutex.Lock()
-		styleCache[cacheKey] = style
+		if cacheSize < maxCacheSize {
+			styleCache[cacheKey] = style
+			cacheSize++
+		} else {
+			// Simple eviction: clear cache when full
+			styleCache = make(map[uint64]lipgloss.Style)
+			styleCache[cacheKey] = style
+			cacheSize = 1
+		}
 		styleMutex.Unlock()
 	}
 

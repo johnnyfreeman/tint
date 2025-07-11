@@ -59,23 +59,37 @@ func (m *Modal) SetPosition(x, y int) {
 }
 
 // Draw renders the modal to the screen at the specified position
-func (m *Modal) Draw(screen *Screen, x, y int, theme *Theme) {
+func (m *Modal) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
 	if !m.visible {
 		return
+	}
+
+	// Modal decides its own size (doesn't use all available space)
+	// Use the modal's preferred dimensions
+	modalWidth := m.width
+	modalHeight := m.height
+	
+	// Constrain to available space if needed
+	if modalWidth > availableWidth {
+		modalWidth = availableWidth
+	}
+	if modalHeight > availableHeight {
+		modalHeight = availableHeight
 	}
 
 	// Calculate actual position
 	actualX, actualY := x, y
 	if m.centered {
-		actualX = (screen.Width() - m.width) / 2
-		actualY = (screen.Height() - m.height) / 2
+		// Center within available space
+		actualX = x + (availableWidth - modalWidth) / 2
+		actualY = y + (availableHeight - modalHeight) / 2
 	} else if x == 0 && y == 0 {
 		actualX, actualY = m.x, m.y
 	}
 
 	// Clear the modal area with surface color first
 	surfaceStyle := lipgloss.NewStyle().Background(theme.Palette.Surface)
-	ClearArea(screen, actualX, actualY, m.width, m.height, surfaceStyle)
+	ClearArea(screen, actualX, actualY, modalWidth, modalHeight, surfaceStyle)
 
 	// Draw block shadow AFTER clearing (offset by 1 cell)
 	shadowStyle := lipgloss.NewStyle().
@@ -85,7 +99,7 @@ func (m *Modal) Draw(screen *Screen, x, y int, theme *Theme) {
 	shadowOffsetY := 1
 
 	// Use the new DrawBlockShadow method
-	screen.DrawBlockShadow(actualX, actualY, m.width, m.height, shadowStyle, shadowOffsetX, shadowOffsetY)
+	screen.DrawBlockShadow(actualX, actualY, modalWidth, modalHeight, shadowStyle, shadowOffsetX, shadowOffsetY)
 }
 
 // Focus gives keyboard focus to this component
@@ -103,14 +117,12 @@ func (m *Modal) IsFocused() bool {
 	return m.focused
 }
 
-// HandleKey processes keyboard input when focused
-func (m *Modal) HandleKey(key string) bool {
+// HandleInput processes keyboard input
+func (m *Modal) HandleInput(key string) {
 	switch key {
 	case "esc", "enter":
 		m.Hide()
-		return true
 	}
-	return false
 }
 
 // SetSize sets the width and height of the component

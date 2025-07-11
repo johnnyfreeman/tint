@@ -122,12 +122,16 @@ func (s *Stack) GetSize() (width, height int) {
 }
 
 // Draw renders the stack layout to the screen
-func (s *Stack) Draw(screen *Screen, x, y int, theme *Theme) {
-	s.DrawWithBounds(screen, x, y, s.width, s.height, theme)
+func (s *Stack) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// Stack decides to use available space for layout
+	stackWidth := availableWidth
+	stackHeight := availableHeight
+	
+	s.drawWithBounds(screen, x, y, stackWidth, stackHeight, theme)
 }
 
-// DrawWithBounds draws the stack with specific bounds
-func (s *Stack) DrawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
+// drawWithBounds draws the stack with specific bounds
+func (s *Stack) drawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
 	// Draw items in order (first item is bottom, last is top)
 	for _, item := range s.items {
 		// Calculate position and size
@@ -171,25 +175,18 @@ func (s *Stack) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 		}
 
 		// Draw the component
-		if drawer, ok := item.Component.(interface {
-			DrawWithBounds(*Screen, int, int, int, int, *Theme)
-		}); ok {
-			drawer.DrawWithBounds(screen, itemX, itemY, itemWidth, itemHeight, theme)
-		} else if sizable, ok := item.Component.(interface {
-			SetSize(int, int)
-			Draw(*Screen, int, int, *Theme)
-		}); ok {
-			sizable.SetSize(itemWidth, itemHeight)
-			sizable.Draw(screen, itemX, itemY, theme)
-		} else {
-			item.Component.Draw(screen, itemX, itemY, theme)
-		}
+		item.Component.Draw(screen, itemX, itemY, itemWidth, itemHeight, theme)
 	}
 }
 
 // Clear removes all items from the stack
 func (s *Stack) Clear() {
 	s.items = []StackItem{}
+}
+
+// HandleInput processes keyboard input
+func (s *Stack) HandleInput(key string) {
+	// Stack doesn't handle input itself
 }
 
 // Count returns the number of items in the stack

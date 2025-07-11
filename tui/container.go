@@ -16,7 +16,6 @@ type Container struct {
 	focused        bool
 	borderStyle    string // "single", "double", "heavy", "rounded"
 	borderElements []BorderElement
-	useSurface     bool   // Whether to use Surface color instead of Background
 }
 
 // NewContainer creates a new container
@@ -48,12 +47,6 @@ func (c *Container) SetPadding(padding Margin) {
 // Options: "single", "double", "heavy", "rounded"
 func (c *Container) SetBorderStyle(style string) {
 	c.borderStyle = style
-}
-
-// SetUseSurface sets whether the container should use Surface color instead of Background
-// This should be set to true for containers inside modals
-func (c *Container) SetUseSurface(useSurface bool) {
-	c.useSurface = useSurface
 }
 
 // AddBorderElement adds an inline element to the border
@@ -99,13 +92,12 @@ func (c *Container) SetTitle(title string) {
 }
 
 // Draw renders the container to the screen
-func (c *Container) Draw(screen *Screen, x, y int, theme *Theme) {
-	c.draw(screen, x, y, c.width, c.height, theme)
-}
-
-// DrawWithBounds draws the container with specific bounds
-func (c *Container) DrawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
-	c.draw(screen, x, y, width, height, theme)
+func (c *Container) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// Container decides to use available space (containers are typically space-filling)
+	containerWidth := availableWidth
+	containerHeight := availableHeight
+	
+	c.draw(screen, x, y, containerWidth, containerHeight, theme)
 }
 
 func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) {
@@ -113,12 +105,7 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 		return
 	}
 
-	// Clear the entire container area with appropriate background
-	if c.useSurface {
-		ClearSurfaceArea(screen, x, y, width, height, theme)
-	} else {
-		ClearComponentArea(screen, x, y, width, height, theme)
-	}
+	ClearSurfaceArea(screen, x, y, width, height, theme)
 
 	contentX, contentY := x, y
 	contentWidth, contentHeight := width, height
@@ -164,14 +151,7 @@ func (c *Container) draw(screen *Screen, x, y, width, height int, theme *Theme) 
 
 	// Draw content if it fits
 	if contentWidth > 0 && contentHeight > 0 && c.content != nil {
-		// Draw content with bounds
-		if drawer, ok := c.content.(interface {
-			DrawWithBounds(*Screen, int, int, int, int, *Theme)
-		}); ok {
-			drawer.DrawWithBounds(screen, contentX, contentY, contentWidth, contentHeight, theme)
-		} else {
-			c.content.Draw(screen, contentX, contentY, theme)
-		}
+		c.content.Draw(screen, contentX, contentY, contentWidth, contentHeight, theme)
 	}
 }
 
@@ -350,15 +330,12 @@ func (c *Container) IsFocused() bool {
 	return c.focused
 }
 
-// HandleKey processes keyboard input when focused
-func (c *Container) HandleKey(key string) bool {
-	// Pass key events to content
+// HandleInput processes keyboard input
+func (c *Container) HandleInput(key string) {
+	// Pass input to content
 	if c.content != nil {
-		if handler, ok := c.content.(interface{ HandleKey(string) bool }); ok {
-			return handler.HandleKey(key)
-		}
+		c.content.HandleInput(key)
 	}
-	return false
 }
 
 // SetSize sets the width and height of the component
@@ -372,18 +349,6 @@ func (c *Container) GetSize() (width, height int) {
 	return c.width, c.height
 }
 
-// DrawWithBorder draws the component with a border and optional title
-func (c *Container) DrawWithBorder(screen *Screen, x, y int, theme *Theme, title string) {
-	oldTitle := c.title
-	oldShowBorder := c.showBorder
-
-	c.title = title
-	c.showBorder = true
-	c.Draw(screen, x, y, theme)
-
-	c.title = oldTitle
-	c.showBorder = oldShowBorder
-}
 
 // Panel is a convenience function to create a container with common settings
 func Panel(title string, content Component) *Container {

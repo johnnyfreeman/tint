@@ -99,8 +99,12 @@ func (t *TabsComponent) SetRenderStyle(style TabRenderStyle) {
 }
 
 // Draw renders the tabs component to the screen
-func (t *TabsComponent) Draw(screen *Screen, x, y int, theme *Theme) {
-	t.drawAtPosition(screen, x, y, t.width, t.height, theme)
+func (t *TabsComponent) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// TabsComponent decides to use available space
+	tabsWidth := availableWidth
+	tabsHeight := availableHeight
+	
+	t.drawAtPosition(screen, x, y, tabsWidth, tabsHeight, theme)
 }
 
 // drawAtPosition draws the tabs at a specific position with given dimensions
@@ -350,7 +354,7 @@ func (t *TabsComponent) drawContent(screen *Screen, x, y, width, height int, the
 		}
 	case Component:
 		// Draw component content
-		content.Draw(screen, x+1, y, theme)
+		content.Draw(screen, x+1, y, width-2, height-1, theme)
 	}
 }
 
@@ -369,32 +373,27 @@ func (t *TabsComponent) IsFocused() bool {
 	return t.focused
 }
 
-// HandleKey processes keyboard input when focused
-func (t *TabsComponent) HandleKey(key string) bool {
+// HandleInput processes keyboard input
+func (t *TabsComponent) HandleInput(key string) {
 	switch key {
 	case "left", "h":
 		t.PrevTab()
-		return true
 	case "right", "l":
 		t.NextTab()
-		return true
 	case "1", "2", "3", "4", "5", "6", "7", "8", "9":
 		// Quick tab switching
 		index := int(key[0] - '1')
 		if index < len(t.tabs) {
 			t.SetActive(index)
-			return true
+		}
+	default:
+		// Pass key to active tab content if it's a component
+		if activeTab := t.GetActiveTab(); activeTab != nil {
+			if component, ok := activeTab.Content.(Component); ok {
+				component.HandleInput(key)
+			}
 		}
 	}
-
-	// Pass key to active tab content if it's a component
-	if activeTab := t.GetActiveTab(); activeTab != nil {
-		if component, ok := activeTab.Content.(Component); ok {
-			return component.HandleKey(key)
-		}
-	}
-
-	return false
 }
 
 // SetSize sets the width and height of the component
@@ -410,6 +409,6 @@ func (t *TabsComponent) GetSize() (width, height int) {
 
 // DrawWithBorder draws the component with a border and optional title
 func (t *TabsComponent) DrawWithBorder(screen *Screen, x, y int, theme *Theme, title string) {
-	// Tabs already have borders, so just call Draw
-	t.Draw(screen, x, y, theme)
+	// Tabs already have borders, so just call Draw with default size
+	t.Draw(screen, x, y, t.width, t.height, theme)
 }

@@ -167,7 +167,7 @@ func drawLinearDemo(m *model, theme *tui.Theme) {
 	vbox.AddPercentage(bottom, 0.3)
 
 	main.SetContent(vbox)
-	main.Draw(m.screen, 2, 1, theme)
+	main.Draw(m.screen, 2, 1, m.width-4, m.height-4, theme)
 }
 
 // Demo 2: Split Layout
@@ -202,7 +202,7 @@ func drawSplitDemo(m *model, theme *tui.Theme) {
 	vsplit.SetSecond(hsplit)
 
 	main.SetContent(vsplit)
-	main.Draw(m.screen, 2, 1, theme)
+	main.Draw(m.screen, 2, 1, m.width-4, m.height-4, theme)
 }
 
 // Demo 3: Stack Layout
@@ -251,7 +251,7 @@ func drawStackDemo(m *model, theme *tui.Theme) {
 		tui.NewConstraintSet(tui.NewLength(50)),
 		tui.NewConstraintSet(tui.NewLength(12)))
 
-	stack.Draw(m.screen, 0, 0, theme)
+	stack.Draw(m.screen, 0, 0, m.width, m.height, theme)
 }
 
 // Demo 4: Responsive Layout
@@ -306,7 +306,7 @@ func drawResponsiveDemo(m *model, theme *tui.Theme) {
 	style := lipgloss.NewStyle().Foreground(theme.Palette.Primary)
 	m.screen.DrawString(2, 0, sizeInfo, style)
 
-	responsive.Draw(m.screen, 0, 1, theme)
+	responsive.Draw(m.screen, 0, 1, m.width, m.height-1, theme)
 }
 
 // Demo 5: Complex App Layout
@@ -339,7 +339,7 @@ func drawComplexDemo(m *model, theme *tui.Theme) {
 	mainSplit.SetSecond(contentLayout)
 
 	// Draw everything
-	mainSplit.Draw(m.screen, 0, 0, theme)
+	mainSplit.Draw(m.screen, 0, 0, m.width, m.height, theme)
 
 	// Add floating notification using stack
 	if m.width > 80 {
@@ -370,14 +370,17 @@ type colorPanel struct {
 	color lipgloss.TerminalColor
 }
 
-func (p *colorPanel) Draw(screen *tui.Screen, x, y int, theme *tui.Theme) {
-	// Fill with color
+func (p *colorPanel) Draw(screen *tui.Screen, x, y, availableWidth, availableHeight int, theme *tui.Theme) {
+	// Fill with color using available space
+	style := lipgloss.NewStyle().Background(p.color)
+	for dy := 0; dy < availableHeight; dy++ {
+		for dx := 0; dx < availableWidth; dx++ {
+			screen.DrawRune(x+dx, y+dy, ' ', style)
+		}
+	}
 }
 
-func (p *colorPanel) Focus()                    {}
-func (p *colorPanel) Blur()                     {}
-func (p *colorPanel) IsFocused() bool           { return false }
-func (p *colorPanel) HandleKey(key string) bool { return false }
+func (p *colorPanel) HandleInput(key string) {}
 
 // Modal with container wrapper
 type modalWithContainer struct {
@@ -385,15 +388,16 @@ type modalWithContainer struct {
 	container *tui.Container
 }
 
-func (m *modalWithContainer) Draw(screen *tui.Screen, x, y int, theme *tui.Theme) {
-	m.modal.Draw(screen, x, y, theme)
-	m.container.Draw(screen, x, y, theme)
+func (m *modalWithContainer) Draw(screen *tui.Screen, x, y, availableWidth, availableHeight int, theme *tui.Theme) {
+	m.modal.Draw(screen, x, y, availableWidth, availableHeight, theme)
+	// Get modal's actual position and size for container positioning
+	modalWidth, modalHeight := m.modal.GetSize()
+	modalX := x + (availableWidth - modalWidth) / 2
+	modalY := y + (availableHeight - modalHeight) / 2
+	m.container.Draw(screen, modalX, modalY, modalWidth, modalHeight, theme)
 }
 
-func (m *modalWithContainer) Focus()                    { m.container.Focus() }
-func (m *modalWithContainer) Blur()                     { m.container.Blur() }
-func (m *modalWithContainer) IsFocused() bool           { return m.container.IsFocused() }
-func (m *modalWithContainer) HandleKey(key string) bool { return m.container.HandleKey(key) }
+func (m *modalWithContainer) HandleInput(key string) { m.container.HandleInput(key) }
 
 // Complex demo helpers
 
@@ -480,5 +484,5 @@ func drawNotification(m *model, theme *tui.Theme) {
 	notif.SetContent(text)
 
 	notif.SetSize(25, 5)
-	notif.Draw(m.screen, m.width-27, 2, theme)
+	notif.Draw(m.screen, m.width-27, 2, 25, 5, theme)
 }

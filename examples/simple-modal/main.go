@@ -108,7 +108,7 @@ func (m *model) View() string {
 
 	// Draw modal if visible
 	if m.showModal {
-		m.modal.Draw(m.screen, 0, 0, &m.theme)
+		m.modal.Draw(m.screen, 0, 0, m.width, m.height, &m.theme)
 
 		// Get modal position for container
 		modalWidth, modalHeight := m.modal.GetSize()
@@ -128,7 +128,7 @@ func (m *model) View() string {
 		container.SetContent(textarea)
 
 		// Draw the container
-		container.Draw(m.screen, modalX, modalY, &m.theme)
+		container.Draw(m.screen, modalX, modalY, modalWidth, modalHeight, &m.theme)
 	}
 
 	// Show status

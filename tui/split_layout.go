@@ -71,12 +71,16 @@ func (s *Split) GetSize() (width, height int) {
 }
 
 // Draw renders the split layout to the screen
-func (s *Split) Draw(screen *Screen, x, y int, theme *Theme) {
-	s.DrawWithBounds(screen, x, y, s.width, s.height, theme)
+func (s *Split) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// Split decides to use available space for layout
+	splitWidth := availableWidth
+	splitHeight := availableHeight
+	
+	s.drawWithBounds(screen, x, y, splitWidth, splitHeight, theme)
 }
 
-// DrawWithBounds draws the split with specific bounds
-func (s *Split) DrawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
+// drawWithBounds draws the split with specific bounds
+func (s *Split) drawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
 	// Clear the split area
 	ClearComponentArea(screen, x, y, width, height, theme)
 
@@ -87,38 +91,14 @@ func (s *Split) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 
 		// Draw first pane
 		if s.first != nil && firstSize > 0 {
-			if drawer, ok := s.first.(interface {
-				DrawWithBounds(*Screen, int, int, int, int, *Theme)
-			}); ok {
-				drawer.DrawWithBounds(screen, x, y, firstSize, height, theme)
-			} else if sizable, ok := s.first.(interface {
-				SetSize(int, int)
-				Draw(*Screen, int, int, *Theme)
-			}); ok {
-				sizable.SetSize(firstSize, height)
-				sizable.Draw(screen, x, y, theme)
-			} else {
-				s.first.Draw(screen, x, y, theme)
-			}
+			s.first.Draw(screen, x, y, firstSize, height, theme)
 		}
 
 		// Draw second pane
 		secondX := x + firstSize
 		secondWidth := width - firstSize
 		if s.second != nil && secondWidth > 0 {
-			if drawer, ok := s.second.(interface {
-				DrawWithBounds(*Screen, int, int, int, int, *Theme)
-			}); ok {
-				drawer.DrawWithBounds(screen, secondX, y, secondWidth, height, theme)
-			} else if sizable, ok := s.second.(interface {
-				SetSize(int, int)
-				Draw(*Screen, int, int, *Theme)
-			}); ok {
-				sizable.SetSize(secondWidth, height)
-				sizable.Draw(screen, secondX, y, theme)
-			} else {
-				s.second.Draw(screen, secondX, y, theme)
-			}
+			s.second.Draw(screen, secondX, y, secondWidth, height, theme)
 		}
 	} else {
 		// Horizontal split - calculate height for first pane
@@ -126,38 +106,14 @@ func (s *Split) DrawWithBounds(screen *Screen, x, y, width, height int, theme *T
 
 		// Draw first pane
 		if s.first != nil && firstSize > 0 {
-			if drawer, ok := s.first.(interface {
-				DrawWithBounds(*Screen, int, int, int, int, *Theme)
-			}); ok {
-				drawer.DrawWithBounds(screen, x, y, width, firstSize, theme)
-			} else if sizable, ok := s.first.(interface {
-				SetSize(int, int)
-				Draw(*Screen, int, int, *Theme)
-			}); ok {
-				sizable.SetSize(width, firstSize)
-				sizable.Draw(screen, x, y, theme)
-			} else {
-				s.first.Draw(screen, x, y, theme)
-			}
+			s.first.Draw(screen, x, y, width, firstSize, theme)
 		}
 
 		// Draw second pane
 		secondY := y + firstSize
 		secondHeight := height - firstSize
 		if s.second != nil && secondHeight > 0 {
-			if drawer, ok := s.second.(interface {
-				DrawWithBounds(*Screen, int, int, int, int, *Theme)
-			}); ok {
-				drawer.DrawWithBounds(screen, x, secondY, width, secondHeight, theme)
-			} else if sizable, ok := s.second.(interface {
-				SetSize(int, int)
-				Draw(*Screen, int, int, *Theme)
-			}); ok {
-				sizable.SetSize(width, secondHeight)
-				sizable.Draw(screen, x, secondY, theme)
-			} else {
-				s.second.Draw(screen, x, secondY, theme)
-			}
+			s.second.Draw(screen, x, secondY, width, secondHeight, theme)
 		}
 	}
 }
@@ -170,6 +126,11 @@ func (s *Split) GetFirst() Component {
 // GetSecond returns the second pane component
 func (s *Split) GetSecond() Component {
 	return s.second
+}
+
+// HandleInput processes keyboard input
+func (s *Split) HandleInput(key string) {
+	// Split doesn't handle input itself
 }
 
 // IsVertical returns whether this is a vertical split

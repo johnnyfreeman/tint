@@ -81,18 +81,25 @@ func (s *Screen) SetCell(x, y int, cell Cell) {
 }
 
 func (s *Screen) DrawRune(x, y int, r rune, style lipgloss.Style) {
-	if x >= 0 && x < s.width && y >= 0 && y < s.height {
-		newCell := NewCell(r).WithStyle(style)
-		// Merge with existing cell to preserve background if needed
-		existingCell := s.cells[y][x]
-		mergedCell := existingCell.Merge(newCell)
-		s.SetCell(x, y, mergedCell)
+	if x < 0 || x >= s.width || y < 0 || y >= s.height {
+		return // Bounds check - silently ignore out-of-bounds draws
 	}
+	newCell := NewCell(r).WithStyle(style)
+	// Merge with existing cell to preserve background if needed
+	existingCell := s.cells[y][x]
+	mergedCell := existingCell.Merge(newCell)
+	s.SetCell(x, y, mergedCell)
 }
 
 func (s *Screen) DrawString(x, y int, str string, style lipgloss.Style) {
+	if y < 0 || y >= s.height {
+		return // Bounds check - ignore if row is out of bounds
+	}
 	xOffset := 0
 	for _, r := range str {
+		if x+xOffset >= s.width {
+			break // Stop drawing if we exceed screen width
+		}
 		s.DrawRune(x+xOffset, y, r, style)
 		xOffset += RuneWidth(r)
 	}
@@ -119,6 +126,10 @@ func (s *Screen) Theme() Theme {
 }
 
 func (s *Screen) DrawBox(x, y, width, height int, style lipgloss.Style) {
+	if width < 2 || height < 2 {
+		return // Invalid dimensions
+	}
+	
 	// Top border
 	s.DrawRune(x, y, '┌', style)
 	for i := 1; i < width-1; i++ {

@@ -88,12 +88,16 @@ func (c *Conditional) GetSize() (width, height int) {
 }
 
 // Draw renders the conditional layout to the screen
-func (c *Conditional) Draw(screen *Screen, x, y int, theme *Theme) {
-	c.DrawWithBounds(screen, x, y, c.width, c.height, theme)
+func (c *Conditional) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// Conditional decides to use available space for layout
+	condWidth := availableWidth
+	condHeight := availableHeight
+	
+	c.drawWithBounds(screen, x, y, condWidth, condHeight, theme)
 }
 
-// DrawWithBounds draws the conditional with specific bounds
-func (c *Conditional) DrawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
+// drawWithBounds draws the conditional with specific bounds
+func (c *Conditional) drawWithBounds(screen *Screen, x, y, width, height int, theme *Theme) {
 	// Find the first component whose condition is met
 	var componentToDraw Component
 
@@ -111,19 +115,7 @@ func (c *Conditional) DrawWithBounds(screen *Screen, x, y, width, height int, th
 
 	// Draw the selected component
 	if componentToDraw != nil {
-		if drawer, ok := componentToDraw.(interface {
-			DrawWithBounds(*Screen, int, int, int, int, *Theme)
-		}); ok {
-			drawer.DrawWithBounds(screen, x, y, width, height, theme)
-		} else if sizable, ok := componentToDraw.(interface {
-			SetSize(int, int)
-			Draw(*Screen, int, int, *Theme)
-		}); ok {
-			sizable.SetSize(width, height)
-			sizable.Draw(screen, x, y, theme)
-		} else {
-			componentToDraw.Draw(screen, x, y, theme)
-		}
+		componentToDraw.Draw(screen, x, y, width, height, theme)
 	}
 }
 
@@ -135,6 +127,11 @@ func (c *Conditional) GetActiveComponent() Component {
 		}
 	}
 	return c.fallback
+}
+
+// HandleInput processes keyboard input
+func (c *Conditional) HandleInput(key string) {
+	// Conditional doesn't handle input itself
 }
 
 // ResponsiveLayout is a helper for creating responsive layouts

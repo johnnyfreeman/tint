@@ -47,11 +47,13 @@ func (s *StatusBar) Clear() {
 }
 
 // Draw renders the status bar to the screen
-func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
-	width := screen.Width()
-
+func (s *StatusBar) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// StatusBar decides to use available width but always height=1
+	barWidth := availableWidth
+	barHeight := 1
+	
 	// Clear the entire status bar area with theme background
-	ClearComponentArea(screen, x, y, width, s.height, theme)
+	ClearComponentArea(screen, x, y, barWidth, barHeight, theme)
 
 	// Default style if not set (status bar typically uses surface color)
 	bgStyle := lipgloss.NewStyle().
@@ -59,7 +61,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 		Foreground(theme.Palette.TextMuted)
 
 	// Fill the status bar with surface color
-	for i := 0; i < width; i++ {
+	for i := 0; i < barWidth; i++ {
 		screen.SetCell(x+i, y, Cell{
 			Rune:       ' ',
 			Background: theme.Palette.Surface,
@@ -103,7 +105,7 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 			}
 			centerText += segment.Text
 		}
-		centerX := x + (width-StringWidth(centerText))/2
+		centerX := x + (barWidth-StringWidth(centerText))/2
 		screen.DrawString(centerX, y, centerText, bgStyle)
 	}
 
@@ -116,9 +118,14 @@ func (s *StatusBar) Draw(screen *Screen, x, y int, theme *Theme) {
 			}
 			rightText += segment.Text
 		}
-		rightX := x + width - StringWidth(rightText) - 1
+		rightX := x + barWidth - StringWidth(rightText) - 1
 		screen.DrawString(rightX, y, rightText, bgStyle)
 	}
+}
+
+// HandleInput processes keyboard input
+func (s *StatusBar) HandleInput(key string) {
+	// StatusBar doesn't handle input
 }
 
 // SetHeight sets the height of the status bar (usually 1)

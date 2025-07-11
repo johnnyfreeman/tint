@@ -40,7 +40,6 @@ func NewThemePicker() *ThemePicker {
 	container.SetTitle("Choose Theme")
 	container.SetSize(width, height) // Fill the entire modal surface
 	container.SetPadding(tui.NewMargin(1))
-	container.SetUseSurface(true) // Use surface color for modal
 	
 	return &ThemePicker{
 		modal:        modal,
@@ -59,7 +58,7 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 	}
 
 	// Draw modal surface (provides backdrop and elevation)
-	tp.modal.Draw(screen, 0, 0, currentTheme)
+	tp.modal.Draw(screen, 0, 0, screen.Width(), screen.Height(), currentTheme)
 
 	// Get modal position for container placement
 	modalWidth, modalHeight := tp.modal.GetSize()
@@ -74,7 +73,7 @@ func (tp *ThemePicker) DrawWithTheme(screen *tui.Screen, currentTheme *tui.Theme
 	}
 
 	// Draw container filling the entire modal surface
-	tp.container.Draw(screen, modalX, modalY, currentTheme)
+	tp.container.Draw(screen, modalX, modalY, modalWidth, modalHeight, currentTheme)
 
 	// Draw theme options with color swatches inside container
 	for i, themeName := range tp.themes {

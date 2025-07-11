@@ -298,7 +298,7 @@ func main() {
 	searchContainer.SetTitle("Search")
 	searchContainer.SetSize(resultsContainerWidth, searchContainerHeight)
 	searchContainer.SetPadding(tui.NewMargin(1))
-	searchContainer.SetUseSurface(true) // Use surface color for modal
+	// SetUseSurface method removed - Container now uses theme appropriately
 
 	fuzzyInput := tui.NewInput()
 	fuzzyInput.SetPlaceholder("Type to search files...")
@@ -309,14 +309,14 @@ func main() {
 	resultsContainer.SetTitle("Results")
 	resultsContainer.SetSize(resultsContainerWidth, fuzzyFinderHeight-searchContainerHeight)
 	resultsContainer.SetPadding(tui.NewMargin(1))
-	resultsContainer.SetUseSurface(true) // Use surface color for modal
+	// SetUseSurface method removed - Container now uses theme appropriately
 
 	// Preview container
 	previewContainer := tui.NewContainer()
 	previewContainer.SetTitle("Preview")
 	previewContainer.SetSize(fuzzyFinderWidth-resultsContainerWidth-1, fuzzyFinderHeight)
 	previewContainer.SetPadding(tui.NewMargin(1))
-	previewContainer.SetUseSurface(true) // Use surface color for modal
+	// SetUseSurface method removed - Container now uses theme appropriately
 
 	previewViewer := tui.NewViewer()
 	previewContainer.SetContent(previewViewer)
@@ -677,7 +677,7 @@ func (m *model) View() string {
 
 	// Draw editor (start at line 1 after tabs)
 	m.editor.SetSize(editorWidth, contentHeight-1)
-	m.editor.Draw(m.screen, editorX, 1, &m.theme)
+	m.editor.Draw(m.screen, editorX, 1, editorWidth, contentHeight-1, &m.theme)
 
 	// Draw status bar
 	m.drawStatusBar()
@@ -908,12 +908,12 @@ func (m *model) drawStatusBar() {
 	m.statusBar.AddSegment("?:help p:find e:explore s:settings q:quit", "right")
 
 	// Draw the status bar
-	m.statusBar.Draw(m.screen, 0, m.height-1, &m.theme)
+	m.statusBar.Draw(m.screen, 0, m.height-1, m.width, 1, &m.theme)
 }
 
 func (m *model) drawFuzzyFinder() {
 	// Draw modal surface (provides backdrop and elevation)
-	m.fuzzyFinder.Modal.Draw(m.screen, 0, 0, &m.theme)
+	m.fuzzyFinder.Modal.Draw(m.screen, 0, 0, m.width, m.height, &m.theme)
 
 	// Get modal position for container placement
 	modalWidth, modalHeight := m.fuzzyFinder.Modal.GetSize()
@@ -929,11 +929,11 @@ func (m *model) drawFuzzyFinder() {
 
 	// Draw containers filling modal surface area with 1-column gap
 	// Left column: search and results
-	m.fuzzyFinder.searchContainer.Draw(m.screen, modalX, modalY, &m.theme)
-	m.fuzzyFinder.resultsContainer.Draw(m.screen, modalX, modalY+searchContainerHeight, &m.theme)
+	m.fuzzyFinder.searchContainer.Draw(m.screen, modalX, modalY, resultsContainerWidth, searchContainerHeight, &m.theme)
+	m.fuzzyFinder.resultsContainer.Draw(m.screen, modalX, modalY+searchContainerHeight, resultsContainerWidth, fuzzyFinderHeight-searchContainerHeight, &m.theme)
 
 	// Right column: preview (with 1-column gap)
-	m.fuzzyFinder.previewContainer.Draw(m.screen, modalX+resultsContainerWidth+1, modalY, &m.theme)
+	m.fuzzyFinder.previewContainer.Draw(m.screen, modalX+resultsContainerWidth+1, modalY, fuzzyFinderWidth-resultsContainerWidth-1, fuzzyFinderHeight, &m.theme)
 
 	// Draw results manually with selection highlighting inside results container
 	textStyle := lipgloss.NewStyle().
@@ -1007,14 +1007,14 @@ func (m *model) drawSettings() {
 
 	// Draw modal
 	m.settings.Modal.SetSize(settingsWidth, settingsHeight)
-	m.settings.Modal.Draw(m.screen, modalX, modalY, &m.theme)
+	m.settings.Modal.Draw(m.screen, 0, 0, m.width, m.height, &m.theme)
 
 	// Create and draw a container that fills the modal
 	container := tui.NewContainer()
 	container.SetTitle("Settings")
 	container.SetSize(settingsWidth, settingsHeight)
 	container.SetPadding(tui.NewMargin(1))
-	container.Draw(m.screen, modalX, modalY, &m.theme)
+	container.Draw(m.screen, modalX, modalY, settingsWidth, settingsHeight, &m.theme)
 
 	// Adjust positions for container content
 	contentX := modalX + 2 // Container border + padding
@@ -1089,17 +1089,17 @@ func (m *model) drawHelp() {
 	modalY := (m.height - 30) / 2
 
 	// Draw modal
-	m.helpViewer.Modal.Draw(m.screen, modalX, modalY, &m.theme)
+	m.helpViewer.Modal.Draw(m.screen, 0, 0, m.width, m.height, &m.theme)
 
 	// Create and draw a container that fills the modal
 	container := tui.NewContainer()
 	container.SetTitle("Help - Keyboard Shortcuts")
 	container.SetSize(70, 30) // Same size as modal
 	container.SetPadding(tui.NewMargin(1))
-	container.Draw(m.screen, modalX, modalY, &m.theme)
+	container.Draw(m.screen, modalX, modalY, 70, 30, &m.theme)
 
 	// Draw viewer inside container
-	m.helpViewer.viewer.Draw(m.screen, modalX+2, modalY+2, &m.theme)
+	m.helpViewer.viewer.Draw(m.screen, modalX+2, modalY+2, 70-4, 30-4, &m.theme)
 }
 
 func getFileType(filename string) string {

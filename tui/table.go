@@ -116,20 +116,20 @@ func (t *Table) HandleInput(key string) {
 			t.adjustScroll()
 		}
 	case "down", "j":
-		if t.selectedRow < len(t.rows)-1 {
+		if len(t.rows) > 0 && t.selectedRow < len(t.rows)-1 {
 			t.selectedRow++
 			t.adjustScroll()
 		}
 	case "left", "h":
-		if t.selectedCol > 0 {
+		if len(t.columns) > 0 && t.selectedCol > 0 {
 			t.selectedCol--
 		}
 	case "right", "l":
-		if t.selectedCol < len(t.columns)-1 {
+		if len(t.columns) > 0 && t.selectedCol < len(t.columns)-1 {
 			t.selectedCol++
 		}
 	case "enter":
-		if t.editable && t.selectedRow < len(t.rows) {
+		if t.editable && t.selectedRow < len(t.rows) && t.selectedCol < len(t.columns) {
 			t.editingCell = true
 			t.editValue = t.GetValue(t.selectedRow, t.selectedCol)
 			t.editCursor = len(t.editValue)
@@ -144,7 +144,7 @@ func (t *Table) HandleInput(key string) {
 		}
 	case "d":
 		// Delete current row
-		if t.editable && len(t.rows) > 0 {
+		if t.editable && len(t.rows) > 0 && t.selectedRow < len(t.rows) {
 			t.RemoveRow(t.selectedRow)
 		}
 	}
@@ -211,10 +211,18 @@ func (t *Table) adjustScroll() {
 }
 
 // Draw renders the table to the screen
-func (t *Table) Draw(screen *Screen, x, y int, theme *Theme) {
+func (t *Table) Draw(screen *Screen, x, y, availableWidth, availableHeight int, theme *Theme) {
+	// Table decides to use available space but has minimum size requirements
+	tableWidth := availableWidth
+	tableHeight := availableHeight
+	
+	// Update internal dimensions
+	t.height = tableHeight - 2 // -2 for header and separator
+	if t.height < 1 {
+		t.height = 1
+	}
+	
 	// Clear the entire table area with theme background
-	tableWidth := t.getTableWidth()
-	tableHeight := t.height + 2 // +2 for header and separator
 	ClearComponentArea(screen, x, y, tableWidth, tableHeight, theme)
 
 	// Header style
@@ -400,17 +408,9 @@ func (t *Table) DrawInBox(screen *Screen, x, y, width, height int, title string,
 	t.SetHeight(height - 3) // -2 for borders, -1 for header
 	
 	// Draw the container
-	container.Draw(screen, x, y, theme)
+	container.Draw(screen, x, y, width, height, theme)
 }
 
-// HandleKey processes keyboard input when focused
-func (t *Table) HandleKey(key string) bool {
-	if !t.focused {
-		return false
-	}
-	t.HandleInput(key)
-	return true
-}
 
 // GetSize returns the current width and height
 func (t *Table) GetSize() (width, height int) {
