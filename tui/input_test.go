@@ -110,24 +110,24 @@ func TestInputDraw(t *testing.T) {
 	input := NewInput()
 
 	// Test drawing empty input
-	input.Draw(screen.Screen, 0, 0, theme)
+	input.Draw(screen.Screen, 0, 0, 30, 1, theme)
 	// Should be blank
 
 	// Test drawing with value
 	input.SetValue("Hello World")
-	input.Draw(screen.Screen, 0, 1, theme)
+	input.Draw(screen.Screen, 0, 1, 30, 1, theme)
 	AssertTextExists(t, screen, "Hello World")
 
 	// Test drawing with placeholder
 	input.SetValue("")
 	input.SetPlaceholder("Type here...")
-	input.Draw(screen.Screen, 0, 2, theme)
+	input.Draw(screen.Screen, 0, 2, 30, 1, theme)
 	AssertTextExists(t, screen, "Type here...")
 
 	// Test drawing focused input
 	input.Focus()
 	input.SetValue("Focused")
-	input.Draw(screen.Screen, 0, 3, theme)
+	input.Draw(screen.Screen, 0, 3, 30, 1, theme)
 	AssertTextExists(t, screen, "Focused")
 }
 
@@ -216,7 +216,7 @@ func TestInputWidthConstraints(t *testing.T) {
 
 	// Test that long text is truncated in display
 	input.SetValue("This is too long")
-	input.Draw(screen.Screen, 0, 0, theme)
+	input.Draw(screen.Screen, 0, 0, 5, 1, theme)
 
 	// The visible area should be limited to width
 	line := screen.GetLine(0)

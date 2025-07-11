@@ -140,9 +140,11 @@ type mockComponent struct {
 	focused bool
 }
 
-func (m *mockComponent) Draw(screen *Screen, x, y int, theme *Theme) {
+func (m *mockComponent) Draw(screen *Screen, x, y, width, height int, theme *Theme) {
 	m.drawX = x
 	m.drawY = y
+	m.width = width
+	m.height = height
 }
 
 func (m *mockComponent) Focus() {
@@ -157,8 +159,8 @@ func (m *mockComponent) IsFocused() bool {
 	return m.focused
 }
 
-func (m *mockComponent) HandleKey(key string) bool {
-	return false
+func (m *mockComponent) HandleInput(key string) {
+	// No-op for mock component
 }
 
 func (m *mockComponent) SetSize(width, height int) {

@@ -135,7 +135,7 @@ func (m *model) drawLinearHorizontal(screen *tui.Screen, theme *tui.Theme) {
 	layout.AddPercentage(info, 0.3)
 
 	main.SetContent(layout)
-	main.Draw(screen, 2, 1, theme)
+	main.Draw(screen, 2, 1, width-4, height-4, theme)
 }
 
 func (m *model) drawLinearVertical(screen *tui.Screen, theme *tui.Theme) {
@@ -169,7 +169,7 @@ func (m *model) drawLinearVertical(screen *tui.Screen, theme *tui.Theme) {
 	layout.AddFixed(footer, 3)
 
 	main.SetContent(layout)
-	main.Draw(screen, 2, 1, theme)
+	main.Draw(screen, 2, 1, width-4, height-4, theme)
 }
 
 func (m *model) drawSplitLayout(screen *tui.Screen, theme *tui.Theme) {
@@ -208,7 +208,7 @@ func (m *model) drawSplitLayout(screen *tui.Screen, theme *tui.Theme) {
 	vsplit.SetSecond(hsplit)
 
 	main.SetContent(vsplit)
-	main.Draw(screen, 2, 1, theme)
+	main.Draw(screen, 2, 1, width-4, height-4, theme)
 }
 
 func (m *model) drawStackLayout(screen *tui.Screen, theme *tui.Theme) {
@@ -251,7 +251,7 @@ func (m *model) drawStackLayout(screen *tui.Screen, theme *tui.Theme) {
 		tui.NewConstraintSet(tui.NewLength(60)),
 		tui.NewConstraintSet(tui.NewLength(20)))
 
-	stack.Draw(screen, 0, 0, theme)
+	stack.Draw(screen, 0, 0, width, height, theme)
 }
 
 func (m *model) drawResponsiveLayout(screen *tui.Screen, theme *tui.Theme) {
@@ -288,7 +288,7 @@ func (m *model) drawResponsiveLayout(screen *tui.Screen, theme *tui.Theme) {
 	responsive.AddDesktop(desktopLayout)
 
 	// Draw with info
-	responsive.Draw(screen, 0, 0, theme)
+	responsive.Draw(screen, 0, 0, width, height, theme)
 
 	// Show current mode
 	mode := "Desktop"
@@ -350,10 +350,10 @@ func (m *model) drawFuzzyFinder(screen *tui.Screen, theme *tui.Theme) {
 	// Center the modal
 	modalX := (width - 90) / 2
 	modalY := (height - 30) / 2
-	modal.Draw(screen, modalX, modalY, theme)
+	modal.Draw(screen, modalX, modalY, 90, 30, theme)
 
 	// Draw the layout on top of the modal
-	mainLayout.Draw(screen, modalX, modalY, theme)
+	mainLayout.Draw(screen, modalX, modalY, 90, 30, theme)
 }
 
 // Helper functions
@@ -379,20 +379,19 @@ type colorPanel struct {
 	color lipgloss.TerminalColor
 }
 
-func (p *colorPanel) Draw(screen *tui.Screen, x, y int, theme *tui.Theme) {
+func (p *colorPanel) Draw(screen *tui.Screen, x, y int, availableWidth, availableHeight int, theme *tui.Theme) {
 	style := lipgloss.NewStyle().Background(p.color)
-	width := screen.Width()
-	height := screen.Height()
-	for dy := 0; dy < height-y; dy++ {
-		for dx := 0; dx < width-x; dx++ {
+	for dy := 0; dy < availableHeight; dy++ {
+		for dx := 0; dx < availableWidth; dx++ {
 			screen.DrawRune(x+dx, y+dy, ' ', style)
 		}
 	}
 }
 
-func (p *colorPanel) Focus()                    {}
-func (p *colorPanel) Blur()                     {}
-func (p *colorPanel) IsFocused() bool           { return false }
+func (p *colorPanel) HandleInput(key string) {}
+func (p *colorPanel) Focus()                  {}
+func (p *colorPanel) Blur()                   {}
+func (p *colorPanel) IsFocused() bool         { return false }
 func (p *colorPanel) HandleKey(key string) bool { return false }
 
 func createFileList() tui.Component {

@@ -22,7 +22,7 @@ type model struct {
 type modalConfig struct {
 	modal       *tui.Modal
 	description string
-	drawFunc    func(screen *tui.Screen, x, y int, theme *tui.Theme) // Optional custom draw function
+	drawFunc    func(screen *tui.Screen, x, y, width, height int, theme *tui.Theme) // Optional custom draw function
 }
 
 func initialModel() *model {
@@ -118,7 +118,7 @@ func createModalForContainers() *tui.Modal {
 }
 
 // Draw functions for modal content
-func drawSimpleModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
+func drawSimpleModal(screen *tui.Screen, modalX, modalY, width, height int, theme *tui.Theme) {
 	// Create a container that fills the modal
 	container := tui.NewContainer()
 	container.SetTitle("Simple Modal")
@@ -132,10 +132,10 @@ func drawSimpleModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
 	container.SetContent(textarea)
 
 	// Draw container at modal position (no extra offset)
-	container.Draw(screen, modalX, modalY, theme)
+	container.Draw(screen, modalX, modalY, width, height, theme)
 }
 
-func drawLargeModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
+func drawLargeModal(screen *tui.Screen, modalX, modalY, width, height int, theme *tui.Theme) {
 	// Create a container that fills the modal
 	container := tui.NewContainer()
 	container.SetTitle("Large Modal")
@@ -149,10 +149,10 @@ func drawLargeModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
 	container.SetContent(textarea)
 
 	// Draw container at modal position (no extra offset)
-	container.Draw(screen, modalX, modalY, theme)
+	container.Draw(screen, modalX, modalY, width, height, theme)
 }
 
-func drawSmallModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
+func drawSmallModal(screen *tui.Screen, modalX, modalY, width, height int, theme *tui.Theme) {
 	// Create a container that fills the modal
 	container := tui.NewContainer()
 	container.SetTitle("Tiny")
@@ -166,10 +166,10 @@ func drawSmallModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
 	container.SetContent(textarea)
 
 	// Draw container at modal position (no extra offset)
-	container.Draw(screen, modalX, modalY, theme)
+	container.Draw(screen, modalX, modalY, width, height, theme)
 }
 
-func drawFormattedModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
+func drawFormattedModal(screen *tui.Screen, modalX, modalY, width, height int, theme *tui.Theme) {
 	// Create a container that fills the modal
 	container := tui.NewContainer()
 	container.SetTitle("Formatted Text")
@@ -183,11 +183,11 @@ func drawFormattedModal(screen *tui.Screen, modalX, modalY int, theme *tui.Theme
 	container.SetContent(textarea)
 
 	// Draw container at modal position (no extra offset)
-	container.Draw(screen, modalX, modalY, theme)
+	container.Draw(screen, modalX, modalY, width, height, theme)
 }
 
 // Custom draw function for the modal with multiple containers
-func drawMultipleContainers(screen *tui.Screen, modalX, modalY int, theme *tui.Theme) {
+func drawMultipleContainers(screen *tui.Screen, modalX, modalY, width, height int, theme *tui.Theme) {
 	// Create first container
 	container1 := tui.NewContainer()
 	container1.SetTitle("Container 1")
@@ -219,9 +219,9 @@ func drawMultipleContainers(screen *tui.Screen, modalX, modalY int, theme *tui.T
 	container3.SetPadding(tui.NewMargin(2))
 
 	// Draw containers inside the modal with small padding
-	container1.Draw(screen, modalX+1, modalY+1, theme)
-	container2.Draw(screen, modalX+34, modalY+1, theme)
-	container3.Draw(screen, modalX+1, modalY+10, theme)
+	container1.Draw(screen, modalX+1, modalY+1, 30, 8, theme)
+	container2.Draw(screen, modalX+34, modalY+1, 30, 8, theme)
+	container3.Draw(screen, modalX+1, modalY+10, 25, 12, theme)
 }
 
 func (m *model) Init() tea.Cmd {
@@ -330,7 +330,7 @@ func (m *model) View() string {
 	currentModal := currentModalConfig.modal
 	if currentModal.IsVisible() {
 		// First draw the modal itself
-		currentModal.Draw(m.screen, 0, 0, &m.theme)
+		currentModal.Draw(m.screen, 0, 0, m.width, m.height, &m.theme)
 
 		// Then draw any custom content if there's a draw function
 		if currentModalConfig.drawFunc != nil {
@@ -338,7 +338,7 @@ func (m *model) View() string {
 			modalWidth, modalHeight := currentModal.GetSize()
 			modalX := (m.width - modalWidth) / 2
 			modalY := (m.height - modalHeight) / 2
-			currentModalConfig.drawFunc(m.screen, modalX, modalY, &m.theme)
+			currentModalConfig.drawFunc(m.screen, modalX, modalY, modalWidth, modalHeight, &m.theme)
 		}
 	}
 

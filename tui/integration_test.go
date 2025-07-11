@@ -19,7 +19,7 @@ func TestContainerWithInput(t *testing.T) {
 	container.SetContent(input)
 
 	// Draw and verify structure
-	container.Draw(screen.Screen, 0, 0, theme)
+	container.Draw(screen.Screen, 0, 0, 30, 5, theme)
 
 	// Check that container border is drawn
 	AssertTextExists(t, screen, "User Input")
@@ -29,14 +29,14 @@ func TestContainerWithInput(t *testing.T) {
 	container.Focus()
 
 	// Type some text
-	container.HandleKey("J")
-	container.HandleKey("o")
-	container.HandleKey("h")
-	container.HandleKey("n")
+	container.HandleInput("J")
+	container.HandleInput("o")
+	container.HandleInput("h")
+	container.HandleInput("n")
 
 	// Redraw
 	screen.Clear()
-	container.Draw(screen.Screen, 0, 0, theme)
+	container.Draw(screen.Screen, 0, 0, 30, 5, theme)
 
 	// Check input value is displayed
 	AssertTextExists(t, screen, "John")
@@ -66,7 +66,7 @@ func TestNestedContainers(t *testing.T) {
 	outer.SetContent(inner)
 
 	// Draw
-	outer.Draw(screen.Screen, 0, 0, theme)
+	outer.Draw(screen.Screen, 0, 0, 40, 15, theme)
 
 	// Verify nested structure
 	AssertTextExists(t, screen, "Outer Container")
@@ -125,7 +125,7 @@ func TestTableInContainer(t *testing.T) {
 	container.Focus()
 
 	// Draw
-	container.Draw(screen.Screen, 0, 0, theme)
+	container.Draw(screen.Screen, 0, 0, 50, 15, theme)
 
 	// Verify table is drawn within container
 	AssertTextExists(t, screen, "Data Table")
@@ -135,18 +135,18 @@ func TestTableInContainer(t *testing.T) {
 	AssertTextExists(t, screen, "Alice")
 
 	// Navigate in table
-	container.HandleKey("down")
-	container.HandleKey("right")
+	container.HandleInput("down")
+	container.HandleInput("right")
 
 	// Edit cell
-	container.HandleKey("enter")
-	container.HandleKey("backspace")
-	container.HandleKey("backspace")
-	container.HandleKey("backspace")
-	container.HandleKey("J")
-	container.HandleKey("o")
-	container.HandleKey("e")
-	container.HandleKey("enter")
+	container.HandleInput("enter")
+	container.HandleInput("backspace")
+	container.HandleInput("backspace")
+	container.HandleInput("backspace")
+	container.HandleInput("J")
+	container.HandleInput("o")
+	container.HandleInput("e")
+	container.HandleInput("enter")
 
 	// Verify edit
 	if table.GetValue(1, 1) != "Joe" {
@@ -180,9 +180,9 @@ func TestScreenComposition(t *testing.T) {
 	sidebar.SetContent(sidebarText)
 
 	// Draw all components
-	headerText.Draw(mainScreen.Screen, 1, 1, theme)
-	content.Draw(mainScreen.Screen, 1, 5, theme)
-	sidebar.Draw(mainScreen.Screen, 53, 5, theme)
+	headerText.Draw(mainScreen.Screen, 1, 1, 78, 1, theme)
+	content.Draw(mainScreen.Screen, 1, 5, 50, 20, theme)
+	sidebar.Draw(mainScreen.Screen, 53, 5, 25, 20, theme)
 
 	// Verify layout
 	AssertTextExists(t, mainScreen, "=== Application Header ===")
@@ -205,7 +205,7 @@ func TestUnicodeIntegration(t *testing.T) {
 	ta.SetValue("こんにちは\n世界")
 	container.SetContent(ta)
 
-	container.Draw(screen.Screen, 0, 0, theme)
+	container.Draw(screen.Screen, 0, 0, 40, 10, theme)
 
 	// Verify unicode content is properly rendered
 	AssertTextExists(t, screen, "日本語")

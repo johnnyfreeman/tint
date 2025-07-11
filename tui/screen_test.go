@@ -105,19 +105,17 @@ func TestScreenDrawBox(t *testing.T) {
 	AssertCellRune(t, screen, 10, 3, '│') // Right
 }
 
-func TestScreenDrawBoxWithTitle(t *testing.T) {
+func TestScreenDrawBoxLarge(t *testing.T) {
 	screen := NewScreenSimulation(30, 10)
 	borderStyle := lipgloss.NewStyle()
-	titleStyle := lipgloss.NewStyle().Bold(true)
 
-	screen.DrawBoxWithTitle(1, 1, 20, 5, "Test Title", borderStyle, titleStyle)
+	screen.DrawBox(1, 1, 20, 5, borderStyle)
 
-	// Check that title appears in the top border
-	AssertTextExists(t, screen, "Test Title")
-
-	// Check corners still exist
+	// Check corners exist
 	AssertCellRune(t, screen, 1, 1, '┌')
 	AssertCellRune(t, screen, 20, 1, '┐')
+	AssertCellRune(t, screen, 1, 5, '└')
+	AssertCellRune(t, screen, 20, 5, '┘')
 }
 
 func TestScreenDimArea(t *testing.T) {

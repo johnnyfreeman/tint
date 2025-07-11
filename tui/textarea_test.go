@@ -126,12 +126,12 @@ func TestTextAreaDraw(t *testing.T) {
 	ta.SetSize(20, 5)
 
 	// Test drawing empty textarea
-	ta.Draw(screen.Screen, 0, 0, theme)
+	ta.Draw(screen.Screen, 0, 0, 20, 5, theme)
 
 	// Test drawing with content
 	ta.SetValue("Line 1\nLine 2\nLine 3")
 	screen.Clear()
-	ta.Draw(screen.Screen, 0, 0, theme)
+	ta.Draw(screen.Screen, 0, 0, 20, 5, theme)
 
 	// Check that lines are drawn
 	AssertTextExists(t, screen, "Line 1")
@@ -142,7 +142,7 @@ func TestTextAreaDraw(t *testing.T) {
 	ta.SetValue("")
 	ta.SetPlaceholder("Type here...")
 	screen.Clear()
-	ta.Draw(screen.Screen, 0, 0, theme)
+	ta.Draw(screen.Screen, 0, 0, 20, 5, theme)
 	AssertTextExists(t, screen, "Type here...")
 }
 
@@ -265,7 +265,7 @@ func TestTextAreaSizeConstraints(t *testing.T) {
 	longLine := strings.Repeat("This is a very long line ", 5)
 	ta.SetValue(longLine + "\n" + longLine + "\n" + longLine)
 
-	ta.Draw(screen.Screen, 0, 0, theme)
+	ta.Draw(screen.Screen, 0, 0, 15, 5, theme)
 
 	// Check that content is constrained to the textarea size
 	// Count non-empty lines in the first 5 rows

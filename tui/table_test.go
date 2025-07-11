@@ -131,7 +131,7 @@ func TestTableDraw(t *testing.T) {
 	theme := NewTestTheme()
 	table := setupTestTable()
 
-	table.Draw(screen.Screen, 0, 0, theme)
+	table.Draw(screen.Screen, 0, 0, 50, 15, theme)
 
 	// Check headers are drawn
 	AssertTextExists(t, screen, "Name")
@@ -220,7 +220,7 @@ func TestTableUnicodeContent(t *testing.T) {
 
 	screen := NewScreenSimulation(30, 10)
 	theme := NewTestTheme()
-	table.Draw(screen.Screen, 0, 0, theme)
+	table.Draw(screen.Screen, 0, 0, 30, 10, theme)
 
 	// Check unicode content is drawn
 	AssertTextExists(t, screen, "名前")

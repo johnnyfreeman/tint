@@ -132,7 +132,7 @@ func BenchmarkTableDraw(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		table.Draw(screen, 0, 0, theme)
+		table.Draw(screen, 0, 0, 80, 25, theme)
 		screen.Clear()
 	}
 }
@@ -151,7 +151,7 @@ func BenchmarkContainerDraw(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		container.Draw(screen, 10, 2, theme)
+		container.Draw(screen, 10, 2, 60, 20, theme)
 		screen.Clear()
 	}
 }

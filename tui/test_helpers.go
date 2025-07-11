@@ -119,7 +119,7 @@ func NewTestComponent(content string, width, height int) *TestComponent {
 	}
 }
 
-func (tc *TestComponent) Draw(screen *Screen, x, y int, theme *Theme) {
+func (tc *TestComponent) Draw(screen *Screen, x, y, width, height int, theme *Theme) {
 	// Draw content with optional focus indicator
 	var style lipgloss.Style
 	if tc.focused {
@@ -131,6 +131,9 @@ func (tc *TestComponent) Draw(screen *Screen, x, y int, theme *Theme) {
 	// Handle multi-line content
 	lines := strings.Split(tc.content, "\n")
 	for i, line := range lines {
+		if i >= height {
+			break // Don't draw beyond available height
+		}
 		screen.DrawString(x, y+i, line, style)
 	}
 }
@@ -147,9 +150,9 @@ func (tc *TestComponent) IsFocused() bool {
 	return tc.focused
 }
 
-func (tc *TestComponent) HandleKey(key string) bool {
+func (tc *TestComponent) HandleInput(key string) {
 	// Simple key handler for testing
-	return key == "enter" || key == "space"
+	// This method doesn't need to return a value in the new interface
 }
 
 func (tc *TestComponent) SetSize(width, height int) {
